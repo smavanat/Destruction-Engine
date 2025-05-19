@@ -1,0 +1,13 @@
+ECS System: Basic component and entity template setup.
+			Basic component manager
+			Basic component storage.
+			Basic entity manager (needs a little more attention imo)
+			Basic general system
+			Basic Coordinator class that handles all the managers in one spot
+			Need to figure out event bus
+			Need to make a proper main class based off of Texture clicker.cpp to actually have a proper insertion point
+			Need to figure out memory management and garbage collection. (stretch goal)
+
+
+Look into scene graphs for how to make compound ships and shit: https://en.wikipedia.org/wiki/Scene_graph
+Remember to fix the componentCounter thing in Component.h

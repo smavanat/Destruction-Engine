@@ -1,0 +1,23 @@
+#pragma once
+#include <set>
+#include "Entity.h"
+#include "Signature.h"
+class System {
+public:
+	System() = default;
+
+	virtual ~System() = default;
+
+	virtual void init();
+
+	virtual void update();
+
+	virtual void render();
+
+	void registerEntity(Entity const &entity);
+
+	void unRegisterEntity(Entity const& entity);
+
+protected:
+	std::set<Entity> registeredEntities;
+};
