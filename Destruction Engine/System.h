@@ -8,11 +8,9 @@ public:
 
 	virtual ~System() = default;
 
-	virtual void init();
+	virtual void init() {};
 
-	virtual void update();
-
-	virtual void render();
+	virtual void update(float dt) {};
 
 	void registerEntity(Entity const &entity);
 

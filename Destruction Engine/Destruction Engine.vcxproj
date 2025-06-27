@@ -19,10 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BasicSystems.hpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="ComponentArray.h" />
     <ClCompile Include="ComponentManager.h" />
-    <ClCompile Include="Coordinator.cpp" />
+    <ClCompile Include="Main.cpp" />
     <ClCompile Include="Maths.cpp" />
     <ClCompile Include="Outline.cpp" />
     <ClCompile Include="polypartition.cpp" />
@@ -39,7 +40,11 @@
     <ClInclude Include="Coordinator.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="EntityManager.h" />
+    <ClInclude Include="Event.h" />
+    <ClInclude Include="EventBus.h" />
+    <ClInclude Include="EventHandler.h" />
     <ClInclude Include="Maths.h" />
+    <ClInclude Include="MemberFunctionHandler.h" />
     <ClInclude Include="Outline.hpp" />
     <ClInclude Include="Signature.h" />
     <ClInclude Include="System.h" />

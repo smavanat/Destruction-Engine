@@ -1,4 +1,5 @@
 #pragma once
+#include <type_traits>
 struct ComponentCounter {
 	static int counter;
 };
@@ -11,6 +12,7 @@ struct Component {
 		static int id = ComponentCounter::counter++;
 		return id;
 	}
+	Component() = default;
 };
 
 template <typename C>

@@ -1,4 +1,5 @@
 #include <unordered_map>
+#include <cassert>
 #include "Entity.h"
 class IComponentArray {
 public:
@@ -29,7 +30,7 @@ public:
 		//Replace component to be removed with last element in the array and set the last element to null
 		int removalIndex = entityToIndexMap[e];
 		componentArray[removalIndex] = componentArray[size - 1];
-		componentArray[size - 1] = nullptr;
+		//componentArray[size - 1] = nullptr;
 
 		//Need to update the mappings to reflect the moved entity
 		Entity replacingEntity = indexToEntityMap[size - 1];//Need to get this value before any operations otherwise it will be overriden later
@@ -38,14 +39,14 @@ public:
 
 		//Erase the remvoed entity
 		entityToIndexMap.erase(e);
-		entityToIndexMap.erase(size - 1);
+		indexToEntityMap.erase(size - 1);
 		size--;
 		return true;
 	}
 
 	//Retrieves the value of a component given the entity it is attached to 
 	T& getComponent(Entity e) {
-		if (entityToIndexMap.find(e) == entityToIndexMap.end()) return nullptr;
+		assert(entityToIndexMap.find(e) != entityToIndexMap.end() && "Retrieving non-existent component.");
 		return componentArray[entityToIndexMap[e]];
 	}
 

@@ -9,6 +9,8 @@ struct Vector2
 	float x;
 	float y;
 
+	Vector2() = default;
+
 	Vector2 operator +(const Vector2& a) const {
 		Vector2 ret = {};
 		ret.x = a.x + x;
@@ -26,6 +28,11 @@ struct Vector2
 	bool operator ==(const Vector2& a) const {
 		if (a.x == x && a.y == y) return true;
 		else return false;
+	}
+
+	void operator = (const b2Vec2& a) {
+		x = a.x;
+		y = a.y;
 	}
 };
 

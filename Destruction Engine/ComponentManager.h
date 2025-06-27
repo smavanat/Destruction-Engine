@@ -6,7 +6,7 @@
 class ComponentManager {
 public:
 	template<typename T>
-	void addComponent(Entity e, Component<T> c) {
+	void addComponent(Entity e, T c) {
 		getComponentArray<T>()->addComponent(e, c);
 	}
 
@@ -17,7 +17,7 @@ public:
 
 	template<typename T>
 	T& getComponent(Entity e) {
-		getComponentArray<T>()->getComponent(e);
+		return getComponentArray<T>()->getComponent(e);
 	}
 
 	void destroyEntity(Entity e) {
@@ -29,13 +29,16 @@ public:
 private:
 	std::array<std::shared_ptr<IComponentArray>, MAX_COMPONENTS> componentArrays;
 	int numComponentArrays = 0;
+
 	template<typename T>
 	std::shared_ptr<ComponentArray<T>> getComponentArray() {
 		//The component does not have a component array assigned to it we need to make a new one
-		if (GetComponentFamily<T>() >= numComponentArrays) {
-			componentArrays[numComponentArrays] = std::make_shared<ComponentArray<T>>();
-			return componentArrays[numComponentArrays++];
+		const std::size_t index = GetComponentFamily<T>();
+
+		if (!componentArrays[index]) {
+			componentArrays[index] = std::make_shared<ComponentArray<T>>();
 		}
-		return componentArrays[GetComponentFamily<T>()];
+
+		return std::static_pointer_cast<ComponentArray<T>>(componentArrays[index]);
 	}
 };
