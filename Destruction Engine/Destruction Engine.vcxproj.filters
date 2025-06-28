@@ -24,12 +24,6 @@
     <ClCompile Include="polypartition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Texture clicker.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Texture.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ComponentArray.h">
       <Filter>Header Files</Filter>
     </ClCompile>
@@ -62,9 +56,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Outline.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Texture.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Component.h">

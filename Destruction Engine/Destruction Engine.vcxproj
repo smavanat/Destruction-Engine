@@ -28,8 +28,6 @@
     <ClCompile Include="Outline.cpp" />
     <ClCompile Include="polypartition.cpp" />
     <ClCompile Include="System.cpp" />
-    <ClCompile Include="Texture clicker.cpp" />
-    <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Notes.txt" />
@@ -49,7 +47,6 @@
     <ClInclude Include="Signature.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="SystemManager.h" />
-    <ClInclude Include="Texture.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

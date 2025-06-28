@@ -1,15 +1,23 @@
 ECS System: Basic component and entity template setup.
 			Basic component manager
 			Basic component storage.
-			Basic entity manager (needs a little more attention imo)
+			Basic entity manager
 			Basic general system
 			Basic Coordinator class that handles all the managers in one spot
-			Basic Event Bus (done. need to test)
+			Basic Event Bus 
 			Re-Written Texture class as a c struct
 			Basic main class based off of Texture clicker.cpp to actually have a proper insertion point
-			Erasure is weird now. Just try it to see what I mean. Need to fix.
 			Need to figure out memory management and garbage collection. (stretch goal)
 
 
 Look into scene graphs for how to make child-parent relationships in scene: https://en.wikipedia.org/wiki/Scene_graph
 Code for engine based off of https://savas.ca/nomad and https://austinmorlan.com/posts/entity_component_system/
+
+Week 1 Notes:
+
+Implemented an Event Bus
+Successful conversion of old erasing system to use the new ECS engine.
+Converted texture class into struct format, so that could pass around pure data rather than objects (even though
+there is no meaningful difference between structs and classes in c++)
+Created three basic components (Transform, Collider and Sprite-> this is just a re-write of the old Texture class)
+Re-wrote the insertion point (it is now in an actual )
