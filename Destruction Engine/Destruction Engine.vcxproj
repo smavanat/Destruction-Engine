@@ -42,7 +42,7 @@
     <ClInclude Include="EntityManager.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="EventBus.h" />
-    <ClInclude Include="EventHandler.h" />
+    <ClInclude Include="Input.h" />
     <ClInclude Include="Maths.h" />
     <ClInclude Include="MemberFunctionHandler.h" />
     <ClInclude Include="Outline.hpp" />

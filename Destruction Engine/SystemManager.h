@@ -52,6 +52,7 @@ public:
 			if ((entitySignature & systemSignature) == systemSignature)
 			{
 				system->registerEntity(entity);
+				//printf("Adding an entity to the %s system\n", type.name());
 			}
 			// Entity signature does not match system signature - erase from set
 			else

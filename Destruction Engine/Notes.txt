@@ -7,7 +7,7 @@ ECS System: Basic component and entity template setup.
 			Basic Event Bus (done. need to test)
 			Re-Written Texture class as a c struct
 			Basic main class based off of Texture clicker.cpp to actually have a proper insertion point
-			Engine works. Need to add conversion of destruction system to work with engine. Probably cannot be a system of its own, since it is more complex than just ecs. But can make it work with ecs system
+			Erasure is weird now. Just try it to see what I mean. Need to fix.
 			Need to figure out memory management and garbage collection. (stretch goal)
 
 

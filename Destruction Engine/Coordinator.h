@@ -1,14 +1,20 @@
 #pragma once
 #include<memory>
+#include<type_traits>
 #include "ComponentManager.h"
 #include "EntityManager.h"
 #include "SystemManager.h"
+#include "EventBus.h"
+#include "Input.h"
+
 class Coordinator {
 public:
 	Coordinator() {
 		sysManager = std::make_unique<SystemManager>();
 		compManager = std::make_unique<ComponentManager>();
 		entManager = std::make_unique<EntityManager>();
+		eBus = std::make_unique<EventBus>();
+		input = std::make_unique<Input>();
 	}
 
 	//Called on engine init
@@ -43,10 +49,14 @@ public:
 	//Add a new component to an entity
 	template<typename T>
 	void addComponent(Entity& e, T&& c) {
-		compManager->addComponent(e, c);
+		// removes reference and const. 
+		// This is because the signature will treat references as different types and so produce a difference 
+		// signature when adding (for example) Sprite and Sprite&.
+		using CleanT = std::decay_t<T>;  
+
+		compManager->addComponent<CleanT>(e, std::forward<T>(c));
 		auto sig = entManager->getSignature(e);
-		std::cout << "Entity Signature: " << sig.mask << "\n";
-		sig.addComponent<T>();
+		sig.addComponent<CleanT>();
 		entManager->setSignature(e, sig);
 		sysManager->entitySignatureChanged(e, sig);
 	}
@@ -66,9 +76,19 @@ public:
 		sysManager->entitySignatureChanged(e, sig);
 	}
 
+	EventBus* getEventBus() {
+		return eBus.get();
+	}
+
+	Input* getInput() {
+		return input.get();
+	}
+
 private:
 	std::unique_ptr<SystemManager> sysManager;
 	std::unique_ptr<ComponentManager> compManager;
 	std::unique_ptr<EntityManager> entManager;
+	std::unique_ptr<EventBus> eBus;
+	std::unique_ptr<Input> input;
 };
 

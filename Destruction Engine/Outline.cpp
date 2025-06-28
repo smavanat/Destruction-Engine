@@ -7,13 +7,13 @@
 #pragma region splitTexture
 //Erases pixels in a texture in a circular radius determined by scale and marks the texture for alteration. 
 //If all the pixels in the radius have been erased, then the texture is not marked for alteration.
-void erasePixels(Texture* texture, SDL_Renderer* gRenderer, int scale, int x, int y) {
-	Vector2 newOrigin = rotateAboutPoint(newVector2(x, y), texture->getCentre(), -texture->getAngle(), false);
+void s_erasePixels(Sprite &s, SDL_Renderer* gRenderer, int scale, int x, int y) {
+	Vector2 newOrigin = rotateAboutPoint(newVector2(x, y), s.centre, -s.angle, false);
 
-	x = newOrigin.x - texture->getOrigin().x;
-	y = newOrigin.y - texture->getOrigin().y;
+	x = newOrigin.x - s_getOrigin(s).x;
+	y = newOrigin.y - s_getOrigin(s).y;
 
-	Uint32* pixels = texture->getPixels32();
+	Uint32* pixels = s_getPixels32(s);
 
 	if (scale > 0) {
 		for (int w = 0; w < scale * 2; w++)
@@ -22,22 +22,22 @@ void erasePixels(Texture* texture, SDL_Renderer* gRenderer, int scale, int x, in
 			{
 				int dx = scale - w; // horizontal offset
 				int dy = scale - h; // vertical offset
-				if ((dx * dx + dy * dy) < (scale * scale) && (x + dx < texture->getWidth()) && (x + dx > -1) && (y + dy < texture->getHeight()) && (y + dy > -1))
+				if ((dx * dx + dy * dy) < (scale * scale) && (x + dx < s.width) && (x + dx > -1) && (y + dy < s.height) && (y + dy > -1))
 				{
-					if (pixels[(y + dy) * texture->getWidth() + (x + dx)] == NO_PIXEL_COLOUR) continue;
+					if (pixels[(y + dy) * s.width + (x + dx)] == NO_PIXEL_COLOUR) continue;
 					else {
-						pixels[(y + dy) * texture->getWidth() + (x + dx)] = NO_PIXEL_COLOUR;
-						if (!texture->isAltered()) texture->markAsAltered();
+						pixels[(y + dy) * s.width + (x + dx)] = NO_PIXEL_COLOUR;
+						if (!s.needsSplitting) s.needsSplitting = true;
 					}
 				}
 			}
 		}
 	}
 	else {
-		pixels[y * texture->getWidth() + x] = NO_PIXEL_COLOUR;
+		pixels[y * s.width + x] = NO_PIXEL_COLOUR;
 	}
 
-	texture->loadFromPixels(gRenderer);
+	s_loadFromPixels(s, gRenderer);
 }
 
 bool isAtTopEdge(int pixelPosition, int arrayWidth) {
@@ -151,9 +151,9 @@ std::vector<int> bfs(int index, int arrayWidth, int arrayLength, Uint32* pixels,
 	return indexes;
 }
 
-Texture* constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int arrayWidth, Texture* texture, SDL_Renderer* gRenderer) {
+Sprite s_constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int arrayWidth, Sprite s, SDL_Renderer* gRenderer) {
 	Uint32* newPixelBuffer;
-	Texture* newTexture;
+	Sprite newSprite;
 	int width = 0;
 	int height = (int)(indexes.back() / arrayWidth) - (int)(indexes.front() / arrayWidth) + 1; //Why is the height including the pixel buffer??? Surely that shouldn't come up
 
@@ -178,7 +178,7 @@ Texture* constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int a
 		}
 	}
 	width = endLinePos - startLinePos;
-	width = width + 1; 
+	width = width + 1;
 
 	//Essentially, in order for marching squares to work, there has to be a one-pixel wide colourless perimeter around
 	//the texture. This is so that there is an actual "border" for marching squares to trace around, and I think this is 
@@ -222,35 +222,35 @@ Texture* constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int a
 	}
 
 	//This works now. Cieling it gives the correct value. However I now get a memory error somewhere
-	float originX = ceilf(texture->getOrigin().x + (startLinePos))-1.0f; //Assume original textures also have transparent border
-	float originY = ceilf(texture->getOrigin().y + ((int)floor(indexes[0] / arrayWidth)))-1.0f;
+	float originX = ceilf(s_getOrigin(s).x + (startLinePos)) - 1.0f; //Assume original textures also have transparent border
+	float originY = ceilf(s_getOrigin(s).y + ((int)floor(indexes[0] / arrayWidth))) - 1.0f;
 
 	printf("ORIGINAL OriginX: %f ORIGINAL OriginY: %f\n", originX, originY);
 
 	//Have to manually calculate the center from the origin here.
-	float centreX = originX + floorf((width)/2.0f); //floor instead of ceil because 0-indexed
+	float centreX = originX + floorf((width) / 2.0f); //floor instead of ceil because 0-indexed
 	float centreY = originY + floorf((height) / 2.0f);
 
 	printf("ORIGINAL CentreX: %f ORIGINAL CentreY: %f\n", centreX, centreY);
 
 	//Set this as a pointer as otherwise this variable will be destroyed once this method finishes.
-	newTexture = new Texture(centreX, centreY, width, height, newPixelBuffer, gRenderer, texture->getAngle());
+	newSprite = s_createSprite(centreX, centreY, width, height, newPixelBuffer, gRenderer, s.angle);
 
 	cleanup(pixels, indexes);
-	return newTexture;
+	return newSprite;
 
 	//delete[] newPixelBuffer; //This needs to be commented out since we are actively using newPixelBuffer to create our texture.
 }
 
-std::vector<Texture*> splitTextureAtEdge(Texture* texture, SDL_Renderer* gRenderer) {
-	if (!texture || !texture->isAltered()) return {};
+std::vector<Sprite> s_splitTextureAtEdge(Sprite s, SDL_Renderer* gRenderer) {
+	if (!s.needsSplitting) return {};
 
 	//Get the texture pixels
-	Uint32* pixels = texture->getPixels32(); //This has the correct alpha values for the pixels (checked)
+	Uint32* pixels = s_getPixels32(s); //This has the correct alpha values for the pixels (checked)
 	//This is the transparent pixel colour
 	//Uint32 noPixelColour = texture->mapRGBA(0xFF, 0xFF, 0xFF, 0x00);
 	//A placement int that gets the length of the pixel 1D array
-	int arrayLength = texture->getWidth() * texture->getHeight();
+	int arrayLength = s.width * s.height;
 	//A bitmap that remembers if we visited a pixel before or not.
 	int* visitedTracker = new int[arrayLength];
 	//Initialising visitedTracker to all 0.
@@ -258,15 +258,15 @@ std::vector<Texture*> splitTextureAtEdge(Texture* texture, SDL_Renderer* gRender
 	//Pixel buffer vector
 	std::vector<int> possibleStarts;
 	//Vector for all the new textures that are being formed. This method will return them
-	std::vector<Texture*> newTextures;
+	std::vector<Sprite> newTextures;
 
 	//For loop to get all the split texture parts.
 	for (int i = 0; i < arrayLength; i++) {
 		if (pixels[i] != NO_PIXEL_COLOUR) {
-			possibleStarts = bfs(i, texture->getWidth(), arrayLength, pixels, visitedTracker);
+			possibleStarts = bfs(i, s.width, arrayLength, pixels, visitedTracker);
 			//printf("bfs size: %i\n", possibleStarts.size());
 			if (!possibleStarts.empty()) {
-				newTextures.push_back(constructNewPixelBuffer(possibleStarts, pixels, texture->getWidth(), texture, gRenderer));
+				newTextures.push_back(s_constructNewPixelBuffer(possibleStarts, pixels, s.width, s, gRenderer));
 			}
 		}
 	}
@@ -319,10 +319,11 @@ std::vector<Texture*> splitTextureAtEdge(Texture* texture, SDL_Renderer* gRender
 
 	//Actual marching squares method. Requires that every texture has a one-pixel transparent border so that
 	//it does not get confused by the lack of empty textueres.
-	std::vector<int> marchingSquares(Texture* texture) {
-		Uint32* pixels = texture->getPixels32();
-		int width = texture->getWidth();
-		int length = texture->getHeight() * width;
+
+	std::vector<int> s_marchingSquares(Sprite s) {
+		Uint32* pixels = s_getPixels32(s);
+		int width = s.width;
+		int length = s.height * width;
 		int totalPixels = width * length;
 
 		std::vector<int> contourPoints;
@@ -520,7 +521,7 @@ std::vector<Texture*> splitTextureAtEdge(Texture* texture, SDL_Renderer* gRender
 
 	//Creates a texture polygon by using pure triangulation, and then moves the origin so that it is in the centre of the 
 	//shape rather than at the top-left corner.
-	b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Texture* texture) {
+	b2BodyId s_createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Sprite s) {
 		//Getting points
 		b2Vec2* points = getVec2Array(rdpPoints, arrayWidth);
 		//printf("CentreX: %f, CentreY, %f\n", texture->getCentre().x, texture->getCentre().y);
@@ -528,10 +529,10 @@ std::vector<Texture*> splitTextureAtEdge(Texture* texture, SDL_Renderer* gRender
 		//Creating the b2Body
 		b2BodyDef testbodyDef = b2DefaultBodyDef();
 		testbodyDef.type = b2_dynamicBody;
-		testbodyDef.position = { texture->getCentre().x * pixelsToMetres, texture->getCentre().y * pixelsToMetres };
+		testbodyDef.position = { s.centre.x * pixelsToMetres, s.centre.y * pixelsToMetres };
 		//testbodyDef.position = { static_cast<float>(centre.x) * pixelsToMetres, static_cast<float>(centre.y) * pixelsToMetres };
 		//printf("ColliderPositionX: %f, ColliderPositionY: %f\n", testbodyDef.position.x * metresToPixels, testbodyDef.position.y * metresToPixels);
-		testbodyDef.rotation = { (float)cos(texture->getAngle() * DEGREES_TO_RADIANS), (float)sin(texture->getAngle() * DEGREES_TO_RADIANS) };
+		testbodyDef.rotation = { (float)cos(s.angle * DEGREES_TO_RADIANS), (float)sin(s.angle * DEGREES_TO_RADIANS) };
 		b2BodyId testId = b2CreateBody(worldId, &testbodyDef);
 
 		//I am going to partition the polygon regardless of whether or not the number of vertices is less than 8, because
@@ -539,8 +540,8 @@ std::vector<Texture*> splitTextureAtEdge(Texture* texture, SDL_Renderer* gRender
 		//It is better to just put in triangles so it can't mess things up. I am going to use triangulation instead of 
 		//partitioning to make sure Box2D keeps all of the details, as in higher-vertex convex shapes there is a change
 		//simplification could occur, which I want to avoid.
-		 
-		
+
+
 		//Creating the polypartition polygon and copying all of the points over.
 		TPPLPoly* poly = new TPPLPoly();
 		poly->Init(rdpPoints.size());
@@ -567,7 +568,7 @@ std::vector<Texture*> splitTextureAtEdge(Texture* texture, SDL_Renderer* gRender
 		//printf("Result: %i, Size: %i, ", result, polyList.size
 
 		//Trying to center the polygon:
-		CenterCompundShape(polyList, {static_cast<double>(texture->getWidth()/2)*pixelsToMetres, static_cast<double>(texture->getHeight() / 2)*pixelsToMetres});
+		CenterCompundShape(polyList, { static_cast<double>(s.width / 2) * pixelsToMetres, static_cast<double>(s.height / 2) * pixelsToMetres });
 
 		//Adding the polygons to the collider, or printing an error message if something goes wrong.
 		for (TPPLPolyList::iterator it = polyList.begin(); it != polyList.end(); ++it) {

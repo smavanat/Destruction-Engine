@@ -20,7 +20,7 @@ public:
 	}
 
 	template<class T, class EventT>
-	void subscribe(T* instance, void(T::* memberFunction)(EventT*)) {
+	void subscribe(T* instance, void(T::* memberFunction)(const EventT*)) {
 		HandlerList* handlers = subscribers[typeid(EventT)];
 
 		if (handlers == nullptr) {
