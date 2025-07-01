@@ -10,7 +10,12 @@ extern int scale;
 extern b2WorldId worldId;
 class RenderSystem : public System {
 public:
-	void init() {}
+	void init() {
+		Signature sig;
+		sig.addComponent<Transform>();
+		sig.addComponent<Sprite>();
+		gCoordinator.setSystemSignature<RenderSystem>(sig);
+	}
 
 	void update(float dt) {
 		//printf("Number of registered entities: %i\n", registeredEntities.size());
@@ -27,7 +32,9 @@ public:
 
 class TransformSystem : public System {
 public:
-	void init() {}
+	void init() {
+		
+	}
 
 	void update(float dt) {
 		for (Entity entity : registeredEntities) {
@@ -43,6 +50,10 @@ public:
 class DestructionSystem : public System {
 public:
 	void init() {
+		Signature sig;
+		sig.addComponent<Sprite>();
+		sig.addComponent<Collider>();
+		gCoordinator.setSystemSignature<DestructionSystem>(sig);
 		gCoordinator.getEventBus()->subscribe(this, &DestructionSystem::onErasureEvent);
 	}
 
@@ -101,6 +112,9 @@ public:
 class DebugSystem : public System {
 public:
 	void init() {
+		Signature sig;
+		sig.addComponent<Collider>();
+		gCoordinator.setSystemSignature<DebugSystem>(sig);
 		gCoordinator.getEventBus()->subscribe(this, &DebugSystem::onColliderDebugEvent);
 	}
 

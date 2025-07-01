@@ -2,7 +2,12 @@
 SDL_FRect gTileClips[TOTAL_TILE_SPRITES];
 Entity tileSet;
 
-void TileSystem :: init() {}
+void TileSystem :: init() {
+	Signature sig;
+	sig.addComponent<Transform>();
+	sig.addComponent<TileType>();
+	gCoordinator.setSystemSignature<TileSystem>(sig);
+}
 
 bool TileSystem::setTiles() {
 	//Success flag
@@ -40,7 +45,6 @@ bool TileSystem::setTiles() {
 			if ((tileType >= 0) && (tileType < TOTAL_TILE_SPRITES)) {
 				//Make a new tile
 				Entity e = gCoordinator.createEntity();
-				gCoordinator.addComponent(e, Tag(0));
 				gCoordinator.addComponent(e, Transform(newVector2(x, y), 0));
 				gCoordinator.addComponent(e, TileType(tileType));
 			}

@@ -38,47 +38,16 @@ bool operator ==(const b2BodyId& lhs, const b2BodyId& rhs) {
 bool init()
 {
 	gCoordinator = Coordinator();
-	gCoordinator.init();
 
 	renderSystem = gCoordinator.addSystem<RenderSystem>();
-	{
-		Signature sig;
-		sig.addComponent<Transform>();
-		sig.addComponent<Sprite>();
-		gCoordinator.setSystemSignature<RenderSystem>(sig);
-	}
-
-	renderSystem->init();
-
 	destructionSystem = gCoordinator.addSystem<DestructionSystem>();
-	{
-		Signature sig;
-		sig.addComponent<Sprite>();
-		sig.addComponent<Collider>();
-		gCoordinator.setSystemSignature<DestructionSystem>(sig);
-	}
-
-	destructionSystem->init();
-
 	debugSystem = gCoordinator.addSystem<DebugSystem>();
-	{
-		Signature sig;
-		sig.addComponent<Collider>();
-		gCoordinator.setSystemSignature<DestructionSystem>(sig);
-	}
-
-	debugSystem->init();
-
 	tileSystem = gCoordinator.addSystem<TileSystem>();
-	{
-		Signature sig;
-		sig.addComponent<Transform>();
-		sig.addComponent<TileType>();
-		gCoordinator.setSystemSignature<TileSystem>(sig);
-	}
 
-	tileSystem->init();
-	
+	//Initialise all the systems.
+	gCoordinator.init();
+
+
 	testTexture = gCoordinator.createEntity();
 	//Initialization flag
 	bool success = true;

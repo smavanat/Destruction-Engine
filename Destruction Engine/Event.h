@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 class Event {
 protected:
 	virtual ~Event() {};
@@ -7,3 +8,9 @@ protected:
 struct ErasureEvent : public Event {};
 
 struct ColliderDebugEvent : public Event {};
+
+struct GridChangedEvent : public Event {
+	std::vector<int>grid;
+
+	GridChangedEvent(std::vector<int> g) : grid(g) {}
+};

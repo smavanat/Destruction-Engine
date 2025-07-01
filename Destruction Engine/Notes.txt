@@ -7,6 +7,10 @@ ECS System: Basic component and entity template setup.
 			Basic Event Bus 
 			Re-Written Texture class as a c struct
 			Basic main class based off of Texture clicker.cpp to actually have a proper insertion point
+
+			Need to make Grid System that handles grid updates and sends the grid to the pathfinding system when 
+			it is requested(and has been changed)
+			The pathfinding system requests grid from the Grid system using an event and then runs a* on it.
 			Need to figure out memory management and garbage collection. (stretch goal)
 
 
