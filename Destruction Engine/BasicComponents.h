@@ -1,7 +1,6 @@
 #pragma once
 #include "Maths.h"
 #include "Component.h"
-//#include "Texture.hpp"
 #include<iostream>
 #include<SDL3_image/SDL_image.h>
 #include "box2d/base.h"
@@ -197,28 +196,8 @@ inline void s_renderBasic(Sprite s, SDL_Renderer* gRenderer) {
 }
 
 //When need a rotateable texture
-//void render(Sprite s, SDL_Renderer* gRenderer, SDL_FRect* clip, double angle, SDL_FPoint* centre, SDL_FlipMode flip) {
-//    SDL_FRect renderQuad = { getOrigin(s).x, getOrigin(s).y, s.width, s.height };
-//
-//    //Set clip rendering dimensions
-//    if (clip != NULL)
-//    {
-//        renderQuad.w = clip->w;
-//        renderQuad.h = clip->h;
-//    }
-//
-//    SDL_RenderTextureRotated(gRenderer, s.texture, clip, &renderQuad, angle, centre, flip);
-//}
-
 inline void s_render(Sprite s, SDL_Renderer* gRenderer) {
     SDL_FRect renderQuad = { s_getOrigin(s).x, s_getOrigin(s).y, s.width, s.height };
-
-    //Set clip rendering dimensions
-    /*if (clip != NULL)
-    {
-        renderQuad.w = clip->w;
-        renderQuad.h = clip->h;
-    }*/
 
     SDL_RenderTextureRotated(gRenderer, s.texture, NULL, &renderQuad, s.angle, NULL, SDL_FLIP_NONE);
 }
@@ -234,4 +213,12 @@ struct Collider : public Component<Collider> {
     Collider() = default;
 
     Collider(b2BodyId colliderId) : colliderId(colliderId) {}
+};
+
+struct Tag : public Component<Tag> {
+    int tagId;
+
+    Tag() = default;
+
+    Tag(int tagId) : tagId(tagId) {}
 };

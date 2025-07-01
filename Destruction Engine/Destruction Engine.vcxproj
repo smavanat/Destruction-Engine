@@ -23,11 +23,13 @@
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="ComponentArray.h" />
     <ClCompile Include="ComponentManager.h" />
+    <ClCompile Include="GridSystem.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Maths.cpp" />
     <ClCompile Include="Outline.cpp" />
     <ClCompile Include="polypartition.cpp" />
     <ClCompile Include="System.cpp" />
+    <ClCompile Include="TileSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Notes.txt" />
@@ -40,6 +42,7 @@
     <ClInclude Include="EntityManager.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="EventBus.h" />
+    <ClInclude Include="GridSystem.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Maths.h" />
     <ClInclude Include="MemberFunctionHandler.h" />
@@ -47,6 +50,7 @@
     <ClInclude Include="Signature.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="SystemManager.h" />
+    <ClInclude Include="TileSystem.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

@@ -42,6 +42,12 @@
     <ClCompile Include="BasicSystems.hpp">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="TileSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GridSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Notes.txt">
@@ -89,6 +95,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TileSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GridSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

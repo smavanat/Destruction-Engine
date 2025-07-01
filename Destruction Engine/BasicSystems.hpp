@@ -13,8 +13,6 @@ public:
 	void init() {}
 
 	void update(float dt) {
-		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-		SDL_RenderClear(gRenderer);
 		//printf("Number of registered entities: %i\n", registeredEntities.size());
 		for (Entity entity : registeredEntities) {
 			Transform transform = gCoordinator.getComponent<Transform>(entity);
