@@ -1,6 +1,7 @@
 #include "GridSystem.h"
 #include <algorithm>
 
+//Initialises the signature for the grid system and creates the tiles for the grid
 void GridSystem::init() {
 	Signature sig;
 	sig.addComponent<Transform>();
@@ -9,6 +10,8 @@ void GridSystem::init() {
 	createTiles();
 }
 
+//Checks if the grid has changed in a meaningful way (walkable status of tiles), and if it has, publishes an
+//event so the pathfinding system can be updated too
 void GridSystem::update(float dt) {
 	bool gridChanged = false;
 	for (Entity e : registeredEntities) {
@@ -22,10 +25,14 @@ void GridSystem::update(float dt) {
 	}
 }
 
+//Creates the tiles for the grid
 void GridSystem::createTiles() {
-	for (int i = 0; i < gridHeightInTiles * gridWidthInTiles; i++) {
-		Entity e = gCoordinator.createEntity();
-		//How do we determine whether a tile is walkable or not initially?
+    for (int i = 0; i < gridWidthInTiles; i++) {
+        for (int j = 0; j < gridHeightInTiles; j++) {
+            Entity e = gCoordinator.createEntity();
+            gCoordinator.addComponent(e, Transform(newVector2((i * TILE_WIDTH) + (TILE_WIDTH / 2), (j * TILE_HEIGHT) + (TILE_HEIGHT / 2)), 0));
+            gCoordinator.addComponent(e, Walkable(grid[i][j]));
+        }
 	}
 }
 
@@ -34,10 +41,12 @@ bool GridSystem::tileStatusChanged(Entity e) {
 	return false;
 }
 
-std::vector<int> GridSystem::convertTilesToGrid() {
-
+//Converts the tiles into a vector so that they can easily be stored as data
+std::vector<std::vector<int>> GridSystem::convertTilesToGrid() {
+    return std::vector<std::vector<int>>();
 }
 
+//Node constructor
 Node::Node(int xPos, int yPos) : x(xPos), y(yPos), f(0), g(0), h(0) {}
 
 bool Node::operator>(const Node& other) const {
@@ -48,78 +57,89 @@ bool Node::operator==(const Node& other) const {
 	return x == other.x && y == other.y;
 }
 
+//Pathfinding system initialisation. Incomplete
 void PathFindingSystem::init() {
 	gCoordinator.getEventBus()->subscribe(this, &PathFindingSystem::updateGrid);
 }
 
+//Not sure what components to use for PathFinding update. Maybe just attach a pathfinding component that holds
+//start and end pos?
 void PathFindingSystem::update(float dt) {
 
 }
 
-std::vector<Node> PathFindingSystem::FindPath(const std::vector<std::vector<int>> graph, Vector2 startPos, Vector2 goalPos) {
-	//Node versions of start and end pos
-	Node start = nodeFromWorldPos(startPos);
-	Node goal = nodeFromWorldPos(goalPos);
-	//Coordinates of four possible movement directions. Should expand to 8 later
-	const int directionX[] = { -1, 0, 1, 0 };
-	const int directionY[] = { 0, 1, 0, -1 };
+std::vector<Node> PathFindingSystem::FindPath(const std::vector<std::vector<int>> graph, Vector2 start, Vector2 goal) {
+    const int directionX[] = { -1, 0, 1, 0 };
+    const int directionY[] = { 0, 1, 0, -1 };
 
-	//Initialise open and closed lists
-	std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList;
-	std::vector<std::vector<bool>> closedList(graph.size(), std::vector<bool>(graph[0].size(), false));
+    int rows = graph.size();
+    int cols = graph[0].size();
 
-	openList.push(start);
+    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList;
+    std::vector<std::vector<bool>> closedList(rows, std::vector<bool>(cols, false));
+    std::vector<std::vector<Node>> cameFrom(rows, std::vector<Node>(cols, Node(-1, -1)));
+    std::vector<std::vector<int>> gScore(rows, std::vector<int>(cols, INT_MAX));
 
-	//Main loop
-	while (!openList.empty()) {
-		//Get the cell with the lowest f value from the open list
-		Node current = openList.top();
-		openList.pop();
+    // Initialize start node
+    Node startNode = nodeFromWorldPos(start);
+    Node goalNode = nodeFromWorldPos(goal);
+    startNode.g = 0;
+    startNode.h = abs(start.x - goal.x) + abs(start.y - goal.y);
+    startNode.f = startNode.g + startNode.h;
 
-		//Check if the current cell is the goal
-		if (current == goal) {
-			//Reconstruct the path
-			std::vector<Node> path;
-			while (!(current == start)) {
-				path.push_back(current);
-				current = graph[current.x][current.y];
-			}
-			path.push_back(start);
-			reverse(path.begin(), path.end());
-			return path;
-		}
+    gScore[startNode.x][startNode.y] = 0;
+    openList.push(startNode);
 
-		closedList[current.x][current.y] = true;
-		for (int i = 0; i < 4; i++) {
-			int newX = current.x + directionX[i];
-			int newY = current.y + directionY[i];
+    while (!openList.empty()) {
+        Node current = openList.top();
+        openList.pop();
 
-			//Check that the neighbour is in the grid boundaries
-			if (newX >= 0 && newX < graph.size() && newY >= 0 && newY < graph[0].size()) {
-				//Check if the neighbour is walkable and not in the closed list
-				if (graph[newX][newY] == 0 && !closedList[newX][newY]) {
-					Node neighbour(newX, newY);
+        if (current == goalNode) {
+            std::vector<Node> path;
+            Node trace = current;
+            while (!(trace == startNode)) {
+                path.push_back(trace);
+                trace = cameFrom[trace.x][trace.y];
+            }
+            path.push_back(startNode);
+            reverse(path.begin(), path.end());
+            return path;
+        }
 
-					int newG = current.g + 1;
+        if (closedList[current.x][current.y])
+            continue;
 
-					//Check if the neighbour is not in the open list or has a lower g value
-					if (newG < neighbour.g || !closedList[newX][newY]) {
-						neighbour.g = newG;
-						neighbour.h = abs(newX - goal.x) + abs(newY - goal.y);
-						neighbour.f = neighbour.g + neighbour.h;
-						graph[newX][newY] = current; //Update the parent of the neighbour
-						openList.push(neighbour); //Add the neighbour to the open list
-					}
-				}
-			}
-		}
-	}
-	//No path found 
-	return std::vector<Node>();
+        closedList[current.x][current.y] = true;
+
+        for (int i = 0; i < 4; ++i) {
+            int newX = current.x + directionX[i];
+            int newY = current.y + directionY[i];
+
+            if (newX >= 0 && newX < rows && newY >= 0 && newY < cols) {
+                if (graph[newX][newY] == 0 && !closedList[newX][newY]) {
+                    int tentativeG = gScore[current.x][current.y] + 1;
+
+                    if (tentativeG < gScore[newX][newY]) {
+                        gScore[newX][newY] = tentativeG;
+                        Node neighbor(newX, newY);
+                        neighbor.g = tentativeG;
+                        neighbor.h = abs(newX - goal.x) + abs(newY - goal.y);
+                        neighbor.f = neighbor.g + neighbor.h;
+                        cameFrom[newX][newY] = current;
+                        openList.push(neighbor);
+                    }
+                }
+            }
+        }
+    }
+
+    return std::vector<Node>(); // No path found
 }
 
+//Gets the relevant node from the world position
 Node PathFindingSystem::nodeFromWorldPos(Vector2 pos) {
 	//Idek what to put here
+	return Node(static_cast<int>(floor(pos.x / TILE_WIDTH)), static_cast<int>(floor(pos.y / TILE_HEIGHT)));
 }
 
 //Updates the grid we have to work with

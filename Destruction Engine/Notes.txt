@@ -8,8 +8,8 @@ ECS System: Basic component and entity template setup.
 			Re-Written Texture class as a c struct
 			Basic main class based off of Texture clicker.cpp to actually have a proper insertion point
 
-			Need to make Grid System that handles grid updates and sends the grid to the pathfinding system when 
-			it is requested(and has been changed)
+			Have to actually figure out how to properly initialise values into the grid. Then test 
+			that grid debug system is working and make a debug system for pathfinding
 			The pathfinding system requests grid from the Grid system using an event and then runs a* on it.
 			Need to figure out memory management and garbage collection. (stretch goal)
 
@@ -19,6 +19,7 @@ Code for engine based off of https://savas.ca/nomad and https://austinmorlan.com
 
 Performance Optimisation: Use Entity archetypes -> organise entites by the components that they have as children 
 							and then just have the systems fetch entities from these archetypes.
+Look into Isobands for Marching squares ranges: https://en.wikipedia.org/wiki/Marching_squares#Isobands
 
 Week 1 Notes:
 Implemented an Event Bus

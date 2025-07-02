@@ -10,7 +10,7 @@ struct ErasureEvent : public Event {};
 struct ColliderDebugEvent : public Event {};
 
 struct GridChangedEvent : public Event {
-	std::vector<int>grid;
+	std::vector<std::vector<int>>grid;
 
-	GridChangedEvent(std::vector<int> g) : grid(g) {}
+	GridChangedEvent(std::vector<std::vector<int>> g) : grid(g) {}
 };

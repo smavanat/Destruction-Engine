@@ -222,3 +222,11 @@ struct Tag : public Component<Tag> {
 
     Tag(int tagId) : tagId(tagId) {}
 };
+
+struct Walkable : public Component<Walkable> {
+    int walkStatus;
+
+    Walkable() = default;
+
+    Walkable(int w) : walkStatus(w) {};
+};

@@ -3,6 +3,7 @@
 #include "Outline.hpp"
 #include "BasicSystems.hpp"
 #include "TileSystem.h"
+#include "Debug.h"
 
 //TODO: Figure out how do deal with small shapes. Colliders are not generated for them, but they are still there.
 //		Maybe just erase them? Or put a default small collider around them.
@@ -18,11 +19,12 @@ b2WorldId worldId;
 
 //ECS Managers
 Coordinator gCoordinator;
+DebugManager gDebugManager;
 Entity testTexture;
 std::shared_ptr<RenderSystem> renderSystem;
 std::shared_ptr<DestructionSystem> destructionSystem;
-std::shared_ptr<DebugSystem> debugSystem;
 std::shared_ptr<TileSystem> tileSystem;
+std::shared_ptr<GridSystem> gridSystem;
 
 int scale = 5;
 
@@ -41,12 +43,15 @@ bool init()
 
 	renderSystem = gCoordinator.addSystem<RenderSystem>();
 	destructionSystem = gCoordinator.addSystem<DestructionSystem>();
-	debugSystem = gCoordinator.addSystem<DebugSystem>();
 	tileSystem = gCoordinator.addSystem<TileSystem>();
+	gridSystem = gCoordinator.addSystem<GridSystem>();
 
 	//Initialise all the systems.
 	gCoordinator.init();
 
+	//Need to initialise Debug manager after gCoordinator otherwise debug does not work
+	gDebugManager = DebugManager();
+	gDebugManager.init();
 
 	testTexture = gCoordinator.createEntity();
 	//Initialization flag
@@ -120,8 +125,6 @@ bool loadMedia()
 	std::vector<int> points = { 0, (s.height - 1) * s.width, (s.height * s.width) - 1, s.width - 1 };
 	b2BodyId tempId = s_createTexturePolygon(points, s.width, worldId, s);
 	gCoordinator.addComponent(testTexture, Collider(tempId));
-	//colliders.push_back(tempId);
-
 
 	return success;
 }
@@ -198,11 +201,12 @@ int main(int argc, char* args[]) {
 				auto startTime = std::chrono::high_resolution_clock::now();
 
 				destructionSystem->update(dt);
+				gridSystem->update(dt);
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderClear(gRenderer);
 				tileSystem->render();
 				renderSystem->update(dt);
-				debugSystem->update(dt);
+				gDebugManager.update(dt);
 				SDL_RenderPresent(gRenderer); //Need to put this outside the render system update since need to call it after both render and debug have drawn
 
 				auto stopTime = std::chrono::high_resolution_clock::now();

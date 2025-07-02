@@ -23,6 +23,7 @@
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="ComponentArray.h" />
     <ClCompile Include="ComponentManager.h" />
+    <ClCompile Include="Debug.cpp" />
     <ClCompile Include="GridSystem.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Maths.cpp" />
@@ -38,6 +39,7 @@
     <ClInclude Include="BasicComponents.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Coordinator.h" />
+    <ClInclude Include="Debug.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="EntityManager.h" />
     <ClInclude Include="Event.h" />
