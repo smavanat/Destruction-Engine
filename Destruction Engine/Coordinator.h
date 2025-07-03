@@ -36,8 +36,8 @@ public:
 
 	//Add a new system to the engine. Should happen before init
 	template <typename T>
-	std::shared_ptr<T> addSystem() {
-		return sysManager->registerSystem<T>();
+	std::shared_ptr<T> addSystem(Signature sig) {
+		return sysManager->registerSystem<T>(sig);
 	}
 
 	//Set a system's signature
@@ -82,6 +82,10 @@ public:
 
 	Input* getInput() {
 		return input.get();
+	}
+
+	Signature getSignature(Entity e) {
+		return entManager->getSignature(e);
 	}
 
 private:

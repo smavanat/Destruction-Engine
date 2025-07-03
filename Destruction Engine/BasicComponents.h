@@ -230,3 +230,11 @@ struct Walkable : public Component<Walkable> {
 
     Walkable(int w) : walkStatus(w) {};
 };
+
+struct TileType : public Component<TileType> {
+    int type;
+
+    TileType() = default;
+
+    TileType(int t) : type(t) {}
+};

@@ -3,10 +3,11 @@ SDL_FRect gTileClips[TOTAL_TILE_SPRITES];
 Entity tileSet;
 
 void TileSystem :: init() {
-	Signature sig;
+	/*Signature sig;
 	sig.addComponent<Transform>();
 	sig.addComponent<TileType>();
 	gCoordinator.setSystemSignature<TileSystem>(sig);
+	std::cout << "TileSystem Signature" << sig.mask << "\n";*/
 }
 
 bool TileSystem::setTiles() {
@@ -244,9 +245,10 @@ bool TileSystem::loadTileSet() {
 	return success;
 }
 
-void TileSystem::render() {
+void TileSystem::update(float dt) {
 	Sprite& s = gCoordinator.getComponent<Sprite>(tileSet);
 	for (Entity e : registeredEntities) {
+		/*std::cout << "Entity Signature: " << gCoordinator.getSignature(e).mask << "\n";*/
 		Transform &t = gCoordinator.getComponent<Transform>(e);
 		TileType& tag = gCoordinator.getComponent<TileType>(e);
 

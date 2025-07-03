@@ -1,8 +1,13 @@
 #include "Debug.h"
 #pragma region DebugManager
 DebugManager::DebugManager() {
-	std::shared_ptr<ColliderDebugSystem> cPtr = gCoordinator.addSystem<ColliderDebugSystem>();
-	std::shared_ptr<GridDebugSystem> gPtr= gCoordinator.addSystem<GridDebugSystem>();
+	Signature sig;
+	sig.addComponent<Collider>();
+	std::shared_ptr<ColliderDebugSystem> cPtr = gCoordinator.addSystem<ColliderDebugSystem>(sig);
+	Signature sig2;
+	sig2.addComponent<Transform>();
+	sig2.addComponent<Walkable>();
+	std::shared_ptr<GridDebugSystem> gPtr= gCoordinator.addSystem<GridDebugSystem>(sig2);
 	registerDebugSystem<ColliderDebugSystem>(cPtr);
 	registerDebugSystem<GridDebugSystem>(gPtr);
 }
@@ -27,13 +32,14 @@ void DebugManager::update(float dt) {
 
 #pragma region ColliderDebugSystem
 void ColliderDebugSystem::init() {
-	Signature sig;
+	/*Signature sig;
 	sig.addComponent<Collider>();
-	gCoordinator.setSystemSignature<ColliderDebugSystem>(sig);
+	gCoordinator.setSystemSignature<ColliderDebugSystem>(sig);*/
 	gCoordinator.getEventBus()->subscribe(this, &ColliderDebugSystem::onColliderDebugEvent);
 }
 
 void ColliderDebugSystem::onColliderDebugEvent(const ColliderDebugEvent* event) {
+	printf("Something is happening!");
 	displayColliderOutlines = !displayColliderOutlines;
 }
 
@@ -67,16 +73,15 @@ void ColliderDebugSystem::update(float dt) {
 
 #pragma region GridDebugSystem
 void GridDebugSystem::init() {
-	Signature sig;
+	/*Signature sig;
 	sig.addComponent<Transform>();
 	sig.addComponent<Walkable>();
-	gCoordinator.setSystemSignature<GridDebugSystem>(sig);
+	gCoordinator.setSystemSignature<GridDebugSystem>(sig);*/
 }
 
 void GridDebugSystem::update(float delta) {
 	SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0xFF);
 	for (Entity e : registeredEntities) {
-		printf("This is entity number %i", e.id);
 		Transform t = gCoordinator.getComponent<Transform>(e);
 		SDL_FRect tileRect = { t.position.x - TILE_WIDTH / 2, t.position.y - TILE_HEIGHT / 2, TILE_WIDTH, TILE_HEIGHT };
 		SDL_RenderRect(gRenderer, &tileRect);

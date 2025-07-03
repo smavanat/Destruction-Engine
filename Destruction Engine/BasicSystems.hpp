@@ -11,10 +11,10 @@ extern b2WorldId worldId;
 class RenderSystem : public System {
 public:
 	void init() {
-		Signature sig;
+		/*Signature sig;
 		sig.addComponent<Transform>();
 		sig.addComponent<Sprite>();
-		gCoordinator.setSystemSignature<RenderSystem>(sig);
+		gCoordinator.setSystemSignature<RenderSystem>(sig);*/
 	}
 
 	void update(float dt) {
@@ -50,10 +50,10 @@ public:
 class DestructionSystem : public System {
 public:
 	void init() {
-		Signature sig;
+		/*Signature sig;
 		sig.addComponent<Sprite>();
 		sig.addComponent<Collider>();
-		gCoordinator.setSystemSignature<DestructionSystem>(sig);
+		gCoordinator.setSystemSignature<DestructionSystem>(sig);*/
 		gCoordinator.getEventBus()->subscribe(this, &DestructionSystem::onErasureEvent);
 	}
 

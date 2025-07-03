@@ -7,9 +7,9 @@ ECS System: Basic component and entity template setup.
 			Basic Event Bus 
 			Re-Written Texture class as a c struct
 			Basic main class based off of Texture clicker.cpp to actually have a proper insertion point
-
-			Have to actually figure out how to properly initialise values into the grid. Then test 
-			that grid debug system is working and make a debug system for pathfinding
+			
+			The problem with the colliderdebugsystem seems to be that the event fires twice every time 
+			the key is pressed, resulting in the bool being reset to its original value. Very odd
 			The pathfinding system requests grid from the Grid system using an event and then runs a* on it.
 			Need to figure out memory management and garbage collection. (stretch goal)
 

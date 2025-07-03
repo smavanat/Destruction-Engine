@@ -11,7 +11,7 @@ extern Coordinator gCoordinator;
 //at a later date
 //const int TILE_WIDTH = 80;
 //const int TILE_HEIGHT = 80;
-const int GRID_HEIGHT = 12;
+const int GRID_HEIGHT = 11;
 const int GRID_WIDTH = 16;
 
 class GridSystem : public System {
@@ -32,6 +32,7 @@ public:
 	Vector2 getGridOrigin();*/
 
 	void createTiles();
+	void loadTiles();
 	bool tileStatusChanged(Entity e);
 	std::vector<std::vector<int>> convertTilesToGrid();
 private:
@@ -40,7 +41,7 @@ private:
 	int gridWidthInTiles = GRID_WIDTH;
 	int gridHeightInTiles = GRID_HEIGHT;
 	Vector2 origin = newVector2(0,0);
-	std::vector<std::vector<int>> grid;
+	std::vector<std::vector<int>> grid{ static_cast<size_t>(gridWidthInTiles), std::vector<int>(static_cast<size_t>(gridHeightInTiles), -1)};
 };
 
 struct Grid : public Component<Grid> {
@@ -51,24 +52,24 @@ struct Grid : public Component<Grid> {
 	int gridHeightInTiles;
 };
 
-struct Node {
-	int x, y; //Coordinates of the node in the graph
-	int f, g, h; //Values used by the A* algorithm
-
-	Node(int xPos, int yPos);
-
-	//Comparison operators for pq
-	bool operator > (const Node& other) const;
-	bool operator == (const Node& other) const;
-};
-
-class PathFindingSystem : public System {
-public:
-	void init();
-	void update(float dt);
-	std::vector<Node> FindPath(const std::vector<std::vector<int>> graph, Vector2 start, Vector2 goal);
-	Node nodeFromWorldPos(Vector2 pos);
-	void updateGrid(const GridChangedEvent* event);
-private:
-	std::vector<std::vector<int>> grid;
-};
+//struct Node {
+//	int x, y; //Coordinates of the node in the graph
+//	int f, g, h; //Values used by the A* algorithm
+//
+//	Node(int xPos, int yPos);
+//
+//	//Comparison operators for pq
+//	bool operator > (const Node& other) const;
+//	bool operator == (const Node& other) const;
+//};
+//
+//class PathFindingSystem : public System {
+//public:
+//	void init();
+//	void update(float dt);
+//	std::vector<Node> FindPath(const std::vector<std::vector<int>> graph, Vector2 start, Vector2 goal);
+//	Node nodeFromWorldPos(Vector2 pos);
+//	void updateGrid(const GridChangedEvent* event);
+//private:
+//	std::vector<std::vector<int>> grid;
+//};

@@ -41,16 +41,39 @@ bool init()
 {
 	gCoordinator = Coordinator();
 
-	renderSystem = gCoordinator.addSystem<RenderSystem>();
-	destructionSystem = gCoordinator.addSystem<DestructionSystem>();
-	tileSystem = gCoordinator.addSystem<TileSystem>();
-	gridSystem = gCoordinator.addSystem<GridSystem>();
+	{
+		Signature sig;
+		sig.addComponent<Transform>();
+		sig.addComponent<Sprite>();
+		renderSystem = gCoordinator.addSystem<RenderSystem>(sig);
+	}
 
+	{
+		Signature sig;
+		sig.addComponent<Sprite>();
+		sig.addComponent<Collider>();
+		destructionSystem = gCoordinator.addSystem<DestructionSystem>(sig);
+	}
+
+	{
+		Signature sig;
+		sig.addComponent<Transform>();
+		sig.addComponent<TileType>();
+		tileSystem = gCoordinator.addSystem<TileSystem>(sig);
+	}
+
+	{
+		Signature sig;
+		sig.addComponent<Transform>();
+		sig.addComponent<Walkable>();
+		gridSystem = gCoordinator.addSystem<GridSystem>(sig);
+	}
+	//Place debug manager constructor here to have grid work
+	gDebugManager = DebugManager();
 	//Initialise all the systems.
 	gCoordinator.init();
 
-	//Need to initialise Debug manager after gCoordinator otherwise debug does not work
-	gDebugManager = DebugManager();
+	//Or here to have colliders work. Need to fix colliders
 	gDebugManager.init();
 
 	testTexture = gCoordinator.createEntity();
@@ -204,7 +227,7 @@ int main(int argc, char* args[]) {
 				gridSystem->update(dt);
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderClear(gRenderer);
-				tileSystem->render();
+				tileSystem->update(dt);
 				renderSystem->update(dt);
 				gDebugManager.update(dt);
 				SDL_RenderPresent(gRenderer); //Need to put this outside the render system update since need to call it after both render and debug have drawn
