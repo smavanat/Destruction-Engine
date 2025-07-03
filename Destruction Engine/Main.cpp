@@ -40,7 +40,7 @@ bool operator ==(const b2BodyId& lhs, const b2BodyId& rhs) {
 bool init()
 {
 	gCoordinator = Coordinator();
-
+	gDebugManager = DebugManager();
 	{
 		Signature sig;
 		sig.addComponent<Transform>();
@@ -68,13 +68,9 @@ bool init()
 		sig.addComponent<Walkable>();
 		gridSystem = gCoordinator.addSystem<GridSystem>(sig);
 	}
-	//Place debug manager constructor here to have grid work
-	gDebugManager = DebugManager();
 	//Initialise all the systems.
 	gCoordinator.init();
-
-	//Or here to have colliders work. Need to fix colliders
-	gDebugManager.init();
+	gDebugManager.init(); //In case Debug systems/manager need some other form of initialisation
 
 	testTexture = gCoordinator.createEntity();
 	//Initialization flag
@@ -217,6 +213,9 @@ int main(int argc, char* args[]) {
 						case SDL_EVENT_KEY_DOWN:
 							if (e.key.key == SDLK_C) {
 								gCoordinator.getEventBus()->publish(new ColliderDebugEvent());
+							}
+							if (e.key.key == SDLK_G) {
+								gCoordinator.getEventBus()->publish(new GridDebugEvent());
 							}
 					}
 				}

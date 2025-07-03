@@ -40,11 +40,14 @@ public:
 	void update(float dt);
 	void onColliderDebugEvent(const ColliderDebugEvent* event);
 private:
-	bool displayColliderOutlines = true;
+	bool displayColliderOutlines = false;
 };
 
 class GridDebugSystem : public Debug {
 public:
 	void init();
 	void update(float dt);
+	void onGridDebugEvent(const GridDebugEvent* event);
+private:
+	bool displayGridOutlines = false;
 };

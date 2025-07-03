@@ -9,6 +9,8 @@ struct ErasureEvent : public Event {};
 
 struct ColliderDebugEvent : public Event {};
 
+struct GridDebugEvent : public Event {};
+
 struct GridChangedEvent : public Event {
 	std::vector<std::vector<int>>grid;
 

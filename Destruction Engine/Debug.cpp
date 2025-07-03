@@ -14,11 +14,7 @@ DebugManager::DebugManager() {
 
 //Initialises all the systems stored in the manager
 void DebugManager::init() {
-	for (auto const& pair : debugMap) {
-		if (pair.second) {
-			pair.second->init();
-		}
-	}
+	
 }
 
 void DebugManager::update(float dt) {
@@ -39,7 +35,6 @@ void ColliderDebugSystem::init() {
 }
 
 void ColliderDebugSystem::onColliderDebugEvent(const ColliderDebugEvent* event) {
-	printf("Something is happening!");
 	displayColliderOutlines = !displayColliderOutlines;
 }
 
@@ -73,18 +68,21 @@ void ColliderDebugSystem::update(float dt) {
 
 #pragma region GridDebugSystem
 void GridDebugSystem::init() {
-	/*Signature sig;
-	sig.addComponent<Transform>();
-	sig.addComponent<Walkable>();
-	gCoordinator.setSystemSignature<GridDebugSystem>(sig);*/
+	gCoordinator.getEventBus()->subscribe(this, &GridDebugSystem::onGridDebugEvent);
+}
+
+void GridDebugSystem::onGridDebugEvent(const GridDebugEvent* event) {
+	displayGridOutlines = !displayGridOutlines;
 }
 
 void GridDebugSystem::update(float delta) {
-	SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0xFF);
-	for (Entity e : registeredEntities) {
-		Transform t = gCoordinator.getComponent<Transform>(e);
-		SDL_FRect tileRect = { t.position.x - TILE_WIDTH / 2, t.position.y - TILE_HEIGHT / 2, TILE_WIDTH, TILE_HEIGHT };
-		SDL_RenderRect(gRenderer, &tileRect);
+	if (displayGridOutlines) {
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0xFF);
+		for (Entity e : registeredEntities) {
+			Transform t = gCoordinator.getComponent<Transform>(e);
+			SDL_FRect tileRect = { t.position.x - TILE_WIDTH / 2, t.position.y - TILE_HEIGHT / 2, TILE_WIDTH, TILE_HEIGHT };
+			SDL_RenderRect(gRenderer, &tileRect);
+		}
 	}
 }
 #pragma endregion
