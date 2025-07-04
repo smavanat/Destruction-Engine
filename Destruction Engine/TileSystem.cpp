@@ -19,7 +19,7 @@ bool TileSystem::setTiles() {
 
 	//Open the map
 	//std::ifstream map("assets/lazy.map");
-	std::ifstream map("assets/MS.map");
+	std::ifstream map("assets/Pathfinding.map");
 
 	//If the map couldn't be loaded
 	if (map.fail()) {

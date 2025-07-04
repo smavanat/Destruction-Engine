@@ -20,11 +20,17 @@ b2WorldId worldId;
 //ECS Managers
 Coordinator gCoordinator;
 DebugManager gDebugManager;
-Entity testTexture;
+
+//ECS systems
 std::shared_ptr<RenderSystem> renderSystem;
 std::shared_ptr<DestructionSystem> destructionSystem;
 std::shared_ptr<TileSystem> tileSystem;
 std::shared_ptr<GridSystem> gridSystem;
+std::shared_ptr<PathFindingSystem> pathfindingSystem;
+
+//Test entities;
+Entity testTexture;
+Entity testPath;
 
 int scale = 5;
 
@@ -68,11 +74,18 @@ bool init()
 		sig.addComponent<Walkable>();
 		gridSystem = gCoordinator.addSystem<GridSystem>(sig);
 	}
+
+	{
+		Signature sig;
+		sig.addComponent<Pathfinding>();
+		pathfindingSystem = gCoordinator.addSystem<PathFindingSystem>(sig);
+	}
 	//Initialise all the systems.
 	gCoordinator.init();
 	gDebugManager.init(); //In case Debug systems/manager need some other form of initialisation
 
 	testTexture = gCoordinator.createEntity();
+	testPath = gCoordinator.createEntity();
 	//Initialization flag
 	bool success = true;
 
@@ -107,7 +120,10 @@ bool init()
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 			}
 		}
-		gCoordinator.addComponent(testTexture, Transform(newVector2(320.0f, 240.0f), 0.0));
+		gCoordinator.addComponent(testTexture, Transform(newVector2(1420.0f, 440.0f), 0.0));
+		gCoordinator.addComponent(testPath, Pathfinding(newVector2(10, 10), newVector2(500, 500)));
+
+		gridSystem->updatePathfinding(); //This line needs to exist otherwise the pathfinding will not have the initial grid
 
 		worldDef = b2DefaultWorldDef();
 		worldDef.gravity = { 0.0f, 0.0f };
@@ -120,7 +136,7 @@ bool loadMedia()
 {
 	//Loading success flag
 	bool success = true;
-	gCoordinator.addComponent(testTexture, Sprite(NULL, NULL, newVector2(320.0f, 240.0f), 0, 0, 0.0, false));
+	gCoordinator.addComponent(testTexture, Sprite(NULL, NULL, newVector2(1420.0f, 440.0f), 0, 0, 0.0, false));
 	Sprite &s = gCoordinator.getComponent<Sprite>(testTexture);
 	//Load Foo' texture
 	if (!s_loadPixelsFromFile(s, "assets/foo.png"))
@@ -217,15 +233,19 @@ int main(int argc, char* args[]) {
 							if (e.key.key == SDLK_G) {
 								gCoordinator.getEventBus()->publish(new GridDebugEvent());
 							}
+							if (e.key.key == SDLK_P) {
+								gCoordinator.getEventBus()->publish(new PathFindingDebugEvent());
+							}
 					}
 				}
 
 				auto startTime = std::chrono::high_resolution_clock::now();
 
-				destructionSystem->update(dt);
-				gridSystem->update(dt);
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderClear(gRenderer);
+				destructionSystem->update(dt);
+				gridSystem->update(dt);
+				pathfindingSystem->update(dt);
 				tileSystem->update(dt);
 				renderSystem->update(dt);
 				gDebugManager.update(dt);

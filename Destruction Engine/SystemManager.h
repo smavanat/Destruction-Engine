@@ -5,7 +5,6 @@
 #include "System.h"
 class SystemManager {
 public:
-	//Maybe make this take an array of entites, and then it automatically assigns the entites to the new system?
 	//template<typename T> 
 	//std::shared_ptr<T> registerSystem() {
 	//	std::string typeName = typeid(T).name();//I don't like this trick. Find a better way of doing things

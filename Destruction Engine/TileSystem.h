@@ -9,12 +9,12 @@
 #include "BasicComponents.h"
 //The dimensions of the level
 const int LEVEL_WIDTH = 1280;
-const int LEVEL_HEIGHT = 880;
+const int LEVEL_HEIGHT = 960;
 
 //Tile constants
 const int TILE_WIDTH = 80;
 const int TILE_HEIGHT = 80;
-const int TOTAL_TILES = 176;
+const int TOTAL_TILES = 192;
 const int TOTAL_TILE_SPRITES = 16;
 
 //The different tile sprites

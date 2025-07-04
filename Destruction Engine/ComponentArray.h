@@ -1,6 +1,13 @@
 #include <unordered_map>
 #include <cassert>
 #include "Entity.h"
+
+/*
+* This file contains the classes that hold all of the same type of component in a singular dynamic array for 
+* efficient memory memory access
+*/
+
+//Interface for implementing Component Array class
 class IComponentArray {
 public:
 	virtual ~IComponentArray() = default;

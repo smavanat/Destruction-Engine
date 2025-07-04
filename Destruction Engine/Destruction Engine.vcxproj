@@ -34,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="Notes.txt" />
+    <Text Include="Progress.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasicComponents.h" />

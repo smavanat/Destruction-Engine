@@ -56,6 +56,9 @@
     <Text Include="Notes.txt">
       <Filter>Source Files</Filter>
     </Text>
+    <Text Include="Progress.txt">
+      <Filter>Source Files</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Entity.h">

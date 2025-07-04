@@ -1,11 +1,11 @@
 #pragma once
 #include <type_traits>
+//Holds the component "family" of the newest component. Helps us easily differentiate different components
 struct ComponentCounter {
 	static int counter;
 };
 
-//int ComponentCounter::counter = 0; //Need to declare this somewhere else
-
+//Basic class from which all other components inherit from
 template<typename CType>
 struct Component {
 	static inline int componentTypeId() {
@@ -20,5 +20,4 @@ static int GetComponentFamily() {
 	return Component<typename std::remove_const<C>::type>::componentTypeId();
 }
 
-//const int MAX_COMPONENTS = 64;
 constexpr int MAX_COMPONENTS = 64;

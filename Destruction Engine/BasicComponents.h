@@ -4,6 +4,8 @@
 #include<iostream>
 #include<SDL3_image/SDL_image.h>
 #include "box2d/base.h"
+#include <vector>
+//Holds the position and rotation of an entity
 struct Transform : public Component<Transform> {
 	Vector2 position;
 	double rotation;
@@ -19,6 +21,7 @@ struct Transform : public Component<Transform> {
     {}
 };
 
+//Holds sprite texture data
 struct Sprite : public Component<Sprite> {
     SDL_Texture* texture = nullptr;
     SDL_Surface* surfacePixels = nullptr;
@@ -207,6 +210,7 @@ inline SDL_PixelFormat s_getPixelFormat(Sprite s) {
 }
 #pragma endregion
 
+//Holds a box2D b2BodyId
 struct Collider : public Component<Collider> {
 	b2BodyId colliderId;
 
@@ -215,6 +219,7 @@ struct Collider : public Component<Collider> {
     Collider(b2BodyId colliderId) : colliderId(colliderId) {}
 };
 
+//Tag component to seperate identities that would otherwise be identical into groups
 struct Tag : public Component<Tag> {
     int tagId;
 
@@ -223,6 +228,7 @@ struct Tag : public Component<Tag> {
     Tag(int tagId) : tagId(tagId) {}
 };
 
+//Whether a tile is walkable or not
 struct Walkable : public Component<Walkable> {
     int walkStatus;
 
@@ -231,10 +237,22 @@ struct Walkable : public Component<Walkable> {
     Walkable(int w) : walkStatus(w) {};
 };
 
+//Tile type -> represents what bit of a spritesheet to use for a tileset
 struct TileType : public Component<TileType> {
     int type;
 
     TileType() = default;
 
     TileType(int t) : type(t) {}
+};
+
+//Holds the start and end positions to find a path between, and the path returned
+struct Pathfinding : public Component<Pathfinding> {
+    Vector2 startPos;
+    Vector2 endPos;
+    std::vector<Vector2> path;
+
+    Pathfinding() = default;
+
+    Pathfinding(Vector2 s, Vector2 e) : startPos(s), endPos(e), path(std::vector<Vector2>()) {};
 };

@@ -7,6 +7,11 @@
 #include "EventBus.h"
 #include "Input.h"
 
+/*
+* Coordinator classs that manages all of the sub-managers and helps them communicate so that entity access,
+* deletion etc is much easier
+*/
+
 class Coordinator {
 public:
 	Coordinator() {

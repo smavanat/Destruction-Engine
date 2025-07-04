@@ -11,12 +11,15 @@ extern SDL_Renderer* gRenderer;
 
 using Debug = System;
 
+//Manager class to batch run all of the Debug tools
+//Actual system management of entities etc is handled by the SystemManager still, just to make things easier
 class DebugManager {
 public:
 	DebugManager();
 	void init();
 	void update(float dt);
 
+	//Have to write this method in a header class since it is a template
 	//Allows users to add their own debug systems. All in-built ones are just added in init
 	template<typename T>
 	std::shared_ptr<T> registerDebugSystem(std::shared_ptr<T> dPointer) {
@@ -34,6 +37,7 @@ private:
 	std::unordered_map<std::string, std::shared_ptr<Debug>> debugMap;
 };
 
+//Highlights collider outlines
 class ColliderDebugSystem : public Debug {
 public:
 	void init();
@@ -43,6 +47,7 @@ private:
 	bool displayColliderOutlines = false;
 };
 
+//Gets the grid outlines
 class GridDebugSystem : public Debug {
 public:
 	void init();
@@ -50,4 +55,14 @@ public:
 	void onGridDebugEvent(const GridDebugEvent* event);
 private:
 	bool displayGridOutlines = false;
+};
+
+//Shows paths
+class PathFindingDebugSystem : public Debug {
+public:
+	void init();
+	void update(float dt);
+	void onPathFindingDebugEvent(const PathFindingDebugEvent* event);
+private:
+	bool displayPath = false;
 };

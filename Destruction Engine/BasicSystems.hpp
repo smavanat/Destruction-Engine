@@ -8,13 +8,12 @@ extern Coordinator gCoordinator;
 extern SDL_Renderer* gRenderer;
 extern int scale;
 extern b2WorldId worldId;
+
+//Renders Sprites
 class RenderSystem : public System {
 public:
 	void init() {
-		/*Signature sig;
-		sig.addComponent<Transform>();
-		sig.addComponent<Sprite>();
-		gCoordinator.setSystemSignature<RenderSystem>(sig);*/
+		
 	}
 
 	void update(float dt) {
@@ -30,6 +29,7 @@ public:
 	}
 };
 
+//Currently not used, but ideally would update an entity's transform after physics has been applied
 class TransformSystem : public System {
 public:
 	void init() {
@@ -47,55 +47,53 @@ public:
 	}
 };
 
+//Modifies and destroys entities after they have been altered in some way
 class DestructionSystem : public System {
 public:
 	void init() {
-		/*Signature sig;
-		sig.addComponent<Sprite>();
-		sig.addComponent<Collider>();
-		gCoordinator.setSystemSignature<DestructionSystem>(sig);*/
 		gCoordinator.getEventBus()->subscribe(this, &DestructionSystem::onErasureEvent);
 	}
 
 	void onErasureEvent(const ErasureEvent* erasure) {
-			std::vector<Entity> entitiesToRemove;
-			std::vector<Sprite> spritesToAdd;
+		//Need to hold the removed/added entities in vectors so we don't modify the registeredEntities set as we iterate over it
+		std::vector<Entity> entitiesToRemove; 
+		std::vector<Sprite> spritesToAdd;
 
-			for (Entity entity : registeredEntities) {
-				Sprite& s = gCoordinator.getComponent<Sprite>(entity);
-				if (s.needsSplitting) {
-					for (Sprite &newSprite : s_splitTextureAtEdge(s, gRenderer)) {
-						spritesToAdd.push_back(newSprite);
-					}
-					s.needsSplitting = false;
-					entitiesToRemove.push_back(entity);
+		for (Entity entity : registeredEntities) {
+			Sprite& s = gCoordinator.getComponent<Sprite>(entity);
+			if (s.needsSplitting) {
+				for (Sprite &newSprite : s_splitTextureAtEdge(s, gRenderer)) {
+					spritesToAdd.push_back(newSprite);
 				}
+				s.needsSplitting = false;
+				entitiesToRemove.push_back(entity);
 			}
+		}
 
-			for (Sprite s : spritesToAdd) {
-				std::vector<int> tempPoints = s_marchingSquares(s);
+		for (Sprite s : spritesToAdd) {
+			std::vector<int> tempPoints = s_marchingSquares(s);
 
-				std::vector<int> temprdpPoints;
-				//Position at size()-2 is where 0 is stored. This will give us the 
-				//straight line that we want. If we add origin at end as well it messes up partition so don't do that.
-				temprdpPoints.push_back(tempPoints[tempPoints.size() - 2]);
-				rdp(0, tempPoints.size() - 1, 3, s.width, tempPoints, temprdpPoints);
-				Entity e = gCoordinator.createEntity();
-				gCoordinator.addComponent(e, Transform(s.centre, s.angle));
-				gCoordinator.addComponent(e, s);
-				gCoordinator.addComponent(e, Collider(s_createTexturePolygon(temprdpPoints, s.width, worldId, s)));
-			}
-			spritesToAdd.clear();
+			std::vector<int> temprdpPoints;
+			//Position at size()-2 is where 0 is stored. This will give us the 
+			//straight line that we want. If we add origin at end as well it messes up partition so don't do that.
+			temprdpPoints.push_back(tempPoints[tempPoints.size() - 2]);
+			rdp(0, tempPoints.size() - 1, 3, s.width, tempPoints, temprdpPoints);
+			Entity e = gCoordinator.createEntity();
+			gCoordinator.addComponent(e, Transform(s.centre, s.angle));
+			gCoordinator.addComponent(e, s);
+			gCoordinator.addComponent(e, Collider(s_createTexturePolygon(temprdpPoints, s.width, worldId, s)));
+		}
+		spritesToAdd.clear();
 
-			for (Entity e : entitiesToRemove) {
-				gCoordinator.destroyEntity(e);
-			}
-			entitiesToRemove.clear();
+		for (Entity e : entitiesToRemove) {
+			gCoordinator.destroyEntity(e);
+		}
+		entitiesToRemove.clear();
 	}
 
 	void update(float dt) {
 		Input* in = gCoordinator.getInput();
-		if (in->leftMouseButtonDown) {
+		if (in->leftMouseButtonDown) {//Checking that lmb is activated
 			for (Entity entity : registeredEntities) {
 				Sprite &s = gCoordinator.getComponent<Sprite>(entity);
 				Vector2 rotated = rotateAboutPoint(newVector2(in->mouseX, in->mouseY), s.centre, -s.angle, false);

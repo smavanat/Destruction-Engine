@@ -1,0 +1,74 @@
+Overview of whole project progress:
+ECS System: Basic component and entity template setup.
+			Basic component manager
+			Basic component storage.
+			Basic entity manager
+			Basic general system
+			Basic Coordinator class that handles all the managers in one spot
+			Basic Event Bus 
+			Re-Written Texture class as a c struct
+			Basic main class based off of Texture clicker.cpp to actually have a proper insertion point
+			Basic Grid, pathfinding and tile systems
+			Debug manager and several debug systems to help with debugging and visualisations
+			
+
+Things to look into in future for optimisation:
+Need to figure out memory management and garbage collection. (stretch goal)
+Currently I am just passing the raw structs around when dealing with data in the ECS system.
+This is not such a big deal for entities, but some of the components (especially Sprite), have the potential to 
+become quite large. It might be better to deal with pointers to improve performance. Look into this in future.
+Need to find a way of packaging (or at least allowing multiples of) the tile-grid-pathfinding linkage. Currently
+it works fine since I only need one, but in future I may want to use several and then it will be a pain
+The pathfinding needs to have Steering Behaviours added. It currently does not have the actual start
+and end positions added to the returned path. Maybe steering behaviours could be used to fix that, or could use 
+rdp to simplify the a* path.
+Use Entity archetypes -> organise entites by the components that they have as and then just have the systems 
+fetch entities from these archetypes. Apparently this optimises the ECS
+
+Week 1 Notes:
+Implemented an Event Bus
+Successful conversion of old erasing system to use the new ECS engine.
+Converted texture class into struct format, so that could pass around pure data rather than objects (even though
+there is no meaningful difference between structs and classes in c++)
+Created three basic components (Transform, Collider and Sprite-> this is just a re-write of the old Texture class)
+Modified the old erasure/destruction methods to work with the new Sprite struct.
+Re-wrote the insertion point (it is now in an actual file called Main.cpp rather than just Texture Clicker).
+It now uses the ECS structures -> this allows me to package away the code into different systems.
+4 new systems that accomplish this:
+			RenderSystem -> Handles sprite rendering
+			TransformSystem -> Handles movement (not really used at the moment, needs more work)
+			DestructionSystem -> Handles sprite destruction
+			DebugSystem -> Displays debug information, currently only used for seeing collider outlines but can easily be extended in future.
+No physics system since I am not sure yet how I am going to link it with the sprite destruction. That will be a future 
+part of the project
+I created an input manager class, mostly to help tell the rest of the program what keys are pressed (right now I 
+only use it for mouse buttons). SDL does have its own in built input system, and this is essentially just a messenger
+class that carries the information from SDL to the rest of the system, since the SDL manager works by polling 
+an event queue (done in main), which the manager then uses to update its own variables that can be seen by all systems
+(since it is stored in the Coordinator class).
+
+Week 2:
+Implemented a tilemap system. It loads grid data from a .map file, and then uses this, alongside a provided stylesheet,
+to render the grid on the screen.
+Implemented a Grid system. The difference between this and the tilemap, is that the tile map is used just for 
+initial rendering. The grid system checks and updates the pathfinding system on which tiles are walkable or not
+Implemented a pathfinding system. Currently it only does very simple 8-directional a*. Need to add path simplification
+and steering behaviours in future, but this it is not necessary right now.
+The pathfinding system requests grid from the Grid system using an event and then runs a* on it.
+These three system currently work well and are linked, but this relies on using a lot of global variables and constants
+It would be good to find a way to package these systems more securely in one to enable multiple grids etc.
+
+Overhauled the way that debugging works, there is now a DebugManager class that batch calls the debuggers
+All debuggers now inherit from a type synonym of System called Debug. It would be good to make this an actual class,
+since all Debug - based systems all have the exact same structure, the init() and update() methods from the System class,
+plus an onSomeDebugEvent() method, and a boolean display. However, I am not sure how to implement the 
+onSomeDebugEvent() method as a virtual inheritable method, while constraining the type in the definition, to only
+match the event that the specific Debug class uses to avoid erroneous Event calls.
+
+Added a GridDebugSystem and a PathFindingDebugSystem, which are used to provide helpful viewing for the Grid and
+Pathfinding systems respectively
+
+Fixed a large bug in the Coordinator that meant Systems could be created without a signature. This led to some 
+very annoying errors where entities where being added to systems where they should not be because the system 
+has a blank signature at the point of the entities' instantiation, and this then crashed the program as the system 
+attempted to access a component the entity did not have.

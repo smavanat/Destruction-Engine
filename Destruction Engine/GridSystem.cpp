@@ -1,13 +1,10 @@
 #include "GridSystem.h"
 #include <algorithm>
+#include <unordered_set>
 
 //Initialises the signature for the grid system and creates the tiles for the grid
 void GridSystem::init() {
-	/*Signature sig;
-	sig.addComponent<Transform>();
-	sig.addComponent<Walkable>();
-	gCoordinator.setSystemSignature<GridSystem>(sig);
-    std::cout << "GridSystem Signature" << sig.mask << "\n";*/
+    //Load and create the tiles
     loadTiles();
 	createTiles();
 }
@@ -29,25 +26,30 @@ void GridSystem::update(float dt) {
 
 //Creates the tiles for the grid
 void GridSystem::createTiles() {
-    for (int i = 0; i < gridWidthInTiles; i++) {
-        for (int j = 0; j < gridHeightInTiles; j++) {
+    for (int i = 0; i < gridHeightInTiles; i++) {
+        for (int j = 0; j < gridWidthInTiles; j++) {
             Entity e = gCoordinator.createEntity();
-            gCoordinator.addComponent(e, Transform(newVector2((i * TILE_WIDTH) + (TILE_WIDTH / 2), (j * TILE_HEIGHT) + (TILE_HEIGHT / 2)), 0));
-            gCoordinator.addComponent(e, Walkable(grid[i][j]));
+            gCoordinator.addComponent(e, Transform(newVector2((j * TILE_WIDTH) + (TILE_WIDTH / 2), ( i* TILE_HEIGHT) + (TILE_HEIGHT / 2)), 0));
+            gCoordinator.addComponent(e, Walkable(grid[j][i]));
         }
 	}
 }
 
+void GridSystem::updatePathfinding() {
+    gCoordinator.getEventBus()->publish(new GridChangedEvent(grid));
+}
+
+//Loads the tilemap from a .map file
 void GridSystem::loadTiles() {
-    std::ifstream map("assets/MS.map");
+    std::ifstream map("assets/Pathfinding.map");
 
     if (map.fail()) {
         printf("Unable to get grid data.\n");
     }
     else {
         bool tilesLoaded = true;
-        for (int i = 0; i < gridWidthInTiles; i++) {
-            for (int j = 0; j < gridHeightInTiles; j++) {
+        for (int i = 0; i < gridHeightInTiles; i++) {
+            for (int j = 0; j < gridWidthInTiles; j++) {
                 int tileType = -1;
                 map >> tileType;
 
@@ -62,7 +64,7 @@ void GridSystem::loadTiles() {
                 //If the number is a valid tile number
                 if ((tileType >= 0) && (tileType < TOTAL_TILE_SPRITES)) {
                     //Make a new tile
-                    grid[i][j] = tileType;
+                    grid[j][i] = tileType;
                 }
                 else {
                     //Stop loading the map 
@@ -89,102 +91,172 @@ std::vector<std::vector<int>> GridSystem::convertTilesToGrid() {
 }
 
 //Node constructor
-//Node::Node(int xPos, int yPos) : x(xPos), y(yPos), f(0), g(0), h(0) {}
-//
-//bool Node::operator>(const Node& other) const {
-//	return f > other.f;
-//}
-//
-//bool Node::operator==(const Node& other) const {
-//	return x == other.x && y == other.y;
-//}
-//
-////Pathfinding system initialisation. Incomplete
-//void PathFindingSystem::init() {
-//	gCoordinator.getEventBus()->subscribe(this, &PathFindingSystem::updateGrid);
-//}
-//
-////Not sure what components to use for PathFinding update. Maybe just attach a pathfinding component that holds
-////start and end pos?
-//void PathFindingSystem::update(float dt) {
-//
-//}
-//
-//std::vector<Node> PathFindingSystem::FindPath(const std::vector<std::vector<int>> graph, Vector2 start, Vector2 goal) {
-//    const int directionX[] = { -1, 0, 1, 0 };
-//    const int directionY[] = { 0, 1, 0, -1 };
-//
-//    int rows = graph.size();
-//    int cols = graph[0].size();
-//
-//    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList;
-//    std::vector<std::vector<bool>> closedList(rows, std::vector<bool>(cols, false));
-//    std::vector<std::vector<Node>> cameFrom(rows, std::vector<Node>(cols, Node(-1, -1)));
-//    std::vector<std::vector<int>> gScore(rows, std::vector<int>(cols, INT_MAX));
-//
-//    // Initialize start node
-//    Node startNode = nodeFromWorldPos(start);
-//    Node goalNode = nodeFromWorldPos(goal);
-//    startNode.g = 0;
-//    startNode.h = abs(start.x - goal.x) + abs(start.y - goal.y);
-//    startNode.f = startNode.g + startNode.h;
-//
-//    gScore[startNode.x][startNode.y] = 0;
-//    openList.push(startNode);
-//
-//    while (!openList.empty()) {
-//        Node current = openList.top();
-//        openList.pop();
-//
-//        if (current == goalNode) {
-//            std::vector<Node> path;
-//            Node trace = current;
-//            while (!(trace == startNode)) {
-//                path.push_back(trace);
-//                trace = cameFrom[trace.x][trace.y];
-//            }
-//            path.push_back(startNode);
-//            reverse(path.begin(), path.end());
-//            return path;
-//        }
-//
-//        if (closedList[current.x][current.y])
-//            continue;
-//
-//        closedList[current.x][current.y] = true;
-//
-//        for (int i = 0; i < 4; ++i) {
-//            int newX = current.x + directionX[i];
-//            int newY = current.y + directionY[i];
-//
-//            if (newX >= 0 && newX < rows && newY >= 0 && newY < cols) {
-//                if (graph[newX][newY] == 0 && !closedList[newX][newY]) {
-//                    int tentativeG = gScore[current.x][current.y] + 1;
-//
-//                    if (tentativeG < gScore[newX][newY]) {
-//                        gScore[newX][newY] = tentativeG;
-//                        Node neighbor(newX, newY);
-//                        neighbor.g = tentativeG;
-//                        neighbor.h = abs(newX - goal.x) + abs(newY - goal.y);
-//                        neighbor.f = neighbor.g + neighbor.h;
-//                        cameFrom[newX][newY] = current;
-//                        openList.push(neighbor);
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    return std::vector<Node>(); // No path found
-//}
-//
-////Gets the relevant node from the world position
-//Node PathFindingSystem::nodeFromWorldPos(Vector2 pos) {
-//	//Idek what to put here
-//	return Node(static_cast<int>(floor(pos.x / TILE_WIDTH)), static_cast<int>(floor(pos.y / TILE_HEIGHT)));
-//}
-//
-////Updates the grid we have to work with
-//void PathFindingSystem::updateGrid(const GridChangedEvent* event) {
-//	grid = event->grid;
-//}
+Node::Node(int xPos, int yPos) : x(xPos), y(yPos), f(0), g(0), h(0) {}
+
+bool Node::operator>(const Node& other) const {
+	return f > other.f;
+}
+
+bool Node::operator==(const Node& other) const {
+	return x == other.x && y == other.y;
+}
+
+//Pathfinding system initialisation. Incomplete
+void PathFindingSystem::init() {
+	gCoordinator.getEventBus()->subscribe(this, &PathFindingSystem::updateGrid);
+}
+
+void PathFindingSystem::update(float dt) {
+    //Need to find a better way of doing this. This is just a quick version that works for now. Use a queue maybe?
+    //And then have a function that adds PathFinding requests Entities to the queue or something
+    for (Entity e : registeredEntities) {
+        Pathfinding &p = gCoordinator.getComponent<Pathfinding>(e);
+
+        //If the component does not have a well defined start and end pos, continue
+        if (p.startPos == Vector2() || p.endPos == Vector2()) {
+            continue;
+        }
+        else {
+            //This code also appends end and startPos to the list:
+            //Probably need to use rdp on it to smooth out the path
+            /*
+                vecPath.reserve(path.size() + 2);  // Optional optimization
+                
+                // Add start position
+                vecPath.push_back(p.startPos);
+
+                // Convert internal path to world coordinates
+                std::transform(path.begin(), path.end(), std::back_inserter(vecPath),
+                    [this](const Node& n) { return nodeToWorldPos(n); });
+
+                // Add end position
+                vecPath.push_back(p.endPos);
+            */
+
+            //Get the path in node form
+            auto path = FindPath(grid, p.startPos, p.endPos);
+            std::vector<Vector2> vecPath(path.size());
+
+            //Convert it to coordinates
+            std::transform(path.begin(), path.end(), vecPath.begin(),
+                [this](Node n) {return nodeToWorldPos(n); });
+
+            //Set the path value in the component
+            p.path = vecPath;
+            //Reset the start and endpos to default values to avoid repeat computations
+            p.startPos = Vector2();
+            p.endPos = Vector2();
+        }
+    }
+}
+
+std::vector<Node> PathFindingSystem::FindPath(const std::vector<std::vector<int>> graph, Vector2 start, Vector2 goal) {
+    //Represents the (x,y) coordinates of all possible neighbours
+    const int directionX[] = { -1, 0, 1, 0, 1, 1, -1, -1 };
+    const int directionY[] = { 0, 1, 0, -1, 1, -1, 1, -1 };
+    
+    const int straightCost = 10; //Cost of moving straight -> 1* 10
+    const int diagonalCost = 14; //Cost of moving diagonally ~sqrt(2) *10
+
+    int rows = graph.size();
+    int cols = graph[0].size();
+
+    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList; //Nodes to visit
+    std::unordered_set<Node> closedList; //Nodes visited
+    std::unordered_map<Node, Node, std::hash<Node>> cameFrom; //Holds the parents of each node -> the one visited before them
+    std::vector<std::vector<int>> gScore(rows, std::vector<int>(cols, INT_MAX)); //Holds the gScore of every node 
+
+    // Initialize start node
+    Node startNode = nodeFromWorldPos(start);
+    Node goalNode = nodeFromWorldPos(goal);
+    startNode.g = 0;
+    startNode.h = getDistance(startNode, goalNode);
+    startNode.f = startNode.g + startNode.h;
+
+    gScore[startNode.x][startNode.y] = 0;
+    openList.push(startNode);
+
+    //While there are nodes to visit
+    while (!openList.empty()) {
+        //Since openList is a pq, this will get the node with the lowest f score
+        Node current = openList.top();
+        openList.pop();
+
+        //If we have reached the end
+        if (current == goalNode) {
+            //Get all of the nodes in the path from the start to the end
+            std::vector<Node> path;
+            Node trace = current;
+            while (!(trace == startNode)) {
+                path.push_back(trace);
+                trace = cameFrom[trace];
+            }
+            path.push_back(startNode);
+            //Reverse it so it is in the correct order
+            reverse(path.begin(), path.end());
+            return path;
+        }
+
+        //Otherwise mark the current node as visited
+        closedList.insert(current);
+
+        //Visit all of its neighbours and insert them into the openList
+        for (int i = 0; i < 8; ++i) {
+            //The neighbour's coordinates
+            int newX = current.x + directionX[i];
+            int newY = current.y + directionY[i];
+
+            //Making sure we don't go out of grid bounds and crash the program
+            if (newX >= 0 && newX < rows && newY >= 0 && newY < cols) {
+                if (graph[newX][newY] == 0) { //If it walkable
+                    Node neighbor(newX, newY);
+                    //If it is not already visited
+                    if (closedList.find(neighbor) == closedList.end()) {
+                        int moveCost = (directionX[i] != 0 && directionY[i] != 0) ? diagonalCost : straightCost;
+
+                        int tentativeG = gScore[current.x][current.y] + moveCost;
+
+                        if (tentativeG < gScore[newX][newY]) {
+                            gScore[newX][newY] = tentativeG;
+
+                            neighbor.g = tentativeG;
+                            neighbor.h = getDistance(neighbor, goalNode);
+                            neighbor.f = neighbor.g + neighbor.h;
+                            cameFrom[neighbor] = current;
+                            openList.push(neighbor);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return std::vector<Node>(); // No path found
+}
+
+//Gets the relevant node from the world position
+Node PathFindingSystem::nodeFromWorldPos(Vector2 pos) {
+	return Node(static_cast<int>(floor(pos.x / TILE_WIDTH)), static_cast<int>(floor(pos.y / TILE_HEIGHT)));
+}   
+
+//Converts a node's grid position to its world position
+Vector2 PathFindingSystem::nodeToWorldPos(Node n) {
+    return Vector2{
+        n.x * TILE_WIDTH + TILE_WIDTH / 2.0f,
+        n.y * TILE_HEIGHT + TILE_HEIGHT / 2.0f
+    };
+}
+
+//Gets the distance between two nodes as the crow flies
+int PathFindingSystem::getDistance(Node a, Node b) {
+    int dstX = (int)abs(a.x - b.x);
+    int dstY = (int)abs(a.y - b.y);
+    if (dstX > dstY)
+        return 14 * dstY + 10 * (dstX - dstY);
+    return 14 * dstX + 10 * (dstY - dstX);
+}
+
+//Updates the grid we have to work with
+void PathFindingSystem::updateGrid(const GridChangedEvent* event) {
+	grid = event->grid;
+}

@@ -3,6 +3,10 @@
 #include <map>
 #include <typeindex>
 #include "MemberFunctionHandler.h"
+/*
+* The event bus is used to make subscribing and publishing events easier and more centralised
+* Based on this forum post: https://www.gamedev.net/articles/programming/general-and-gameplay-programming/effective-event-handling-in-c-r2459/
+*/
 typedef std::list<HandlerFunctionBase*> HandlerList;
 class EventBus {
 public:
