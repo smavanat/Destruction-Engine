@@ -47,7 +47,7 @@ bool TileSystem::setTiles() {
 			if ((tileType >= 0) && (tileType < TOTAL_TILE_SPRITES)) {
 				//Make a new tile
 				Entity e = gCoordinator.createEntity();
-				gCoordinator.addComponent(e, Transform(newVector2(x, y), 0));
+				gCoordinator.addComponent(e, Transform(Vector2(x, y), 0));
 				gCoordinator.addComponent(e, TileType(tileType));
 			}
 			else {
@@ -228,7 +228,7 @@ bool TileSystem::loadTileSet() {
 	
 	//Initialise the Entity that holds the tileset
 	tileSet = gCoordinator.createEntity();
-	gCoordinator.addComponent(tileSet, Sprite(NULL, NULL, newVector2(0.0f, 0.0f), 0, 0, 0.0, false));
+	gCoordinator.addComponent(tileSet, Sprite(NULL, NULL, Vector2(0.0f, 0.0f), 0, 0, 0.0, false));
 	Sprite& s = gCoordinator.getComponent<Sprite>(tileSet);
 
 	//Load tile texture

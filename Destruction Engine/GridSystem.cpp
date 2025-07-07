@@ -5,8 +5,9 @@
 //Initialises the signature for the grid system and creates the tiles for the grid
 void GridSystem::init() {
     //Load and create the tiles
-    loadTiles();
-	createTiles();
+    std::vector<int> tileGrid = loadTiles();
+	createTiles(tileGrid);
+    grid = convertTilesToGrid();
 }
 
 //Checks if the grid has changed in a meaningful way (walkable status of tiles), and if it has, publishes an
@@ -25,12 +26,12 @@ void GridSystem::update(float dt) {
 }
 
 //Creates the tiles for the grid
-void GridSystem::createTiles() {
+void GridSystem::createTiles(std::vector<int> tGrid) {
     for (int i = 0; i < gridHeightInTiles; i++) {
         for (int j = 0; j < gridWidthInTiles; j++) {
             Entity e = gCoordinator.createEntity();
-            gCoordinator.addComponent(e, Transform(newVector2((j * TILE_WIDTH) + (TILE_WIDTH / 2), ( i* TILE_HEIGHT) + (TILE_HEIGHT / 2)), 0));
-            gCoordinator.addComponent(e, Walkable(grid[j][i]));
+            gCoordinator.addComponent(e, Transform(Vector2((j * TILE_WIDTH) + (TILE_WIDTH / 2), ( i* TILE_HEIGHT) + (TILE_HEIGHT / 2)), 0));
+            gCoordinator.addComponent(e, Walkable(tGrid[(i * gridWidthInTiles) + j]));
         }
 	}
 }
@@ -40,7 +41,8 @@ void GridSystem::updatePathfinding() {
 }
 
 //Loads the tilemap from a .map file
-void GridSystem::loadTiles() {
+std::vector<int> GridSystem::loadTiles() {
+    std::vector<int> retGrid(gridHeightInTiles * gridWidthInTiles, -1);
     std::ifstream map("assets/Pathfinding.map");
 
     if (map.fail()) {
@@ -48,36 +50,37 @@ void GridSystem::loadTiles() {
     }
     else {
         bool tilesLoaded = true;
-        for (int i = 0; i < gridHeightInTiles; i++) {
-            for (int j = 0; j < gridWidthInTiles; j++) {
-                int tileType = -1;
-                map >> tileType;
+        for (int i = 0; i < gridHeightInTiles*gridWidthInTiles; i++) {
+            int tileType = -1;
+            map >> tileType;
 
-                //If there was a problem in reading the map 
-                if (map.fail()) {
-                    //Stop loading the map 
-                    printf("Error loading the map: Unexpected end of file!\n");
-                    tilesLoaded = false;
-                    break;
-                }
-                
-                //If the number is a valid tile number
-                if ((tileType >= 0) && (tileType < TOTAL_TILE_SPRITES)) {
-                    //Make a new tile
-                    grid[j][i] = tileType;
-                }
-                else {
-                    //Stop loading the map 
-                    printf("Error loading map: Invalid tile type\n");
-                    tilesLoaded = false;
-                    break;
-                }
+            //If there was a problem in reading the map 
+            if (map.fail()) {
+                //Stop loading the map 
+                printf("Error loading the map: Unexpected end of file!\n");
+                tilesLoaded = false;
+                //break;
             }
+                
+            //If the number is a valid tile number
+            if ((tileType >= 0) && (tileType < TOTAL_TILE_SPRITES)) {
+                //Make a new tile
+                retGrid[i] = tileType;
+            }
+            else {
+                //Stop loading the map 
+                printf("Error loading map: Invalid tile type\n");
+                tilesLoaded = false;
+                //break;
+            }
+            //Just return an empty vector to signal a failure;
             if (!tilesLoaded) {
-                break;
+                return std::vector<int>();
+                //break;
             }
         }
     }
+    return retGrid;
 }
 
 //This only needs to be filled once the actual destruction pathfinding system has been implemented
@@ -85,9 +88,131 @@ bool GridSystem::tileStatusChanged(Entity e) {
 	return false;
 }
 
-//Converts the tiles into a vector so that they can easily be stored as data
+//Converts the tiles into their marching squares representation as a 2D vector so we can do pathfinding on them
 std::vector<std::vector<int>> GridSystem::convertTilesToGrid() {
-    return std::vector<std::vector<int>>();
+    //std::vector<std::vector<int>> tempGrid( static_cast<size_t>(gridWidthInTiles * 2), std::vector<int>(static_cast<size_t>(gridHeightInTiles * 2), -1) );
+    std::vector<std::vector<int>> tempGrid(static_cast<size_t>(gridWidthInTiles * 2), std::vector<int>(static_cast<size_t>(gridHeightInTiles * 2), -1));
+    for (Entity e : registeredEntities) {
+        Transform t = gCoordinator.getComponent<Transform>(e);
+        Walkable w = gCoordinator.getComponent<Walkable>(e);
+
+        //Origin of each set of four is in the top left
+        int topX = static_cast<int>(floor(t.position.x / TILE_WIDTH))*2;
+        int topY = static_cast<int>(floor(t.position.y / TILE_HEIGHT))*2;
+        //Vector2 topLeft = Vector2(static_cast<int>(floor(t.position.x / TILE_WIDTH)), static_cast<int>(floor(t.position.y / TILE_HEIGHT)));
+
+        /*printf("posX: %f, posY: %f\n", t.position.x, t.position.y);
+        printf("TopX: %i, TopY: %i\n", topX, topY);
+        printf("Tiletype: %i\n", w.walkStatus);*/
+        //Manual conversion of the a* tiles to marching squares representation in the grid for proper pathfinding
+        switch (w.walkStatus) {
+            case 0:
+                tempGrid[topX][topY] = 0;
+                tempGrid[topX+1][topY] = 0;
+                tempGrid[topX][topY+1] = 0;
+                tempGrid[topX+1][topY+1] = 0;
+            break;
+            case 1:
+                tempGrid[topX][topY] = 0;
+                tempGrid[topX + 1][topY] = 0;
+                tempGrid[topX][topY + 1] = 1;
+                tempGrid[topX + 1][topY + 1] = 0;
+            break;
+            case 2:
+                tempGrid[topX][topY] = 0;
+                tempGrid[topX + 1][topY] = 0;
+                tempGrid[topX][topY + 1] = 0;
+                tempGrid[topX + 1][topY + 1] = 1;
+            break;
+            case 3:
+                tempGrid[topX][topY] = 0;
+                tempGrid[topX + 1][topY] = 0;
+                tempGrid[topX][topY + 1] = 1;
+                tempGrid[topX + 1][topY + 1] = 1;
+            break;
+            case 4:
+                tempGrid[topX][topY] = 0;
+                tempGrid[topX + 1][topY] = 1;
+                tempGrid[topX][topY + 1] = 0;
+                tempGrid[topX + 1][topY + 1] = 0;
+            break;
+            case 5:
+                tempGrid[topX][topY] = 1;
+                tempGrid[topX + 1][topY] = 0;
+                tempGrid[topX][topY + 1] = 0;
+                tempGrid[topX + 1][topY + 1] = 1;
+            break;
+            case 6:
+                tempGrid[topX][topY] = 0;
+                tempGrid[topX + 1][topY] = 1;
+                tempGrid[topX][topY + 1] = 0;
+                tempGrid[topX + 1][topY + 1] = 1;
+            break;
+            case 7:
+                tempGrid[topX][topY] = 0;
+                tempGrid[topX + 1][topY] = 1;
+                tempGrid[topX][topY + 1] = 1;
+                tempGrid[topX + 1][topY + 1] = 1;
+            break;
+            case 8:
+                tempGrid[topX][topY] = 1;
+                tempGrid[topX + 1][topY] = 0;
+                tempGrid[topX][topY + 1] = 0;
+                tempGrid[topX + 1][topY + 1] = 0;
+            break;
+            case 9:
+                tempGrid[topX][topY] = 1;
+                tempGrid[topX + 1][topY] = 1;
+                tempGrid[topX][topY + 1] = 0;
+                tempGrid[topX + 1][topY + 1] = 0;
+            break;
+            case 10:
+                tempGrid[topX][topY] = 0;
+                tempGrid[topX + 1][topY] = 1;
+                tempGrid[topX][topY + 1] = 1;
+                tempGrid[topX + 1][topY + 1] = 0;
+            break;
+            case 11:
+                tempGrid[topX][topY] = 1;
+                tempGrid[topX + 1][topY] = 0;
+                tempGrid[topX][topY + 1] = 1;
+                tempGrid[topX + 1][topY + 1] = 1;
+            break;
+            case 12:
+                tempGrid[topX][topY] = 1;
+                tempGrid[topX + 1][topY] = 0;
+                tempGrid[topX][topY + 1] = 1;
+                tempGrid[topX + 1][topY + 1] = 0;
+            break;
+            case 13:
+                tempGrid[topX][topY] = 1;
+                tempGrid[topX + 1][topY] = 1;
+                tempGrid[topX][topY + 1] = 1;
+                tempGrid[topX + 1][topY + 1] = 0;
+            break;
+            case 14:
+                tempGrid[topX][topY] = 1;
+                tempGrid[topX + 1][topY] = 1;
+                tempGrid[topX][topY + 1] = 0;
+                tempGrid[topX + 1][topY + 1] = 1;
+            break;
+            case 15:
+                tempGrid[topX][topY] = 1;
+                tempGrid[topX + 1][topY] = 1;
+                tempGrid[topX][topY + 1] = 1;
+                tempGrid[topX + 1][topY + 1] = 1;
+            break;
+        }
+    }
+
+    /*for (int j = 0; j < tempGrid.size(); j++) {
+        for (int i = 0; i < tempGrid[j].size(); i++) {
+            printf("%i ", tempGrid[j][i]);
+        }
+        printf("\n");
+    }*/
+
+    return tempGrid;
 }
 
 //Node constructor
@@ -140,6 +265,11 @@ void PathFindingSystem::update(float dt) {
             //Convert it to coordinates
             std::transform(path.begin(), path.end(), vecPath.begin(),
                 [this](Node n) {return nodeToWorldPos(n); });
+
+            printf("%i", vecPath.size());
+            for (Vector2 v : vecPath) {
+                printf("(%f, %f)", v.x, v.y);
+            }
 
             //Set the path value in the component
             p.path = vecPath;

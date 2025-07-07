@@ -11,6 +11,8 @@ struct Vector2
 
 	Vector2() = default;
 
+	Vector2(float x, float y) : x(x), y(y) {};
+
 	Vector2 operator +(const Vector2& a) const {
 		Vector2 ret = {};
 		ret.x = a.x + x;

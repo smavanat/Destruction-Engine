@@ -19,8 +19,8 @@ public:
 	void init();
 	void update(float dt);
 
-	void createTiles();
-	void loadTiles();
+	void createTiles(std::vector<int> tGrid);
+	std::vector<int> loadTiles();
 	void updatePathfinding();
 	bool tileStatusChanged(Entity e);
 	std::vector<std::vector<int>> convertTilesToGrid();
@@ -29,8 +29,8 @@ private:
 	int tileHeight = TILE_HEIGHT;
 	int gridWidthInTiles = GRID_WIDTH;
 	int gridHeightInTiles = GRID_HEIGHT;
-	Vector2 origin = newVector2(0,0);
-	std::vector<std::vector<int>> grid{ static_cast<size_t>(gridWidthInTiles), std::vector<int>(static_cast<size_t>(gridHeightInTiles), -1)};
+	Vector2 origin = Vector2(0,0);
+	std::vector<std::vector<int>> grid{ static_cast<size_t>(gridWidthInTiles*2), std::vector<int>(static_cast<size_t>(gridHeightInTiles*2), -1)};
 };
 
 struct Grid : public Component<Grid> {

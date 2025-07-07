@@ -8,7 +8,7 @@
 //Erases pixels in a texture in a circular radius determined by scale and marks the texture for alteration. 
 //If all the pixels in the radius have been erased, then the texture is not marked for alteration.
 void s_erasePixels(Sprite &s, SDL_Renderer* gRenderer, int scale, int x, int y) {
-	Vector2 newOrigin = rotateAboutPoint(newVector2(x, y), s.centre, -s.angle, false);
+	Vector2 newOrigin = rotateAboutPoint(Vector2(x, y), s.centre, -s.angle, false);
 
 	x = newOrigin.x - s_getOrigin(s).x;
 	y = newOrigin.y - s_getOrigin(s).y;

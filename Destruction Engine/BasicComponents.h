@@ -56,7 +56,7 @@ struct Sprite : public Component<Sprite> {
 inline Vector2 s_getOrigin(Sprite s) {
     float originX = s.centre.x - (s.width / 2);
     float originY = s.centre.y - (s.height / 2);
-    return newVector2(originX, originY);
+    return Vector2(originX, originY);
 }
 
 inline void s_free(Sprite &s) {
@@ -131,12 +131,12 @@ inline bool s_loadFromFile(Sprite &s, std::string path, SDL_Renderer* gRenderer)
 
 //Basic sprite creation (usually used when loading from a file)
 inline Sprite s_createSprite(int x, int y) {
-    return Sprite(nullptr, nullptr, newVector2(x, y), 0, 0, 0.0, false);
+    return Sprite(nullptr, nullptr, Vector2(x, y), 0, 0, 0.0, false);
 }
 
 //Controlled sprite creation (when making an object after destruction)
 inline Sprite s_createSprite(int x, int y, int w, int h, Uint32* pixels, SDL_Renderer* gRenderer, double d) {
-    Sprite s = Sprite(NULL, SDL_CreateSurfaceFrom(w, h, SDL_PIXELFORMAT_ARGB8888, pixels, w * 4), newVector2(x, y), w, h, d, false);
+    Sprite s = Sprite(NULL, SDL_CreateSurfaceFrom(w, h, SDL_PIXELFORMAT_ARGB8888, pixels, w * 4), Vector2(x, y), w, h, d, false);
     SDL_SetSurfaceBlendMode(s.surfacePixels, SDL_BLENDMODE_BLEND);
     s_loadFromPixels(s, gRenderer);
     return s;

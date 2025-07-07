@@ -96,7 +96,7 @@ public:
 		if (in->leftMouseButtonDown) {//Checking that lmb is activated
 			for (Entity entity : registeredEntities) {
 				Sprite &s = gCoordinator.getComponent<Sprite>(entity);
-				Vector2 rotated = rotateAboutPoint(newVector2(in->mouseX, in->mouseY), s.centre, -s.angle, false);
+				Vector2 rotated = rotateAboutPoint(Vector2(in->mouseX, in->mouseY), s.centre, -s.angle, false);
 				if (rotated.x >= s_getOrigin(s).x && rotated.x < s_getOrigin(s).x + s.width &&
 					rotated.y < s_getOrigin(s).y + s.height && rotated.y >= s_getOrigin(s).y
 					) {

@@ -120,8 +120,8 @@ bool init()
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 			}
 		}
-		gCoordinator.addComponent(testTexture, Transform(newVector2(1420.0f, 440.0f), 0.0));
-		gCoordinator.addComponent(testPath, Pathfinding(newVector2(10, 10), newVector2(500, 500)));
+		gCoordinator.addComponent(testTexture, Transform(Vector2(1420.0f, 440.0f), 0.0));
+		gCoordinator.addComponent(testPath, Pathfinding(Vector2(10, 10), Vector2(500, 500)));
 
 		gridSystem->updatePathfinding(); //This line needs to exist otherwise the pathfinding will not have the initial grid
 
@@ -136,7 +136,7 @@ bool loadMedia()
 {
 	//Loading success flag
 	bool success = true;
-	gCoordinator.addComponent(testTexture, Sprite(NULL, NULL, newVector2(1420.0f, 440.0f), 0, 0, 0.0, false));
+	gCoordinator.addComponent(testTexture, Sprite(NULL, NULL, Vector2(1420.0f, 440.0f), 0, 0, 0.0, false));
 	Sprite &s = gCoordinator.getComponent<Sprite>(testTexture);
 	//Load Foo' texture
 	if (!s_loadPixelsFromFile(s, "assets/foo.png"))
