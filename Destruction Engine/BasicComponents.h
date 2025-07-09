@@ -122,7 +122,7 @@ inline bool s_loadFromFile(Sprite &s, std::string path, SDL_Renderer* gRenderer)
     else {
         if (!s_loadFromPixels(s, gRenderer))
         {
-            printf("Failed to texture from pixels from %s!\n", path.c_str());
+            printf("Failed to load texture from pixels from %s!\n", path.c_str());
         }
     }
 
@@ -235,6 +235,18 @@ struct Walkable : public Component<Walkable> {
     Walkable() = default;
 
     Walkable(int w) : walkStatus(w) {};
+};
+
+//Determines the state of a partially walkable tile:
+struct PartiallyWalkable : public Component<PartiallyWalkable> {
+    int status; //0 -> walkable, 1 -> blocked 2 -> partial
+    int subcells[16];
+
+    PartiallyWalkable() = default;
+
+    PartiallyWalkable(int s, int sArr[16]) : status(s) {
+        std::copy(sArr, sArr + 16, subcells);
+    }
 };
 
 //Tile type -> represents what bit of a spritesheet to use for a tileset

@@ -10,9 +10,10 @@ ECS System: Basic component and entity template setup.
 			Basic main class based off of Texture clicker.cpp to actually have a proper insertion point
 			Basic Grid, pathfinding and tile systems
 			Debug manager and several debug systems to help with debugging and visualisations
+			GridManager to couple Grid and Pathfinding together.
 			
 
-Things to look into in future for optimisation:
+Things to look into in future for optimisation and fixes:
 Need to figure out memory management and garbage collection. (stretch goal)
 Currently I am just passing the raw structs around when dealing with data in the ECS system.
 This is not such a big deal for entities, but some of the components (especially Sprite), have the potential to 
@@ -24,6 +25,15 @@ and end positions added to the returned path. Maybe steering behaviours could be
 rdp to simplify the a* path.
 Use Entity archetypes -> organise entites by the components that they have as and then just have the systems 
 fetch entities from these archetypes. Apparently this optimises the ECS
+Need to fix the way signatures are set for Systems. Currently this is done manually every time I want to 
+add a system using the coordinator. Need to have a way of each system just holding its own signature, then can
+just use that with the coordinator
+Need to add a way to check if a system has already been initialised -> maybe just add an "initialised" bool, 
+to prevent repeat initialisations. Or figure out a better way of initialising systems, because currently, if a system
+is added after gCoordinator init is called, its fucked, and have to do it manually, but at the same time, can just
+add manual init() calls all the time, since this will mean double initialisations. I think the bool is the best option
+for now
+Could use tags to have multiple tile/grid systems and use this with archetypes to allow many grids and pathfinding layouts
 
 Week 1 Notes:
 Implemented an Event Bus

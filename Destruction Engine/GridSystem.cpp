@@ -5,9 +5,9 @@
 //Initialises the signature for the grid system and creates the tiles for the grid
 void GridSystem::init() {
     //Load and create the tiles
-    std::vector<int> tileGrid = loadTiles();
-	createTiles(tileGrid);
-    grid = convertTilesToGrid();
+    //std::vector<int> tileGrid = loadTiles();
+	createTiles();
+    //grid = convertTilesToGrid();
 }
 
 //Checks if the grid has changed in a meaningful way (walkable status of tiles), and if it has, publishes an
@@ -26,61 +26,65 @@ void GridSystem::update(float dt) {
 }
 
 //Creates the tiles for the grid
-void GridSystem::createTiles(std::vector<int> tGrid) {
-    for (int i = 0; i < gridHeightInTiles; i++) {
-        for (int j = 0; j < gridWidthInTiles; j++) {
+void GridSystem::createTiles() {
+    for (int i = 0; i < grid->gridHeight; i++) {
+        for (int j = 0; j < grid->gridWidth; j++) {
             Entity e = gCoordinator.createEntity();
             gCoordinator.addComponent(e, Transform(Vector2((j * TILE_WIDTH) + (TILE_WIDTH / 2), ( i* TILE_HEIGHT) + (TILE_HEIGHT / 2)), 0));
-            gCoordinator.addComponent(e, Walkable(tGrid[(i * gridWidthInTiles) + j]));
+            gCoordinator.addComponent(e, Walkable(grid->tiles[toIndex(grid, Vector2(j, i))].status));
         }
 	}
 }
 
 void GridSystem::updatePathfinding() {
-    gCoordinator.getEventBus()->publish(new GridChangedEvent(grid));
+    //gCoordinator.getEventBus()->publish(new GridChangedEvent(grid));
 }
 
 //Loads the tilemap from a .map file
-std::vector<int> GridSystem::loadTiles() {
-    std::vector<int> retGrid(gridHeightInTiles * gridWidthInTiles, -1);
-    std::ifstream map("assets/Pathfinding.map");
+//std::vector<int> GridSystem::loadTiles(std::string path) {
+//    std::vector<int> retGrid(grid->gridHeight * grid->gridWidth, -1);
+//    std::ifstream map(path);
+//
+//    if (map.fail()) {
+//        printf("Unable to get grid data.\n");
+//    }
+//    else {
+//        bool tilesLoaded = true;
+//        for (int i = 0; i < grid->gridHeight*grid->gridWidth; i++) {
+//            int tileType = -1;
+//            map >> tileType;
+//
+//            //If there was a problem in reading the map 
+//            if (map.fail()) {
+//                //Stop loading the map 
+//                printf("Error loading the map: Unexpected end of file!\n");
+//                tilesLoaded = false;
+//                //break;
+//            }
+//                
+//            //If the number is a valid tile number
+//            if ((tileType >= 0) && (tileType < TOTAL_TILE_SPRITES)) {
+//                //Make a new tile
+//                retGrid[i] = tileType;
+//            }
+//            else {
+//                //Stop loading the map 
+//                printf("Error loading map: Invalid tile type\n");
+//                tilesLoaded = false;
+//                //break;
+//            }
+//            //Just return an empty vector to signal a failure;
+//            if (!tilesLoaded) {
+//                return std::vector<int>();
+//                //break;
+//            }
+//        }
+//    }
+//    return retGrid;
+//}
 
-    if (map.fail()) {
-        printf("Unable to get grid data.\n");
-    }
-    else {
-        bool tilesLoaded = true;
-        for (int i = 0; i < gridHeightInTiles*gridWidthInTiles; i++) {
-            int tileType = -1;
-            map >> tileType;
-
-            //If there was a problem in reading the map 
-            if (map.fail()) {
-                //Stop loading the map 
-                printf("Error loading the map: Unexpected end of file!\n");
-                tilesLoaded = false;
-                //break;
-            }
-                
-            //If the number is a valid tile number
-            if ((tileType >= 0) && (tileType < TOTAL_TILE_SPRITES)) {
-                //Make a new tile
-                retGrid[i] = tileType;
-            }
-            else {
-                //Stop loading the map 
-                printf("Error loading map: Invalid tile type\n");
-                tilesLoaded = false;
-                //break;
-            }
-            //Just return an empty vector to signal a failure;
-            if (!tilesLoaded) {
-                return std::vector<int>();
-                //break;
-            }
-        }
-    }
-    return retGrid;
+void GridSystem::setGrid(std::shared_ptr<GridData> g) {
+    grid = g;
 }
 
 //This only needs to be filled once the actual destruction pathfinding system has been implemented
@@ -91,7 +95,7 @@ bool GridSystem::tileStatusChanged(Entity e) {
 //Converts the tiles into their marching squares representation as a 2D vector so we can do pathfinding on them
 std::vector<std::vector<int>> GridSystem::convertTilesToGrid() {
     //std::vector<std::vector<int>> tempGrid( static_cast<size_t>(gridWidthInTiles * 2), std::vector<int>(static_cast<size_t>(gridHeightInTiles * 2), -1) );
-    std::vector<std::vector<int>> tempGrid(static_cast<size_t>(gridWidthInTiles * 2), std::vector<int>(static_cast<size_t>(gridHeightInTiles * 2), -1));
+    std::vector<std::vector<int>> tempGrid(static_cast<size_t>(grid->gridWidth * 2), std::vector<int>(static_cast<size_t>(grid->gridHeight * 2), -1));
     for (Entity e : registeredEntities) {
         Transform t = gCoordinator.getComponent<Transform>(e);
         Walkable w = gCoordinator.getComponent<Walkable>(e);
@@ -99,11 +103,7 @@ std::vector<std::vector<int>> GridSystem::convertTilesToGrid() {
         //Origin of each set of four is in the top left
         int topX = static_cast<int>(floor(t.position.x / TILE_WIDTH))*2;
         int topY = static_cast<int>(floor(t.position.y / TILE_HEIGHT))*2;
-        //Vector2 topLeft = Vector2(static_cast<int>(floor(t.position.x / TILE_WIDTH)), static_cast<int>(floor(t.position.y / TILE_HEIGHT)));
 
-        /*printf("posX: %f, posY: %f\n", t.position.x, t.position.y);
-        printf("TopX: %i, TopY: %i\n", topX, topY);
-        printf("Tiletype: %i\n", w.walkStatus);*/
         //Manual conversion of the a* tiles to marching squares representation in the grid for proper pathfinding
         switch (w.walkStatus) {
             case 0:
@@ -216,7 +216,7 @@ std::vector<std::vector<int>> GridSystem::convertTilesToGrid() {
 }
 
 //Node constructor
-Node::Node(int xPos, int yPos) : x(xPos), y(yPos), f(0), g(0), h(0) {}
+Node::Node(int xPos, int yPos) : x(xPos), y(yPos), f(0), g(0), h(0), partial(false), subcells(nullptr) {}
 
 bool Node::operator>(const Node& other) const {
 	return f > other.f;
@@ -259,14 +259,13 @@ void PathFindingSystem::update(float dt) {
             */
 
             //Get the path in node form
-            auto path = FindPath(grid, p.startPos, p.endPos);
+            auto path = FindPath(p.startPos, p.endPos);
             std::vector<Vector2> vecPath(path.size());
 
             //Convert it to coordinates
             std::transform(path.begin(), path.end(), vecPath.begin(),
                 [this](Node n) {return nodeToWorldPos(n); });
 
-            printf("%i", vecPath.size());
             for (Vector2 v : vecPath) {
                 printf("(%f, %f)", v.x, v.y);
             }
@@ -280,11 +279,100 @@ void PathFindingSystem::update(float dt) {
     }
 }
 
-std::vector<Node> PathFindingSystem::FindPath(const std::vector<std::vector<int>> graph, Vector2 start, Vector2 goal) {
+void PathFindingSystem::setGrid(std::shared_ptr<GridData> g) {
+    grid = g;
+}
+
+//Original pure A* implementation:
+std::vector<Node> PathFindingSystem::FindPath(Vector2 start, Vector2 goal) {
     //Represents the (x,y) coordinates of all possible neighbours
     const int directionX[] = { -1, 0, 1, 0, 1, 1, -1, -1 };
     const int directionY[] = { 0, 1, 0, -1, 1, -1, 1, -1 };
     
+    const int straightCost = 10; //Cost of moving straight -> 1* 10
+    const int diagonalCost = 14; //Cost of moving diagonally ~sqrt(2) *10
+
+    int rows = grid->gridHeight;
+    int cols = grid->gridWidth;
+
+    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList; //Nodes to visit
+    std::unordered_set<Node> closedList; //Nodes visited
+    std::unordered_map<Node, Node, std::hash<Node>> cameFrom; //Holds the parents of each node -> the one visited before 
+    std::vector<int> gScore(rows * cols, INT_MAX);//Holds the gScore of every node 
+
+    // Initialize start node
+    Node startNode = nodeFromWorldPos(start);
+    Node goalNode = nodeFromWorldPos(goal);
+    startNode.g = 0;
+    startNode.h = getDistance(startNode, goalNode);
+    startNode.f = startNode.g + startNode.h;
+
+    gScore[toIndex(grid, Vector2(startNode.x, startNode.y))] = 0;
+    openList.push(startNode);
+
+    //While there are nodes to visit
+    while (!openList.empty()) {
+        //Since openList is a pq, this will get the node with the lowest f score
+        Node current = openList.top();
+        openList.pop();
+
+        //If we have reached the end
+        if (current == goalNode) {
+            //Get all of the nodes in the path from the start to the end
+            std::vector<Node> path;
+            Node trace = current;
+            while (!(trace == startNode)) {
+                path.push_back(trace);
+                trace = cameFrom[trace];
+            }
+            path.push_back(startNode);
+            //Reverse it so it is in the correct order
+            reverse(path.begin(), path.end());
+            return path;
+        }
+
+        //Otherwise mark the current node as visited
+        closedList.insert(current);
+
+        //Visit all of its neighbours and insert them into the openList
+        for (int i = 0; i < 8; ++i) {
+            //The neighbour's coordinates
+            int newX = current.x + directionX[i];
+            int newY = current.y + directionY[i];
+
+            //Making sure we don't go out of grid bounds and crash the program
+            if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+                if (grid->tiles[toIndex(grid, Vector2(newX, newY))].status == 0) { //If it walkable
+                    Node neighbor(newX, newY);
+                    //If it is not already visited
+                    if (closedList.find(neighbor) == closedList.end()) {
+                        int moveCost = (directionX[i] != 0 && directionY[i] != 0) ? diagonalCost : straightCost;
+
+                        int tentativeG = gScore[toIndex(grid, Vector2(current.x, current.y))] + moveCost;
+
+                        if (tentativeG < gScore[toIndex(grid, Vector2(newX, newY))]) {
+                            gScore[toIndex(grid, Vector2(newX, newY))] = tentativeG;
+                            neighbor.g = tentativeG;
+                            neighbor.h = getDistance(neighbor, goalNode);
+                            neighbor.f = neighbor.g + neighbor.h;
+                            cameFrom[neighbor] = current;
+                            openList.push(neighbor);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return std::vector<Node>(); // No path found
+}
+
+//Modified pathfinding for destructability:
+std::vector<Node> PathFindingSystem::FindPath2(const std::vector<std::vector<int>> graph, Vector2 start, Vector2 goal) {
+    //Represents the (x,y) coordinates of all possible neighbours
+    const int directionX[] = { -1, 0, 1, 0, 1, 1, -1, -1 };
+    const int directionY[] = { 0, 1, 0, -1, 1, -1, 1, -1 };
+
     const int straightCost = 10; //Cost of moving straight -> 1* 10
     const int diagonalCost = 14; //Cost of moving diagonally ~sqrt(2) *10
 
@@ -388,5 +476,5 @@ int PathFindingSystem::getDistance(Node a, Node b) {
 
 //Updates the grid we have to work with
 void PathFindingSystem::updateGrid(const GridChangedEvent* event) {
-	grid = event->grid;
+	//grid = event->grid;
 }

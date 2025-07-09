@@ -7,15 +7,7 @@
 #include "Coordinator.h"
 #include "math.h"
 #include "BasicComponents.h"
-//The dimensions of the level
-const int LEVEL_WIDTH = 1280;
-const int LEVEL_HEIGHT = 960;
-
-//Tile constants
-const int TILE_WIDTH = 80;
-const int TILE_HEIGHT = 80;
-const int TOTAL_TILES = 192;
-const int TOTAL_TILE_SPRITES = 16;
+#include "GridData.h"
 
 //The different tile sprites
 //const int TILE_RED = 0;
@@ -56,9 +48,9 @@ public:
 	void init();
 
 	//Sets tiles from tile map
-	bool setTiles();
+	bool setTiles(std::string path);
 
-	bool loadTileSet();
+	bool loadTileSet(std::string tilePath, std::string setPath);
 
 	void update(float dt);
 };

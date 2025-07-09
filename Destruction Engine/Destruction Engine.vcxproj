@@ -24,6 +24,8 @@
     <ClCompile Include="ComponentArray.h" />
     <ClCompile Include="ComponentManager.h" />
     <ClCompile Include="Debug.cpp" />
+    <ClCompile Include="GridData.cpp" />
+    <ClCompile Include="GridManager.cpp" />
     <ClCompile Include="GridSystem.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Maths.cpp" />
@@ -45,6 +47,8 @@
     <ClInclude Include="EntityManager.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="EventBus.h" />
+    <ClInclude Include="GridData.h" />
+    <ClInclude Include="GridManager.h" />
     <ClInclude Include="GridSystem.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Maths.h" />

@@ -3,14 +3,10 @@ SDL_FRect gTileClips[TOTAL_TILE_SPRITES];
 Entity tileSet;
 
 void TileSystem :: init() {
-	/*Signature sig;
-	sig.addComponent<Transform>();
-	sig.addComponent<TileType>();
-	gCoordinator.setSystemSignature<TileSystem>(sig);
-	std::cout << "TileSystem Signature" << sig.mask << "\n";*/
+
 }
 
-bool TileSystem::setTiles() {
+bool TileSystem::setTiles(std::string path) {
 	//Success flag
 	bool tilesLoaded = true;
 
@@ -19,7 +15,7 @@ bool TileSystem::setTiles() {
 
 	//Open the map
 	//std::ifstream map("assets/lazy.map");
-	std::ifstream map("assets/Pathfinding.map");
+	std::ifstream map(path);
 
 	//If the map couldn't be loaded
 	if (map.fail()) {
@@ -222,7 +218,7 @@ bool TileSystem::setTiles() {
 	return tilesLoaded;
 }
 
-bool TileSystem::loadTileSet() {
+bool TileSystem::loadTileSet(std::string tilePath, std::string setPath) {
 	//Loading success flag
 	bool success = true;
 	
@@ -232,12 +228,12 @@ bool TileSystem::loadTileSet() {
 	Sprite& s = gCoordinator.getComponent<Sprite>(tileSet);
 
 	//Load tile texture
-	if (!s_loadFromFile(s, "assets/MarchingSquares.png", gRenderer)) {
+	if (!s_loadFromFile(s, setPath, gRenderer)) {
 		printf("Failed to load tile set texture!\n");
 		success = false;
 	}
 
-	if (!setTiles()) {
+	if (!setTiles(tilePath)) {
 		printf("Failed to load tile set!\n");
 		success = false;
 	}

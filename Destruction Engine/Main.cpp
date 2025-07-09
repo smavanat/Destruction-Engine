@@ -4,6 +4,8 @@
 #include "BasicSystems.hpp"
 #include "TileSystem.h"
 #include "Debug.h"
+#include "GridData.h"
+#include "GridManager.h"
 
 //TODO: Figure out how do deal with small shapes. Colliders are not generated for them, but they are still there.
 //		Maybe just erase them? Or put a default small collider around them.
@@ -20,13 +22,14 @@ b2WorldId worldId;
 //ECS Managers
 Coordinator gCoordinator;
 DebugManager gDebugManager;
+GridSystemManager gGridManager;
 
 //ECS systems
 std::shared_ptr<RenderSystem> renderSystem;
 std::shared_ptr<DestructionSystem> destructionSystem;
 std::shared_ptr<TileSystem> tileSystem;
-std::shared_ptr<GridSystem> gridSystem;
-std::shared_ptr<PathFindingSystem> pathfindingSystem;
+//std::shared_ptr<GridSystem> gridSystem;
+//std::shared_ptr<PathFindingSystem> pathfindingSystem;
 
 //Test entities;
 Entity testTexture;
@@ -47,6 +50,7 @@ bool init()
 {
 	gCoordinator = Coordinator();
 	gDebugManager = DebugManager();
+
 	{
 		Signature sig;
 		sig.addComponent<Transform>();
@@ -68,7 +72,7 @@ bool init()
 		tileSystem = gCoordinator.addSystem<TileSystem>(sig);
 	}
 
-	{
+	/*{
 		Signature sig;
 		sig.addComponent<Transform>();
 		sig.addComponent<Walkable>();
@@ -79,7 +83,9 @@ bool init()
 		Signature sig;
 		sig.addComponent<Pathfinding>();
 		pathfindingSystem = gCoordinator.addSystem<PathFindingSystem>(sig);
-	}
+	}*/
+	gGridManager = GridSystemManager(TILE_WIDTH, TILE_HEIGHT, GRID_WIDTH, GRID_HEIGHT);
+
 	//Initialise all the systems.
 	gCoordinator.init();
 	gDebugManager.init(); //In case Debug systems/manager need some other form of initialisation
@@ -123,7 +129,7 @@ bool init()
 		gCoordinator.addComponent(testTexture, Transform(Vector2(1420.0f, 440.0f), 0.0));
 		gCoordinator.addComponent(testPath, Pathfinding(Vector2(10, 10), Vector2(500, 500)));
 
-		gridSystem->updatePathfinding(); //This line needs to exist otherwise the pathfinding will not have the initial grid
+		//gridSystem->updatePathfinding(); //This line needs to exist otherwise the pathfinding will not have the initial grid
 
 		worldDef = b2DefaultWorldDef();
 		worldDef.gravity = { 0.0f, 0.0f };
@@ -151,8 +157,13 @@ bool loadMedia()
 		}
 	}
 
-	if (!tileSystem->loadTileSet()) {
+	if (!tileSystem->loadTileSet("assets/Pathfinding.map", "assets/MarchingSquares.png")) {
 		printf("Unable to load tileset\n");
+		success = false;
+	}
+
+	if (!gGridManager.loadGridFromFile("assets/Pathfinding.map")) {
+		printf("Unable to load grid\n");
 		success = false;
 	}
 
@@ -244,8 +255,12 @@ int main(int argc, char* args[]) {
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderClear(gRenderer);
 				destructionSystem->update(dt);
-				gridSystem->update(dt);
+				/*gridSystem->update(dt);
 				pathfindingSystem->update(dt);
+				*/
+				/*gGridManager.gSystem->update(dt);
+				gGridManager.pSystem->update(dt);*/
+				gGridManager.update(dt);
 				tileSystem->update(dt);
 				renderSystem->update(dt);
 				gDebugManager.update(dt);
