@@ -22,13 +22,8 @@ const int TOTAL_TILE_SPRITES = 16;
 struct TileData {
 	uint8_t status; //0 -> walkable, 1 -> blocked 2 -> partial
 	uint8_t type; //Represents the type of tile, could be used for weighted pathfinding
-	std::array<uint8_t, 16> subcells;
-
-	/*TileData() = default;
-
-	TileData(uint8_t s, std::array<uint8_t, 16> subcells;) : status(s) {
-		std::copy(sArr, sArr + 16, subcells);
-	}*/
+	std::array<uint8_t, 16> subcells; //Holds the subcell representation of the grid
+	std::array<bool, 4> exitable; //Holds which sides can be exited from in this tile
 };
 
 struct GridData {
@@ -38,6 +33,21 @@ struct GridData {
 	int gridWidth = GRID_WIDTH;
 	int gridHeight = GRID_HEIGHT;
 	std::vector<TileData> tiles;
+};
+
+enum Direction8 {
+	NW,
+	N,
+	NE,
+	E,
+	SE,
+	S,
+	SW,
+	W
+};
+
+enum Direction4 {
+	N_4, E_4, W_4, S_4
 };
 
 //Global methods that need to be used by both Path and Grid systems
@@ -50,3 +60,9 @@ Vector2 worldToGridPos(std::shared_ptr<GridData> g, Vector2 worldPos);
 int toIndex(std::shared_ptr<GridData> g, Vector2 gridPos);
 //Checks if a grid position is in bounds
 bool inBounds(std::shared_ptr<GridData> g, Vector2 gridPos);
+//Checks if a tile is walkable in a given direction
+bool isDirectionWalkable(const TileData& t, Direction8 d, int s);
+//Determines the number of exitable sides that a tile has
+int numExits(const TileData& t);
+//Determines whether an agent of a certain size could walk through this tile
+bool isPathable(const TileData& t, Direction8 d, int size);

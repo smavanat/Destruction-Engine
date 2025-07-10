@@ -2,6 +2,7 @@
 #include <vector>
 #include <queue>
 #include <cmath>
+#include <unordered_map>
 #include "Maths.h"
 #include "Coordinator.h"
 #include "BasicComponents.h"
@@ -16,19 +17,11 @@ public:
 	void update(float dt);
 
 	void createTiles();
-	//std::vector<int> loadTiles(std::string path);
 	void setGrid(std::shared_ptr<GridData> g);
-	void updatePathfinding();
 	bool tileStatusChanged(Entity e);
 	std::vector<std::vector<int>> convertTilesToGrid();
 private:
 	std::shared_ptr<GridData> grid;
-//	int tileWidth = TILE_WIDTH;
-//	int tileHeight = TILE_HEIGHT;
-//	int gridWidthInTiles = GRID_WIDTH;
-//	int gridHeightInTiles = GRID_HEIGHT;
-//	Vector2 origin = Vector2(0,0);
-//	std::vector<std::vector<int>> grid{ static_cast<size_t>(gridWidthInTiles*2), std::vector<int>(static_cast<size_t>(gridHeightInTiles*2), -1)};
 };
 
 //This struct is used for a* pathfinding and nothing else
@@ -36,13 +29,10 @@ struct Node {
 	int x, y; //Coordinates of the node in the graph
 	int f, g, h; //Values used by the A* algorithm
 	bool partial; //Whether or not the node is somewhat destroyed
-	int* subcells; //The under-makeup of the node
 
 	Node() = default;
 
 	Node(int xPos, int yPos);
-
-	//Node(int xPos, int yPos)
 
 	//Comparison operators for pq
 	bool operator > (const Node& other) const;
@@ -65,14 +55,12 @@ class PathFindingSystem : public System {
 public:
 	void init();
 	void update(float dt);
-	void updateGrid(const GridChangedEvent* event);
 	void setGrid(std::shared_ptr<GridData> g);
 	std::vector<Node> FindPath(Vector2 start, Vector2 goal);
-	std::vector<Node> FindPath2(const std::vector<std::vector<int>> graph, Vector2 start, Vector2 goal);
+	std::vector<Node> FindPath2(Vector2 start, Vector2 goal);
 private:
 	Node nodeFromWorldPos(Vector2 pos);
 	Vector2 nodeToWorldPos(Node n);
 	int getDistance(Node a, Node b);
 	std::shared_ptr<GridData> grid;
-	/*std::vector<std::vector<int>> grid;*/
 };

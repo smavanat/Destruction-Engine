@@ -60,10 +60,6 @@ void GridSystemManager::update(float dt) {
 }
 
 bool GridSystemManager::loadGridFromFile(std::string path) {
-    //Make sure that the tileset is loaded properly
-    //if (!tSystem->loadTileSet(path))
-    //    return false;
-
     //Loading the grid to make the GridData tile vector:
     std::ifstream map(path);
 
@@ -90,11 +86,13 @@ bool GridSystemManager::loadGridFromFile(std::string path) {
                 if (tileType == 0) {
                     grid->tiles[i].status = 0;
                     grid->tiles[i].subcells.fill(0);
+                    grid->tiles[i].exitable.fill(true);
                 }
                 //Filled tile
                 else {
                     grid->tiles[i].status = 1;
                     grid->tiles[i].subcells.fill(1);
+                    grid->tiles[i].exitable.fill(false);
                 }
             }
             else {
