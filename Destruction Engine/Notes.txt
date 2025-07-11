@@ -1,6 +1,2 @@
 Look into scene graphs for how to make child-parent relationships in scene: https://en.wikipedia.org/wiki/Scene_graph
 Code for engine based off of https://savas.ca/nomad and https://austinmorlan.com/posts/entity_component_system/
-Look into Isobands for Marching squares ranges: https://en.wikipedia.org/wiki/Marching_squares#Isobands
-
-Need to make a lookup table to get the destruction pathfind working with the marching squares setup-> which ms tile
-corresponds to which four squares

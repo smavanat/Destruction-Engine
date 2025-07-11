@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <unordered_set>
 
-std::unordered_map<Vector2, Direction> directionMap = { {Vector2(-1, -1), NW}, {Vector2(0, -1), N},
+std::unordered_map<Vector2, Direction8> directionMap = {{Vector2(-1, -1), NW}, {Vector2(0, -1), N},
                                                         {Vector2(1, -1), NE},  {Vector2(-1, 0), E},
                                                         {Vector2(1, 0), SE},   {Vector2(-1, 1), S}, 
                                                         {Vector2(0, 1), SW},   {Vector2(1, 1), W}};
@@ -408,9 +408,23 @@ std::vector<Node> PathFindingSystem::FindPath2(Vector2 start, Vector2 goal) {
                     //Need to determine direction we are moving in and if it is open on the partial tile
                     //Then we need to determine if it has any other exits other than on this direction
                     //Then we need to determine if it is pathable by this agent
-                    if (isDirectionWalkable(grid->tiles[index], directionMap[Vector2(newX, newY)], 2) 
-                        && numExits(grid->tiles[index]) >=2 && isPathable(grid->tiles[index], directionMap[Vector2(newX, newY)], 2)) {
+                    if (isPathable(grid->tiles[index], directionMap[Vector2(newX, newY)], 2)) {
+                        Node neighbor(newX, newY);
+                        //If it is not already visited
+                        if (closedList.find(neighbor) == closedList.end()) {
+                            int moveCost = (directionX[i] != 0 && directionY[i] != 0) ? diagonalCost : straightCost;
 
+                            int tentativeG = gScore[toIndex(grid, Vector2(current.x, current.y))] + moveCost;
+
+                            if (tentativeG < gScore[index]) {
+                                gScore[index] = tentativeG;
+                                neighbor.g = tentativeG;
+                                neighbor.h = getDistance(neighbor, goalNode);
+                                neighbor.f = neighbor.g + neighbor.h;
+                                cameFrom[neighbor] = current;
+                                openList.push(neighbor);
+                            }
+                        }
                     }
                 }
             }

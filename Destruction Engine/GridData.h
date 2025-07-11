@@ -60,9 +60,9 @@ Vector2 worldToGridPos(std::shared_ptr<GridData> g, Vector2 worldPos);
 int toIndex(std::shared_ptr<GridData> g, Vector2 gridPos);
 //Checks if a grid position is in bounds
 bool inBounds(std::shared_ptr<GridData> g, Vector2 gridPos);
-//Checks if a tile is walkable in a given direction
-bool isDirectionWalkable(const TileData& t, Direction8 d, int s);
 //Determines the number of exitable sides that a tile has
 int numExits(const TileData& t);
 //Determines whether an agent of a certain size could walk through this tile
 bool isPathable(const TileData& t, Direction8 d, int size);
+//Determines whether a path exists for an agent of a certain size through the subcell grid
+bool pathExists(int startX, int startY, int s, const TileData& t, const std::array<bool, 16>& pArr, Direction8 startDirection);
