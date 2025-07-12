@@ -84,3 +84,50 @@ Fixed a large bug in the Coordinator that meant Systems could be created without
 very annoying errors where entities where being added to systems where they should not be because the system 
 has a blank signature at the point of the entities' instantiation, and this then crashed the program as the system 
 attempted to access a component the entity did not have.
+
+Week 3:
+Made an attempt at implementing a destruction pathfinding system using marching squares. Quickly realised that it 
+would not work, since essentially it would require breaking down the entire grid into subcells, finding a path through
+them, and building it back up into full cells to account for agents of different sizes, which would have been 
+cumbersome to code and in terms of performance.
+
+Settled on trying a different approach by changing the way tile data was stored. Created a GridManager class, 
+which stored a shared_ptr to a GridSystem, a PathFindingSystem and GridData (a new struct I had created to store
+data about grid dimensions as well as the tile layout), that is passed to the GridSystem and PathFindingSystem so
+that grid updates don't have to be sent as events, can just check the data at a pointer.
+
+Created a TileData struct to hold specific data about tiles. Tiles now have a status, which can be 0 (passable)
+1 (impassable) or 2 (partial). They also store a representation of their layout as subcells. Right now I am using
+4x4 subcell grids, but I think that this should be expanded in future to allow dynamic sizing based on the dimensions
+of the tiles themselves, i.e. bigger tiles have larger subcell grids. Currently this is an array of uint8, but it 
+could be changed to a bitset for optimisation purposes. It also stores which sides of the tile have passable subcells. 
+This is (sortof?) useful because it can make some checks quicker. The GridData struct stores a vector of these 
+TileData structs to represent the layout of the grid.
+
+Started the process of decoupling the TileSystem from the GridSystem. This is because I feel that there could be 
+multiple tilesets layered on top of eachother (background, terrain, objects, etc.) which will make determining 
+the pathfinding grid much harder, and also because the pathfinding grid may encompass many different tilesets, 
+which represent different regions of the map. Right now, these systems are still loaded from the same file for 
+convenience, but I hope to change this to be more rigorous in future. I think that determining which tiles 
+are passable or impassable could still be done via files, but partial tiles need to be done via checking colliders
+or something.
+
+Started implementing the pathfinding system on the subcell grids. Essentially, it starts by running some checks 
+to see if (a), there are more than two sides with passable subcell tiles, and (b), that the agent can actually enter
+onto the tile. Then it goes over the subcell grid, and marks all the cells that the agent could stand in (assuming
+that cell was the top left corner), and then runs bfs. If the bfs reaches a tile that is on a different edge to the 
+one the agent started from, we have a path for this agent through the subcell grid. An important note is that when
+we add neighbour cells to the bfs queue, we only add neighbours on the non-diagonal directions. This is because 
+agents will most likely have to use steering behaviours to path through partial tiles, and since both the agents 
+and whatever is in the partial tile will have colliders, moving across diagonals probably means that the agent 
+will just end up ramming themselves into a corner, unable to pass through
+
+There are some assumptions for this algorithm: The size of the agent is less than 4, and the shape of the agent 
+could be approximated to a square. The reason for the first assumption is because I haven't figured out pathing across
+multiple subcell grids (that is the next step), and for the second is because then we would need to account for
+agent orienation, which adds a lot of new complexities which I could really do without at this point, but it is 
+something that I plan to revisit once I have a full working version of this pathfinding system.
+
+Currently, this is only being used to determine pathable neighbours in my modified A*. There is currently no 
+version of this algorithm that actually figures out where to go if a partial tile is the current tile. That needs
+to be added.
