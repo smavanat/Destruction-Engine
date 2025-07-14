@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL3/SDL.h>
 #include<box2d/box2d.h>
+#include <functional>
 
 const double DEGREES_TO_RADIANS = ((2 * acos(0.0)) / 180);
 
@@ -37,6 +38,21 @@ struct Vector2
 		y = a.y;
 	}
 };
+
+
+namespace std {
+	template<>
+	struct hash<Vector2> {
+		std::size_t operator()(const Vector2& v) const noexcept {
+			// Use std::hash<float> for x and y, combine them:
+			std::size_t h1 = std::hash<float>{}(v.x);
+			std::size_t h2 = std::hash<float>{}(v.y);
+
+			// Combine hashes (a common way):
+			return h1 ^ (h2 << 1);
+		}
+	};
+}
 
 struct Vector3 {
 	float x;
