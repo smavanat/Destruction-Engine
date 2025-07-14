@@ -22,16 +22,18 @@ const int TOTAL_TILE_SPRITES = 16;
 struct TileData {
 	uint8_t status; //0 -> walkable, 1 -> blocked 2 -> partial
 	uint8_t type; //Represents the type of tile, could be used for weighted pathfinding
-	std::array<uint8_t, 16> subcells; //Holds the subcell representation of the grid
+	
+	int* subcells; //Holds the subcell representation of the grid
 	std::array<bool, 4> exitable; //Holds which sides can be exited from in this tile
 };
 
 struct GridData {
 	Vector2 origin = Vector2(0, 0);
-	int tileWidth = TILE_WIDTH;
-	int tileHeight = TILE_HEIGHT;
-	int gridWidth = GRID_WIDTH;
-	int gridHeight = GRID_HEIGHT;
+	int subWidth = 4; //Holds the width of the tiles (all tiles should be squares so this is enough)
+	int tileWidth = TILE_WIDTH; //Tile width in pixels
+	int tileHeight = TILE_HEIGHT; //Tile height in pixels
+	int gridWidth = GRID_WIDTH; //Width of the grid in tiles
+	int gridHeight = GRID_HEIGHT; //Height of the grid in tiles
 	std::vector<TileData> tiles;
 };
 
@@ -64,5 +66,8 @@ bool inBounds(std::shared_ptr<GridData> g, Vector2 gridPos);
 int numExits(const TileData& t);
 //Determines whether an agent of a certain size could walk through this tile
 bool isPathable(const TileData& t, Direction8 d, int size);
+bool isPathable2(const TileData& t, Direction8 d, int s, int w);
 //Determines whether a path exists for an agent of a certain size through the subcell grid
 bool pathExists(int startX, int startY, int s, const TileData& t, const std::array<bool, 16>& pArr, Direction8 startDirection);
+//For processing pathfinding across adjacent tiles;
+bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d, int s);

@@ -183,6 +183,7 @@ void close()
 		gCoordinator.destroyEntity(e);
 	}
 	b2DestroyWorld(worldId);
+	gGridManager.free();
 	//Destroy window	
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);

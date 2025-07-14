@@ -6,6 +6,7 @@ GridSystemManager::GridSystemManager() {
     grid = std::make_shared<GridData>();
 
     //Initialising the grid height
+    grid->subWidth = 0;
     grid->tileWidth = 0;
     grid->tileHeight = 0;
     grid->gridWidth = 0;
@@ -39,6 +40,7 @@ GridSystemManager::GridSystemManager(int tWidth, int tHeight, int gWidth, int gH
     grid = std::make_shared<GridData>();
 
     //Initialising the grid height
+    grid->subWidth = 4;
     grid->tileWidth = tWidth;
     grid->tileHeight = tHeight;
     grid->gridWidth = gWidth;
@@ -85,13 +87,17 @@ bool GridSystemManager::loadGridFromFile(std::string path) {
                 //Empty tile
                 if (tileType == 0) {
                     grid->tiles[i].status = 0;
-                    grid->tiles[i].subcells.fill(0);
+                    //grid->tiles[i].subcells.fill(0);
+                    grid->tiles[i].subcells = (int*)malloc(grid->subWidth * grid->subWidth*sizeof(int));
+                    memset(grid->tiles[i].subcells, 0, grid->subWidth * grid->subWidth * sizeof(int));
                     grid->tiles[i].exitable.fill(true);
                 }
                 //Filled tile
                 else {
                     grid->tiles[i].status = 1;
-                    grid->tiles[i].subcells.fill(1);
+                    //grid->tiles[i].subcells.fill(1);
+                    grid->tiles[i].subcells = (int*)malloc(grid->subWidth * grid->subWidth * sizeof(int));
+                    memset(grid->tiles[i].subcells, 1, grid->subWidth * grid->subWidth * sizeof(int));
                     grid->tiles[i].exitable.fill(false);
                 }
             }
@@ -104,4 +110,10 @@ bool GridSystemManager::loadGridFromFile(std::string path) {
         }
     }
     return true;
+}
+
+void GridSystemManager::free() {
+    for (int i = 0; i < grid->gridHeight * grid->gridWidth; i++) {
+        ::free(grid->tiles[i].subcells);
+    }
 }
