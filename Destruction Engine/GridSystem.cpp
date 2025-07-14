@@ -393,7 +393,7 @@ std::vector<Node> PathFindingSystem::FindPath2(Vector2 start, Vector2 goal) {
 
                 if (grid->tiles[index].status == 2) { //If neighbour is partial
                     auto direction = getDirectionMap().at(Vector2(newX, newY));
-                    if (isPathable2(grid->tiles[index], direction, 2, grid->subWidth) || isPathableWithAdjacent(index, grid, direction, 2)) {
+                    if (isPathable(grid->tiles[index], direction, 2, grid->subWidth) || isPathableWithAdjacent(index, grid, direction, 2)) {
                         updateNeighbour = true;
                     }
                 }

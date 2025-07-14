@@ -65,9 +65,8 @@ bool inBounds(std::shared_ptr<GridData> g, Vector2 gridPos);
 //Determines the number of exitable sides that a tile has
 int numExits(const TileData& t);
 //Determines whether an agent of a certain size could walk through this tile
-bool isPathable(const TileData& t, Direction8 d, int size);
-bool isPathable2(const TileData& t, Direction8 d, int s, int w);
+bool isPathable(const TileData& t, Direction8 d, int s, int w);
 //Determines whether a path exists for an agent of a certain size through the subcell grid
-bool pathExists(int startX, int startY, int s, const TileData& t, const std::array<bool, 16>& pArr, Direction8 startDirection);
+//bool pathExists(int startX, int startY, int s, const TileData& t, const std::array<bool, 16>& pArr, Direction8 startDirection);
 //For processing pathfinding across adjacent tiles;
 bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d, int s);
