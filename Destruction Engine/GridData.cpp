@@ -107,9 +107,9 @@ bool checkEdge(int x, int y, int s, int n, Direction8 d) {
 
 //Runs a version of bfs to check if a path exists from a specific starting position for an agent of size s*s 
 //to pass through
-bool pathExists(int startX, int startY, int s, int w, int*subcellArr, bool* pArr, Direction8 startDirection) {
+bool pathExists(int startX, int startY, int s, int w, bool* pArr, Direction8 startDirection) {
     //If the start is invalid, return false
-    if (!isValidPos(subcellArr, w, startX, startY, s)) return false;
+    if (!pArr[(startY*w)+startX]) return false;
 
     //Initialise the variables
     bool found = false;
@@ -131,6 +131,56 @@ bool pathExists(int startX, int startY, int s, int w, int*subcellArr, bool* pArr
         //If this node is touching an edge, and that edge is not the start edge, then we have found a valid path 
         //out of the subcell array
         if (touchesEdge(p.first, p.second, s, w) && !checkEdge(p.first, p.second, s, w, startDirection)) {
+            found = true;
+            break;
+        }
+
+        //Visiting all of the cardinal neighbours of this cell
+        for (int i = 0; i < 4; i++) {
+            int newX = p.first + directionX[i];
+            int newY = p.second + directionY[i];
+
+            //Checking bounds are fine
+            if (newX >= 0 && newX < w && newY >= 0 && newY < w && !visitedArr[(newY * w) + newX]) {
+                visitedArr[(newY * w) + newX] = true; //Marking it as visited
+                //Checking that it is a valid position, and pushing to the queue if it is
+                if (pArr[(newY*w)+newX]) {
+                    validPositions.push({ newX, newY });
+                }
+            }
+        }
+        //Removing the first element of the queue
+        validPositions.pop();
+    }
+    free(visitedArr);
+
+    return found; //No path out of the subcell grid found
+}
+
+bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, bool* pArr) {
+    //If the start is invalid, return false
+    if (!pArr[(startY*w)+startX] || pArr[(endY*w)+endX]) return false;
+
+    //Initialise the variables
+    bool found = false;
+    bool* visitedArr = (bool*)malloc(w * w * sizeof(bool)); //Marks which nodes we have visited
+    if (!visitedArr) return false;
+    memset(visitedArr, false, w * w * sizeof(bool)); //All nodes are initially unvisited
+    std::queue<std::pair<int, int>> validPositions; //Queue to hold all of the positions to visit in bfs.
+    //For iterating over neighbour coordinates
+    int directionX[] = { -1, 1, 0, 0 };
+    int directionY[] = { 0, 0, -1, 1 };
+
+    //Add it to the queue of positions to run bfs on.
+    validPositions.push({ startX, startY });
+    visitedArr[(startY * w) + startX] = true; //Mark is as visited
+
+    while (!validPositions.empty()) {
+        std::pair<int, int> p = validPositions.front(); //Get first elem of queue
+
+        //If this node is touching an edge, and that edge is not the start edge, then we have found a valid path 
+        //out of the subcell array
+        if (p.first == endX && p.second == endY) {
             found = true;
             break;
         }
@@ -209,14 +259,14 @@ bool isPathable(const TileData& t, Direction8 d, int s, int w) {
     bool* prepArray = preprocessValidPositions(t.subcells, w, s);//Get the valid positions in the array
     if (!prepArray) return false;
 
-    bool ret = pathExists(startPos.first, startPos.second, s, w, t.subcells, prepArray, d); //Check that a valid path exists through the tile
+    bool ret = pathExists(startPos.first, startPos.second, s, w, prepArray, d); //Check that a valid path exists through the tile
 
     free(prepArray); //Prevent memory leak;
 
     return ret;
 }
 
-//For combining tiles along the four cardinal directions
+//For combining tiles cardinal directions
 int* combineTiles(std::vector<int*> tArray, int w) {
     int* retArray = (int*)malloc(w * w * tArray.size() *sizeof(int));
     if (!retArray) return NULL;
@@ -256,7 +306,7 @@ int* getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, Direction8 d
                 return NULL;
             }
             else if (index / g->gridWidth == 0) tArr = { g->tiles[index].subcells, g->tiles[index + g->gridWidth].subcells };
-            else if (index % g->gridWidth == g->gridHeight - 1) tArr = { g->tiles[index - g->gridWidth].subcells, g->tiles[index].subcells };
+            else if (index / g->gridWidth == g->gridHeight - 1) tArr = { g->tiles[index - g->gridWidth].subcells, g->tiles[index].subcells };
             else tArr = { g->tiles[index - g->gridWidth].subcells, g->tiles[index].subcells, g->tiles[index + g->gridWidth].subcells };
             break;
         case NW:
@@ -306,7 +356,9 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
     else
         width = 2;
     width *= g->subWidth;
-
+    
+    //THIS ISN'T RIGHT!!!!!!!! WILL FAIL IF CANNOT FIT ONTO TILE AT ALL IN THIS DIRECTION
+    //NEED TO CONSIDER ADJACENT TILES IN STARTPOS CALC TOO!!!!!
     std::pair<int, int> startPos = getStartPos(g->tiles[index].subcells, g->subWidth, s, d); //Get the start position
 
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
@@ -330,7 +382,146 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
         return false;
     }
 
-    bool ret = pathExists(startPos.first, startPos.second, s, width, combinedCells, prepArray, d); //Check that a valid path exists through the tile
+    bool ret = pathExists(startPos.first, startPos.second, s, width, prepArray, d); //Check that a valid path exists through the tile
+
+    //Prevent memory leaks
+    free(combinedCells);
+    free(prepArray); 
+
+    return ret;
+}
+
+//A bunch of helper bools for the trimCells function
+bool isAtTopEdge(Vector2 vec) {
+    return vec.y == -1;
+}
+
+bool isAtLeftEdge(Vector2 vec) {
+    return vec.x == -1;
+}
+
+bool isAtRightEdge(Vector2 vec) {
+    return vec.x == 1;
+}
+
+bool isAtBottomEdge(Vector2 vec) {
+    return vec.y == 1;
+}
+
+//Returns a vector of Vector2s that represent all the coordinates of the 
+//"valid" neighbour cells of the current index
+//It removes all the non-valid neighbours (those that would end up outside the grid)
+//from the vector it returns
+std::vector<Vector2> trimCells(int index, int gridWidth, int gridHeight, Direction8 d) {
+    //Break check on bad indeces
+    if(index < 0 || index >= (gridWidth * gridHeight)) {
+        return std::vector<Vector2>();
+    }
+
+    //The basic vector contains all of the coordinates of the neighbour cells, as well as the current cell
+    std::vector<Vector2> retVec = {Vector2(-1, -1), Vector2(0, -1), Vector2(1, -1), 
+                                   Vector2(-1,  0), Vector2(0, 0),  Vector2(1, 0), 
+                                   Vector2(-1, 1),  Vector2(0, 1),  Vector2(1, 1)};
+    
+    //Trimming the cells based on direction
+    switch(d) {
+        case N:
+            retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtBottomEdge), retVec.end());
+            break;
+        case E:
+            retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtLeftEdge), retVec.end());
+            break;
+        case S:
+            retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtTopEdge), retVec.end());
+            break;
+        case W:
+            retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtRightEdge), retVec.end());
+            break;
+        case NE:
+            retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtBottomEdge), retVec.end());
+            retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtLeftEdge), retVec.end());
+            break;
+        case NW:
+            retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtBottomEdge), retVec.end());
+            retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtRightEdge), retVec.end());
+            break;
+        case SE:
+            retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtTopEdge), retVec.end());
+            retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtLeftEdge), retVec.end());
+            break;
+        case SW:
+            retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtTopEdge), retVec.end());
+            retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtRightEdge), retVec.end());
+            break;
+    }
+    
+    //Trimming the cells if we are at an edge
+    if(index % gridWidth == 0) {
+        retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtLeftEdge), retVec.end());
+    } 
+    if(index % gridWidth == gridWidth - 1){
+        retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtRightEdge), retVec.end());
+    }
+    if(index / gridWidth == 0) {
+        retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtTopEdge), retVec.end());
+    }
+    if(index / gridWidth == gridHeight - 1) {
+        retVec.erase(std::remove_if(retVec.begin(), retVec.end(), isAtBottomEdge), retVec.end());
+    }
+
+    return retVec;
+}
+
+int* getNeighbourCells(int index, std::shared_ptr<GridData>g, Vector2 vec) {
+    return g->tiles[index+ (g->gridWidth*vec.y) + vec.x].subcells;
+}
+
+int* createSurroundGrid(int index, std::shared_ptr<GridData> g, Direction8 d) {
+    //Get the coordinates of all of the neighbours of the cell that are inside the grid
+    std::vector<Vector2> neighbours = trimCells(index, g->gridWidth, g->gridHeight, d);
+
+    //Create the new vector:
+    std::vector<int*> subcellArr(neighbours.size());
+    std::transform(neighbours.begin(), neighbours.end(), subcellArr.begin(),
+                    [index, g](Vector2 v) {return getNeighbourCells(index, g, v);});
+
+    //Combine the neighbour and current cells together
+    return combineTiles(subcellArr, g->subWidth);
+}
+
+bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int indexTo, int s) {
+    //Make the grid subset that we need to path on to get to the desired direction
+    int* combinedCells = createSurroundGrid(indexAt, g, to);
+    if(!combinedCells) return false;
+
+    //The width of the combined grid
+    int width = (indexAt % g->gridWidth == 0 || indexAt % g->gridWidth == g->gridWidth-1) ? 2 : 3;
+    width *= g->subWidth;
+
+    //Find startPosition and endPosition depending on from and to
+    std::pair<int, int> startPos = getStartPos(g->tiles[indexAt].subcells, g->subWidth, s, from);
+    if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
+    std::pair<int, int> endPos = getStartPos(g->tiles[indexTo].subcells, width, s, to);
+    if (endPos == std::make_pair(-1, -1)) return false; //Check that it is valid
+
+    //Need to adjust start position to work in the overall combined grid
+    if (to == N || to == S)
+        startPos.first += g->subWidth;
+    else if (to == W || to == E)
+        startPos.second += g->subWidth;
+    else {
+        startPos.first = g->subWidth;
+        startPos.second = g->subWidth;
+    }
+
+    //Find if there is a path between them 
+    bool* prepArray = preprocessValidPositions(combinedCells, width, s);//Get the valid positions in the array
+    if (!prepArray) {
+        free(combinedCells);
+        return false;
+    }
+
+    bool ret = pathExistsTo(startPos.first, startPos.second, endPos.first, endPos.second, s, width, prepArray); //Check that a valid path exists through the tile
 
     //Prevent memory leaks
     free(combinedCells);

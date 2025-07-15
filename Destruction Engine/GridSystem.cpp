@@ -377,46 +377,64 @@ std::vector<Node> PathFindingSystem::FindPath2(Vector2 start, Vector2 goal) {
         //Otherwise mark the current node as visited
         closedList.insert(current);
 
-        //Visit all of its neighbours and insert them into the openList
-        for (int i = 0; i < 8; ++i) {
-            //The neighbour's coordinates
-            int newX = current.x + directionX[i];
-            int newY = current.y + directionY[i];
+        if (grid->tiles[toIndex(grid, Vector2(current.x, current.y))].status == 0) {
+            //Visit all of its neighbours and insert them into the openList
+            for (int i = 0; i < 8; ++i) {
+                //The neighbour's coordinates
+                int newX = current.x + directionX[i];
+                int newY = current.y + directionY[i];
 
-            //Making sure we don't go out of grid bounds and crash the program
-            if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
-                int index = toIndex(grid, Vector2(newX, newY));
-                bool updateNeighbour = false; //Bool that holds if we can add a new neighbour to the open list or not
-                if (grid->tiles[index].status == 0) { //If neighbour is walkable
-                    updateNeighbour = true;
-                }
-
-                if (grid->tiles[index].status == 2) { //If neighbour is partial
-                    auto direction = getDirectionMap().at(Vector2(newX, newY));
-                    if (isPathable(grid->tiles[index], direction, 2, grid->subWidth) || isPathableWithAdjacent(index, grid, direction, 2)) {
+                //Making sure we don't go out of grid bounds and crash the program
+                if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+                    int index = toIndex(grid, Vector2(newX, newY));
+                    bool updateNeighbour = false; //Bool that holds if we can add a new neighbour to the open list or not
+                    if (grid->tiles[index].status == 0) { //If neighbour is walkable
                         updateNeighbour = true;
                     }
-                }
 
-                //If we can add the neighbour to the openList, do so.
-                if (updateNeighbour) {
-                    Node neighbor(newX, newY);
-                    //If it is not already visited
-                    if (closedList.find(neighbor) == closedList.end()) {
-                        int moveCost = (directionX[i] != 0 && directionY[i] != 0) ? diagonalCost : straightCost;
+                    if (grid->tiles[index].status == 2) { //If neighbour is partial
+                        auto direction = getDirectionMap().at(Vector2(newX, newY));
+                        if (isPathable(grid->tiles[index], direction, 2, grid->subWidth) || isPathableWithAdjacent(index, grid, direction, 2)) {
+                            updateNeighbour = true;
+                        }
+                    }
 
-                        int tentativeG = gScore[toIndex(grid, Vector2(current.x, current.y))] + moveCost;
+                    //If we can add the neighbour to the openList, do so.
+                    if (updateNeighbour) {
+                        Node neighbor(newX, newY);
+                        //If it is not already visited
+                        if (closedList.find(neighbor) == closedList.end()) {
+                            int moveCost = (directionX[i] != 0 && directionY[i] != 0) ? diagonalCost : straightCost;
 
-                        if (tentativeG < gScore[index]) {
-                            gScore[index] = tentativeG;
-                            neighbor.g = tentativeG;
-                            neighbor.h = getDistance(neighbor, goalNode);
-                            neighbor.f = neighbor.g + neighbor.h;
-                            cameFrom[neighbor] = current;
-                            openList.push(neighbor);
+                            int tentativeG = gScore[toIndex(grid, Vector2(current.x, current.y))] + moveCost;
+
+                            if (tentativeG < gScore[index]) {
+                                gScore[index] = tentativeG;
+                                neighbor.g = tentativeG;
+                                neighbor.h = getDistance(neighbor, goalNode);
+                                neighbor.f = neighbor.g + neighbor.h;
+                                cameFrom[neighbor] = current;
+                                openList.push(neighbor);
+                            }
                         }
                     }
                 }
+            }
+        }
+        else {
+            //Figure out how we are going to pathfind on partial tiles
+            //I mean we could do it by just manually checking each direction,
+            //Seeing if it is pathable, and then just checking the three tiles there?
+            //Sounds stupid, but doable.
+            //Essentially, what we need to do is to have each Node struct also store the direction
+            //that we would be coming from to reach it. Then we need to determine if there is a 
+            //path between that origin direction and the destination direction, even if it is exitable on that
+            //side. Will have to do it using adjacent cells, because otherwise then can't determine if the 
+            //agent fits or not. Then we do the stupid tile checks
+            const TileData& t = grid->tiles[toIndex(grid, Vector2(current.x, current.y))];
+            for(int i = 0; i < 8; i++) {
+                auto direction = getDirectionMap().at(Vector2(directionX[i], directionY[i]));
+                
             }
         }
     }

@@ -2,6 +2,7 @@
 #include <vector>
 #include <memory>
 #include<array>
+#include <algorithm>
 #include "Maths.h"
 
 //For now, just have these be constants. Need to figure out how to link grid and pathfinding properly
@@ -67,6 +68,8 @@ int numExits(const TileData& t);
 //Determines whether an agent of a certain size could walk through this tile
 bool isPathable(const TileData& t, Direction8 d, int s, int w);
 //Determines whether a path exists for an agent of a certain size through the subcell grid
-//bool pathExists(int startX, int startY, int s, const TileData& t, const std::array<bool, 16>& pArr, Direction8 startDirection);
-//For processing pathfinding across adjacent tiles;
+//For processing pathfinding across adjacent tiles
 bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d, int s);
+//Determines whether there is a path, standing in the tile, for an agent to move between
+//one direction and another
+bool isPathBetween(Direction8 d1, Direction8 d2, const TileData& t, std::shared_ptr<GridData> g, int s);
