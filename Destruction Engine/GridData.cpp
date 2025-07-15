@@ -505,15 +505,64 @@ bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, 
     if (endPos == std::make_pair(-1, -1)) return false; //Check that it is valid
 
     //Need to adjust start position to work in the overall combined grid
-    if (to == N || to == S)
+    /*if (from == N || from == S)
         startPos.first += g->subWidth;
-    else if (to == W || to == E)
+    else if (from == W || from == E)
         startPos.second += g->subWidth;
     else {
         startPos.first = g->subWidth;
         startPos.second = g->subWidth;
+    }*/
+    //I think these are the correct adjusted start and end positions
+    switch(from) {
+        case N:
+        case S:
+            startPos.first += g->subWidth;
+            break;
+        case E:
+        case W:
+            startPos.second += g->subWidth;
+            break;
+        case NW:
+            startPos.first = 0;
+            startPos.second = 0;
+            break;
+        case NE:
+            startPos.first = g->subWidth-1;
+            startPos.second = 0;
+            break;
+        case SW:
+            startPos.first = 0;
+            startPos.second = g->subWidth-1;
+            break;
+        case SE:
+            endPos.first = g->subWidth;
+            endPos.second = g->subWidth;
+            break;
     }
-
+ 
+    switch(to) {
+        case N:
+            endPos.second -= g->subWidth;
+            endPos.first += g->subWidth;
+            break;
+        case S:
+            endPos.second += g->subWidth;
+            endPos.first += g->subWidth;
+            break;
+        case E:
+            endPos.first += g->subWidth;
+            endPos.second += g->subWidth;
+            break;
+        case W:
+            endPos.first -= g->subWidth;
+            endPos.second += g->subWidth;
+            break;
+        default:
+            endPos.second = g->subWidth;
+            endPos.first = g->subWidth;
+            break;
+    }
     //Find if there is a path between them 
     bool* prepArray = preprocessValidPositions(combinedCells, width, s);//Get the valid positions in the array
     if (!prepArray) {

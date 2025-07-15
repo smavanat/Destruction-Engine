@@ -72,4 +72,4 @@ bool isPathable(const TileData& t, Direction8 d, int s, int w);
 bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d, int s);
 //Determines whether there is a path, standing in the tile, for an agent to move between
 //one direction and another
-bool isPathBetween(Direction8 d1, Direction8 d2, const TileData& t, std::shared_ptr<GridData> g, int s);
+bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int indexTo, int s);
