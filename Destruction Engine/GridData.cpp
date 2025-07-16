@@ -159,7 +159,7 @@ bool pathExists(int startX, int startY, int s, int w, bool* pArr, Direction8 sta
 
 bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, bool* pArr) {
     //If the start is invalid, return false
-    if (!pArr[(startY*w)+startX] || pArr[(endY*w)+endX]) return false;
+    if (!pArr[(startY*w)+startX] ||!pArr[(endY*w)+endX]) return false;
 
     //Initialise the variables
     bool found = false;

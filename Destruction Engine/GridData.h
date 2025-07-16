@@ -73,3 +73,22 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
 //Determines whether there is a path, standing in the tile, for an agent to move between
 //one direction and another
 bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int indexTo, int s);
+
+//These functions should not be included in this header file in the final build
+//They are here for now so I can run unit tests on them in the testbed
+bool isValidPos(int* subcellArr, int w, int x, int y, int s); 
+bool* preprocessValidPositions(int* subcellArr, int w, int s); 
+bool touchesEdge(int x, int y, int s, int n); 
+bool checkEdge(int x, int y, int s, int n, Direction8 d); 
+bool pathExists(int startX, int startY, int s, int w, bool* pArr, Direction8 startDirection); 
+bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, bool* pArr);
+std::pair<int, int> getStartPos(int* subcellArr, int w, int s, Direction8 d);
+int* combineTiles(std::vector<int*> tArray, int w);
+int* getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, Direction8 d);
+bool isAtTopEdge(Vector2 vec);
+bool isAtLeftEdge(Vector2 vec);
+bool isAtRightEdge(Vector2 vec);
+bool isAtBottomEdge(Vector2 vec);
+std::vector<Vector2> trimCells(int index, int gridWidth, int gridHeight, Direction8 d);
+int* getNeighbourCells(int index, std::shared_ptr<GridData>g, Vector2 vec);
+int* createSurroundGrid(int index, std::shared_ptr<GridData> g, Direction8 d);
