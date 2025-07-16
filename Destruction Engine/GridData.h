@@ -24,7 +24,7 @@ struct TileData {
 	uint8_t status; //0 -> walkable, 1 -> blocked 2 -> partial
 	uint8_t type; //Represents the type of tile, could be used for weighted pathfinding
 	
-	int* subcells; //Holds the subcell representation of the grid
+	std::vector<int> subcells; //Holds the subcell representation of the grid
 	std::array<bool, 4> exitable; //Holds which sides can be exited from in this tile
 };
 
@@ -76,19 +76,19 @@ bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, 
 
 //These functions should not be included in this header file in the final build
 //They are here for now so I can run unit tests on them in the testbed
-bool isValidPos(int* subcellArr, int w, int x, int y, int s); 
-bool* preprocessValidPositions(int* subcellArr, int w, int s); 
+bool isValidPos(std::vector<int> subcellArr, int w, int x, int y, int s); 
+std::vector<bool> preprocessValidPositions(std::vector<int> subcellArr, int w, int s); 
 bool touchesEdge(int x, int y, int s, int n); 
 bool checkEdge(int x, int y, int s, int n, Direction8 d); 
-bool pathExists(int startX, int startY, int s, int w, bool* pArr, Direction8 startDirection); 
-bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, bool* pArr);
-std::pair<int, int> getStartPos(int* subcellArr, int w, int s, Direction8 d);
-int* combineTiles(std::vector<int*> tArray, int w);
-int* getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, Direction8 d);
+bool pathExists(int startX, int startY, int s, int w, std::vector<bool> pArr, Direction8 startDirection); 
+bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, std::vector<bool> pArr);
+std::pair<int, int> getStartPos(std::vector<int> subcellArr, int w, int s, Direction8 d);
+std::vector<int> combineTiles(std::vector<std::vector<int>*> tArray, int w);
+std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, Direction8 d);
 bool isAtTopEdge(Vector2 vec);
 bool isAtLeftEdge(Vector2 vec);
 bool isAtRightEdge(Vector2 vec);
 bool isAtBottomEdge(Vector2 vec);
 std::vector<Vector2> trimCells(int index, int gridWidth, int gridHeight, Direction8 d);
-int* getNeighbourCells(int index, std::shared_ptr<GridData>g, Vector2 vec);
-int* createSurroundGrid(int index, std::shared_ptr<GridData> g, Direction8 d);
+std::vector<int>* getNeighbourCells(int index, std::shared_ptr<GridData>g, Vector2 vec);
+std::vector<int> createSurroundGrid(int index, std::shared_ptr<GridData> g, Direction8 d);

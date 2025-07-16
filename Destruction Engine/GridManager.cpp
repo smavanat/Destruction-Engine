@@ -88,16 +88,14 @@ bool GridSystemManager::loadGridFromFile(std::string path) {
                 if (tileType == 0) {
                     grid->tiles[i].status = 0;
                     //grid->tiles[i].subcells.fill(0);
-                    grid->tiles[i].subcells = (int*)malloc(grid->subWidth * grid->subWidth*sizeof(int));
-                    memset(grid->tiles[i].subcells, 0, grid->subWidth * grid->subWidth * sizeof(int));
+                    grid->tiles[i].subcells = std::vector<int>(grid->subWidth*grid->subWidth, 0);
                     grid->tiles[i].exitable.fill(true);
                 }
                 //Filled tile
                 else {
                     grid->tiles[i].status = 1;
                     //grid->tiles[i].subcells.fill(1);
-                    grid->tiles[i].subcells = (int*)malloc(grid->subWidth * grid->subWidth * sizeof(int));
-                    memset(grid->tiles[i].subcells, 1, grid->subWidth * grid->subWidth * sizeof(int));
+                    grid->tiles[i].subcells = std::vector<int>(grid->subWidth*grid->subWidth, 1);
                     grid->tiles[i].exitable.fill(false);
                 }
             }
@@ -110,10 +108,4 @@ bool GridSystemManager::loadGridFromFile(std::string path) {
         }
     }
     return true;
-}
-
-void GridSystemManager::free() {
-    for (int i = 0; i < grid->gridHeight * grid->gridWidth; i++) {
-        ::free(grid->tiles[i].subcells);
-    }
 }

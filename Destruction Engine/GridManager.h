@@ -10,7 +10,6 @@ public:
 	GridSystemManager(int tWidth, int tHeight, int gWidth, int gHeight, std::string path);
 	void update(float dt);
 	bool loadGridFromFile(std::string path);
-	void free();
 private:
 	std::shared_ptr<GridSystem> gSystem;
 	std::shared_ptr<PathFindingSystem> pSystem;
