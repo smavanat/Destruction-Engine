@@ -422,8 +422,9 @@ std::vector<Node> PathFindingSystem::FindPath2(Vector2 start, Vector2 goal) {
                 //Making sure we don't go out of grid bounds and crash the program
                 if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
                     auto direction = getDirectionMap().at(Vector2(newX, newY));
+                    auto directionFrom = getDirectionMap().at(Vector2(current.x - cameFrom[current].x, current.y - cameFrom[current].y));
                     //Need to figure out how to get direction that we are coming from.
-                    if(isPathBetween(, direction, grid, toIndex(grid, Vector2(current.x, current.y)), toIndex(grid, Vector2(newX, newY)), 2)) {
+                    if(isPathBetween(directionFrom, direction, grid, toIndex(grid, Vector2(current.x, current.y)), toIndex(grid, Vector2(newX, newY)), 2)) {
                         goodNeighbours.push_back(Node(newX, newY));
                     }
                 }

@@ -359,7 +359,8 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
     
     //THIS ISN'T RIGHT!!!!!!!! WILL FAIL IF CANNOT FIT ONTO TILE AT ALL IN THIS DIRECTION
     //NEED TO CONSIDER ADJACENT TILES IN STARTPOS CALC TOO!!!!!
-    std::pair<int, int> startPos = getStartPos(g->tiles[index].subcells, g->subWidth, s, d); //Get the start position
+    //Maybe just set size to 1 to avoid problems for now
+    std::pair<int, int> startPos = getStartPos(g->tiles[index].subcells, g->subWidth, 1, d); //Get the start position
 
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
 
