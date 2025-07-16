@@ -161,12 +161,17 @@ bool init() {
                     1,1,1,1};
     MS_01.subcells = temp;
     MS_01.exitable = {false, false, false, false};
+    return true;
 }
 
 bool isValidPosTestPos() {
-    
+
 }
 
 bool isValidPosTestNeg() {
 
+}
+
+int main(int argc, char* args[]) {
+    return 0;
 }
