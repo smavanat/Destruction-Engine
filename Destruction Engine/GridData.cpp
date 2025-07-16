@@ -70,7 +70,7 @@ bool touchesEdge(int x, int y, int s, int n) {
     return x == 0 || y == 0 || x + s == n || y + s == n;
 }
 
-//Whether the agent standing at position at (x,y) would exit to a different direction 
+//Whether the agent standing at position at (x,y) would exit to the same direction 
 //to the one it entered the subcell grid from
 bool checkEdge(int x, int y, int s, int n, Direction8 d) {
     switch (d) {

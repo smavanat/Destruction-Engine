@@ -23,6 +23,7 @@ TileData MS_12;
 TileData MS_13;
 TileData MS_14;
 TileData MS_15;
+const int size = 2;
 bool init() {
     //The main grid we are going to use for testing:
     mainGrid.subWidth = 4;
@@ -153,10 +154,10 @@ bool init() {
 
 TEST_CASE("isValidPos works", "[pathfinding]") {
     init();
-    REQUIRE(isValidPos(MS_00.subcells, mainGrid.subWidth, 0, 0, 2) == true);
-    REQUIRE(isValidPos(MS_05.subcells, mainGrid.subWidth, 1, 1, 2) == true);
-    REQUIRE(isValidPos(MS_15.subcells, mainGrid.subWidth, 0, 0, 2) == false);
-    REQUIRE(isValidPos(MS_07.subcells, mainGrid.subWidth, 0, 0, 2) == false);
+    REQUIRE(isValidPos(MS_00.subcells, mainGrid.subWidth, 0, 0, size) == true);
+    REQUIRE(isValidPos(MS_05.subcells, mainGrid.subWidth, 1, 1, size) == true);
+    REQUIRE(isValidPos(MS_15.subcells, mainGrid.subWidth, 0, 0, size) == false);
+    REQUIRE(isValidPos(MS_07.subcells, mainGrid.subWidth, 0, 0, size) == false);
 }
 
 TEST_CASE("preprocessValidPositions works", "[pathfinding]") {
@@ -170,12 +171,48 @@ TEST_CASE("preprocessValidPositions works", "[pathfinding]") {
 //Need to see if need to change touches edge because does not take origin touching edge as valid.
 TEST_CASE("touchesEdge works", "[pathfinding]") {
     init();
-    REQUIRE(touchesEdge(0, 0, 2, mainGrid.subWidth) == true); //NW corner
-    REQUIRE(touchesEdge(1, 0, 2, mainGrid.subWidth) == true); //N side
-    REQUIRE(touchesEdge(2, 0, 2, mainGrid.subWidth) == true); //NE corner
-    REQUIRE(touchesEdge(2, 1, 2, mainGrid.subWidth) == true); //E side
-    REQUIRE(touchesEdge(2, 2, 2, mainGrid.subWidth) == true); //SE corner
-    REQUIRE(touchesEdge(1, 2, 2, mainGrid.subWidth) == true); //S side
-    REQUIRE(touchesEdge(0, 2, 2, mainGrid.subWidth) == true); //SW corner
-    REQUIRE(touchesEdge(0, 2, 2, mainGrid.subWidth) == true); //W side
+    REQUIRE(touchesEdge(0, 0, size, mainGrid.subWidth) == true); //NW corner
+    REQUIRE(touchesEdge(1, 0, size, mainGrid.subWidth) == true); //N side
+    REQUIRE(touchesEdge(2, 0, size, mainGrid.subWidth) == true); //NE corner
+    REQUIRE(touchesEdge(2, 1, size, mainGrid.subWidth) == true); //E side
+    REQUIRE(touchesEdge(2, 2, size, mainGrid.subWidth) == true); //SE corner
+    REQUIRE(touchesEdge(1, 2, size, mainGrid.subWidth) == true); //S side
+    REQUIRE(touchesEdge(0, 2, size, mainGrid.subWidth) == true); //SW corner
+    REQUIRE(touchesEdge(0, 2, size, mainGrid.subWidth) == true); //W side
+}
+
+TEST_CASE("checkEdge works", "[pathfinding]") {
+    init();
+    //Going to check each side in pairs.
+    //Each pair will have a set of coordinates that return true and a set of coordinates
+    //that return false.
+
+    //NW
+    REQUIRE(checkEdge(0,0, size, mainGrid.subWidth, NW) == true);
+    REQUIRE(checkEdge(0,1, size, mainGrid.subWidth, NW) == false);
+    //NE
+    REQUIRE(checkEdge(2,0, size, mainGrid.subWidth, NE) == true);
+    REQUIRE(checkEdge(0,0, size, mainGrid.subWidth, NE) == false);
+    //SE
+    REQUIRE(checkEdge(2,2, size, mainGrid.subWidth, SE) == true);
+    REQUIRE(checkEdge(0,0, size, mainGrid.subWidth, SE) == false);
+    //SW
+    REQUIRE(checkEdge(0,2, size, mainGrid.subWidth, SW) == true);
+    REQUIRE(checkEdge(0,0, size, mainGrid.subWidth, SW) == false);
+    //N
+    REQUIRE(checkEdge(1,0, size, mainGrid.subWidth, N) == true);
+    REQUIRE(checkEdge(0,1, size, mainGrid.subWidth, N) == false);
+    //E
+    REQUIRE(checkEdge(2,1, size, mainGrid.subWidth, E) == true);
+    REQUIRE(checkEdge(0,0, size, mainGrid.subWidth, E) == false);
+    //S
+    REQUIRE(checkEdge(1,2, size, mainGrid.subWidth, S) == true);
+    REQUIRE(checkEdge(0,0, size, mainGrid.subWidth, S) == false);
+    //W
+    REQUIRE(checkEdge(0,1, size, mainGrid.subWidth, W) == true);
+    REQUIRE(checkEdge(1,0, size, mainGrid.subWidth, W) == false);
+}
+
+TEST_CASE("pathExists works", "[pathfinding]") {
+
 }
