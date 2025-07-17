@@ -106,7 +106,7 @@ bool checkEdge(int x, int y, int s, int n, Direction8 d) {
 }
 
 Direction8 getStartDirectionByPosition(int x, int y, int w){
-    if((x > 0 && x != w - 1) && ( y > 0 && y != w - 1)) return INVALID; //Something??
+    if((x > 0 && x != w - 1) && ( y > 0 && y != w - 1)) return INVALID; 
     
     if(x == 0 && y == 0) return NW;
     if(x == 0 && (y > 0 && y < w - 1)) return W;
@@ -122,6 +122,11 @@ Direction8 getStartDirectionByPosition(int x, int y, int w){
 
 //Runs a version of bfs to check if a path exists from a specific starting position for an agent of size s*s 
 //to pass through
+//startX, startY are the starting x and y positions.
+//s is the size of the agent
+//w is the width of the subcell array we are working on
+//pArr is the array of preprocessed valid positions
+//startDirection is the direction we entered the tile from
 bool pathExists(int startX, int startY, int s, int w, std::vector<bool> pArr, Direction8 startDirection) {
     //If the start is invalid, return false
     //if (!pArr[(startY*w)+startX]) return false;
@@ -177,6 +182,11 @@ bool pathExists(int startX, int startY, int s, int w, std::vector<bool> pArr, Di
     return found; //No path out of the subcell grid found
 }
 
+//startX, startY are the starting x and y positions.
+//endX, endY are the ending x and y positions.s
+//s is the size of the agent
+//w is the width of the subcell array we are working on
+//pArr is the array of preprocessed valid positions
 bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, std::vector<bool> pArr) {
     //If the start is invalid, return false
     //if (!pArr[(startY*w)+startX] ||!pArr[(endY*w)+endX]) return false;
@@ -232,6 +242,9 @@ bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, std:
 }
 
 //Gets the start position for an agent of size s*s in a subcell grid of size w*w
+//subcellArr is the subcell array we are working with
+//w is the width of the array
+//s is the size of the agent
 std::pair<int, int> getStartPos(std::vector<int> subcellArr, int w, int s, Direction8 d) {
     switch (d) {
     case NW:
@@ -269,6 +282,19 @@ std::pair<int, int> getStartPos(std::vector<int> subcellArr, int w, int s, Direc
     }
 }
 
+Direction8 getOppositeDirection(Direction8 d) {
+    switch(d) {
+        case N: return S;
+        case E: return W;
+        case S: return N;
+        case W: return E;
+        case NW: return SE;
+        case NE: return SW;
+        case SE: return NW;
+        case SW: return NE;
+    }
+}
+
 //Checks if there is a valid path to pass through the subcell grid
 //if coming from a certain direction
 bool isPathable(const TileData& t, Direction8 d, int s, int w) {
@@ -276,24 +302,32 @@ bool isPathable(const TileData& t, Direction8 d, int s, int w) {
     if (numExits(t) < 2)
         return false;
 
-    std::pair<int, int> startPos = getStartPos(t.subcells, w, s, d); //Get the start position
+    std::pair<int, int> startPos = getStartPos(t.subcells, w, s, getOppositeDirection(d)); //Get the start position
 
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
 
     std::vector<bool> prepArray = preprocessValidPositions(t.subcells, w, s);//Get the valid positions in the array
 
-    bool ret = pathExists(startPos.first, startPos.second, s, w, prepArray, d); //Check that a valid path exists through the tile
+    bool ret = pathExists(startPos.first, startPos.second, s, w, prepArray, getOppositeDirection(d)); //Check that a valid path exists through the tile
 
     return ret;
 }
 
-//For combining tiles cardinal directions
-std::vector<int> combineTiles(std::vector<std::vector<int>*> tArray, int w) {
-    std::vector<int> retArray(w*w*tArray.size(), 0);
+std::vector<int> combineTiles(std::vector<std::vector<int>*> tArray, int tileW, int newGridW, int newGridH) {
+    std::vector<int> retArray(tileW*tileW*tArray.size(), 0);
 
-    for(int i = 0; i < tArray.size(); i++) {
-        for(int j = 0; j < w*w; j++) {
-                retArray[(i*w*w)+j] = tArray[i]->at(j);
+    //This is incredibly disgusting, and unfortunately very necessary 
+    for(int gridX = 0; gridX < newGridW; gridX++) {
+        for(int gridY = 0; gridY < newGridH; gridY++) {
+            for(int tileX = 0; tileX < tileW; tileX++) {
+                for(int tileY = 0; tileY < tileW; tileY++) {
+                    int combinedWidth = tileW * newGridW;
+                    int dstX = gridX * tileW + tileX;
+                    int dstY = gridY * tileW + tileY;
+                    retArray[dstY * combinedWidth + dstX] = 
+                    tArray[(gridY*newGridW) + gridX]->at((tileY*tileW) + tileX);
+                }
+            }
         }
     }
     return retArray;
@@ -324,10 +358,18 @@ std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, 
             else index += g->subWidth;
             
             if (index < 0 || index >= g->tiles.size()) return std::vector<int>();
-            else if (index % g->gridWidth == 0) tArr = { &g->tiles[index].subcells, &g->tiles[index + 1].subcells };
-            else if (index % g->gridWidth == g->gridWidth - 1) tArr = { &g->tiles[index - 1].subcells, &g->tiles[index].subcells };
-            else tArr = { &g->tiles[index - 1].subcells, &g->tiles[index].subcells, &g->tiles[index + 1].subcells };
-            break;
+            else if (index % g->gridWidth == 0) {
+                tArr = { &g->tiles[index].subcells, &g->tiles[index + 1].subcells };
+                return combineTiles(tArr, g->subWidth, 2, 1);
+            }
+            else if (index % g->gridWidth == g->gridWidth - 1) {
+                tArr = { &g->tiles[index - 1].subcells, &g->tiles[index].subcells }; 
+                return combineTiles(tArr, g->subWidth, 2, 1); 
+            } 
+            else {
+                tArr = { &g->tiles[index - 1].subcells, &g->tiles[index].subcells, &g->tiles[index + 1].subcells };
+                return combineTiles(tArr, g->subWidth, 3, 1);
+            }
         case E:
         case W:
             //If we are on the western/easter edges, then we cannot move west/east
@@ -338,40 +380,49 @@ std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, 
             else index -= 1;
 
             if (index < 0 || index >= g->tiles.size()) return std::vector<int>();
-            else if (index / g->gridWidth == 0) tArr = { &g->tiles[index].subcells, &g->tiles[index + g->gridWidth].subcells };
-            else if (index / g->gridWidth == g->gridHeight - 1) tArr = { &g->tiles[index - g->gridWidth].subcells, &g->tiles[index].subcells };
-            else tArr = { &g->tiles[index - g->gridWidth].subcells, &g->tiles[index].subcells, &g->tiles[index + g->gridWidth].subcells };
-            break;
+            else if (index / g->gridWidth == 0) {
+                tArr = { &g->tiles[index].subcells, &g->tiles[index + g->gridWidth].subcells };
+                return combineTiles(tArr, g->subWidth, 1, 2);
+            }
+            else if (index / g->gridWidth == g->gridHeight - 1) {
+                tArr = { &g->tiles[index - g->gridWidth].subcells, &g->tiles[index].subcells };
+                return combineTiles(tArr, g->subWidth, 1, 2);
+            }
+            else {
+                tArr = { &g->tiles[index - g->gridWidth].subcells, &g->tiles[index].subcells, &g->tiles[index + g->gridWidth].subcells };
+                return combineTiles(tArr, g->subWidth, 1, 3);
+            }
+            
         case NW:
             //If we are outside the bounds of the grid, or on the northern or western edges, then we cannot move northwest
             if (index < 0 || index >= g->tiles.size() || index % g->subWidth == 0 || index / g->subWidth == 0) {
                 return std::vector<int>();
             }
             tArr = {&g->tiles[(index - g->gridWidth) - 1].subcells, &g->tiles[index - g->gridWidth].subcells, &g->tiles[index-1].subcells, &tempArr};
-            break;
+            return combineTiles(tArr, g->subWidth, 2, 2);
         case NE:
             //If we are outside the bounds of the grid, or on the northern or eastern edges, then we cannot move northeast
             if (index < 0 || index >= g->tiles.size() || index % g->subWidth == g->subWidth - 1 || index / g->subWidth == 0) {
                 return std::vector<int>();
             }
             tArr = {&g->tiles[index - (g->gridWidth)].subcells, &g->tiles[(index - g->gridWidth) + 1].subcells, &tempArr, &g->tiles[index+1].subcells};
-            break;
+            return combineTiles(tArr, g->subWidth, 2, 2);
         case SW:
             //If we are outside the bounds of the grid, or on the southern or eastern edges, then we cannot move southwest
             if (index < 0 || index >= g->tiles.size() || index % g->subWidth == 0 || index / g->subWidth == g->subWidth - 1) {
                 return std::vector<int>();
             }
             tArr = { &g->tiles[index - 1].subcells, &tempArr, &g->tiles[(index + g->subWidth) - 1].subcells, &g->tiles[index + g ->subWidth].subcells };
-            break;
+            return combineTiles(tArr, g->subWidth, 2, 2);
         case SE:
             //If we are outside the bounds of the grid, or on the sourthern or eastern edges, then we cannot move southeast
             if (index < 0 || index >= g->tiles.size() || index % g->subWidth == g->subWidth - 1 || index / g->subWidth == g->subWidth - 1) {
                 return std::vector<int>();
             }
             tArr = { &tempArr, &g->tiles[index +1].subcells, &g->tiles[index + g->subWidth].subcells, &g->tiles[index + g->subWidth + 1].subcells };
-            break;
+            return combineTiles(tArr, g->subWidth, 2, 2);
     }
-    return combineTiles(tArr, g->subWidth);
+    //return combineTiles(tArr, g->subWidth);
 }
 
 int getWidth(int index, int w, Direction8 d) {
@@ -391,12 +442,16 @@ int getWidth(int index, int w, Direction8 d) {
 //g is the grid that we are pathfinding in
 //d is the direction we want to move in
 //s is the size of the agent
+//ISSUE: THIS FUNCTION WORKS UNDER THE ASSUMPTION THAT d IS THE DIRECTION WE ARE MOVING IN, 
+//BUT OTHER FUNCTIONS, LIKE getStartPos, and isPathable, WORK UNDER THE ASSUMPTION THAT d 
+//IS THE DIRECTION WE ARE COMING FROM, i.e. THE OPPOSITE. NEED TO FIX THIS DISCREPANCY OTHERWISE 
+//THE WHOLE CODE IS FUCKED. I THINK WE SHOULD STAY WITH d BEING THE DIRECTION WE WANT TO MOVE IN
 bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d, int s) {
     if (numExits(g->tiles[index]) < 2) return false;
 
     //Determining the correct width based on orientation
     
-    int width = getWidth(index, g->subWidth, d);
+    int width = getWidth(index, g->gridWidth, d);
     
     //THIS ISN'T RIGHT!!!!!!!! WILL FAIL IF CANNOT FIT ONTO TILE AT ALL IN THIS DIRECTION
     //NEED TO CONSIDER ADJACENT TILES IN STARTPOS CALC TOO!!!!!
@@ -405,10 +460,9 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
 
     //Possible fix?
     std::vector<int> combinedCells = getCombinedSubcellGrid(index, g, d); //Get the combined subcell grid
-    std::pair<int, int> startPos = getStartPos(combinedCells, width, s, d); //Get the start position
-
+    std::pair<int, int> startPos = getStartPos(combinedCells, width, s, getOppositeDirection(d)); //Get the start position
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
-
+    printf("startPos worked\n");
     //Need to adjust start position to work in the overall combined grid
     if (d == N || d == S)
         startPos.first += g->subWidth;
@@ -419,9 +473,12 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
         startPos.second = g->subWidth;
     }
 
+    printf("StartX: %i, StartY: %i", startPos.first, startPos.second);
+
+    //I think the issue is that valid positions are not considered adjacent to the edge. This is quite annoying
     std::vector<bool> prepArray = preprocessValidPositions(combinedCells, width, s);//Get the valid positions in the array
 
-    return pathExists(startPos.first, startPos.second, s, width, prepArray, d); //Check that a valid path exists through the tile
+    return pathExists(startPos.first, startPos.second, s, width, prepArray, getOppositeDirection(d)); //Check that a valid path exists through the tile
 }
 
 //A bunch of helper bools for the trimCells function
@@ -519,7 +576,7 @@ std::vector<int> createSurroundGrid(int index, std::shared_ptr<GridData> g, Dire
                     [index, g](Vector2 v) {return getNeighbourCells(index, g, v);});
 
     //Combine the neighbour and current cells together
-    return combineTiles(subcellArr, g->subWidth);
+    return combineTiles(subcellArr, g->subWidth, 3, 3);
 }
 
 bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int indexTo, int s) {
