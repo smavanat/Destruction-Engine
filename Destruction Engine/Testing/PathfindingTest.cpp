@@ -5,7 +5,7 @@
 //#include "../GridSystem.h"
 
 //The main grid
-GridData mainGrid;
+std::shared_ptr<GridData> mainGrid;
 //We are just going to assume that the tiles are going to correspond to marching squares to keep things simple
 TileData MS_00;
 TileData MS_01;
@@ -24,15 +24,17 @@ TileData MS_13;
 TileData MS_14;
 TileData MS_15;
 const int size = 2;
+const int largeSize = 3;
 bool init() {
     //The main grid we are going to use for testing:
-    mainGrid.subWidth = 4;
-    mainGrid.tileWidth = 32;
-    mainGrid.tileHeight = 32;
-    mainGrid.gridWidth = 4;
-    mainGrid.gridHeight = 4;
-    mainGrid.origin = Vector2(0,0);
-    mainGrid.tiles = std::vector<TileData>();
+    mainGrid = std::make_shared<GridData>();
+    mainGrid->subWidth = 4;
+    mainGrid->tileWidth = 32;
+    mainGrid->tileHeight = 32;
+    mainGrid->gridWidth = 4;
+    mainGrid->gridHeight = 4;
+    mainGrid->origin = Vector2(0,0);
+    mainGrid->tiles = std::vector<TileData>();
 
     MS_00.status = 0;
     MS_00.type = 0;
@@ -154,15 +156,15 @@ bool init() {
 
 TEST_CASE("isValidPos works", "[pathfinding]") {
     init();
-    REQUIRE(isValidPos(MS_00.subcells, mainGrid.subWidth, 0, 0, size) == true);
-    REQUIRE(isValidPos(MS_05.subcells, mainGrid.subWidth, 1, 1, size) == true);
-    REQUIRE(isValidPos(MS_15.subcells, mainGrid.subWidth, 0, 0, size) == false);
-    REQUIRE(isValidPos(MS_07.subcells, mainGrid.subWidth, 0, 0, size) == false);
+    REQUIRE(isValidPos(MS_00.subcells, mainGrid->subWidth, 0, 0, size) == true);
+    REQUIRE(isValidPos(MS_05.subcells, mainGrid->subWidth, 1, 1, size) == true);
+    REQUIRE(isValidPos(MS_15.subcells, mainGrid->subWidth, 0, 0, size) == false);
+    REQUIRE(isValidPos(MS_07.subcells, mainGrid->subWidth, 0, 0, size) == false);
 }
 
 TEST_CASE("preprocessValidPositions works", "[pathfinding]") {
     init();
-    REQUIRE(preprocessValidPositions(MS_05.subcells, mainGrid.subWidth, 2) == std::vector<bool>{false, false, true, false, 
+    REQUIRE(preprocessValidPositions(MS_05.subcells, mainGrid->subWidth, 2) == std::vector<bool>{false, false, true, false, 
                                                                                                 false, true, false, false,
                                                                                                 true, false, false, false,
                                                                                                 false, false, false, false});
@@ -171,14 +173,14 @@ TEST_CASE("preprocessValidPositions works", "[pathfinding]") {
 //Need to see if need to change touches edge because does not take origin touching edge as valid.
 TEST_CASE("touchesEdge works", "[pathfinding]") {
     init();
-    REQUIRE(touchesEdge(0, 0, size, mainGrid.subWidth) == true); //NW corner
-    REQUIRE(touchesEdge(1, 0, size, mainGrid.subWidth) == true); //N side
-    REQUIRE(touchesEdge(2, 0, size, mainGrid.subWidth) == true); //NE corner
-    REQUIRE(touchesEdge(2, 1, size, mainGrid.subWidth) == true); //E side
-    REQUIRE(touchesEdge(2, 2, size, mainGrid.subWidth) == true); //SE corner
-    REQUIRE(touchesEdge(1, 2, size, mainGrid.subWidth) == true); //S side
-    REQUIRE(touchesEdge(0, 2, size, mainGrid.subWidth) == true); //SW corner
-    REQUIRE(touchesEdge(0, 2, size, mainGrid.subWidth) == true); //W side
+    REQUIRE(touchesEdge(0, 0, size, mainGrid->subWidth) == true); //NW corner
+    REQUIRE(touchesEdge(1, 0, size, mainGrid->subWidth) == true); //N side
+    REQUIRE(touchesEdge(2, 0, size, mainGrid->subWidth) == true); //NE corner
+    REQUIRE(touchesEdge(2, 1, size, mainGrid->subWidth) == true); //E side
+    REQUIRE(touchesEdge(2, 2, size, mainGrid->subWidth) == true); //SE corner
+    REQUIRE(touchesEdge(1, 2, size, mainGrid->subWidth) == true); //S side
+    REQUIRE(touchesEdge(0, 2, size, mainGrid->subWidth) == true); //SW corner
+    REQUIRE(touchesEdge(0, 2, size, mainGrid->subWidth) == true); //W side
 }
 
 TEST_CASE("checkEdge works", "[pathfinding]") {
@@ -188,31 +190,138 @@ TEST_CASE("checkEdge works", "[pathfinding]") {
     //that return false.
 
     //NW
-    REQUIRE(checkEdge(0,0, size, mainGrid.subWidth, NW) == true);
-    REQUIRE(checkEdge(0,1, size, mainGrid.subWidth, NW) == false);
+    REQUIRE(checkEdge(0,0, size, mainGrid->subWidth, NW) == true);
+    REQUIRE(checkEdge(0,1, size, mainGrid->subWidth, NW) == false);
     //NE
-    REQUIRE(checkEdge(2,0, size, mainGrid.subWidth, NE) == true);
-    REQUIRE(checkEdge(0,0, size, mainGrid.subWidth, NE) == false);
+    REQUIRE(checkEdge(2,0, size, mainGrid->subWidth, NE) == true);
+    REQUIRE(checkEdge(0,0, size, mainGrid->subWidth, NE) == false);
     //SE
-    REQUIRE(checkEdge(2,2, size, mainGrid.subWidth, SE) == true);
-    REQUIRE(checkEdge(0,0, size, mainGrid.subWidth, SE) == false);
+    REQUIRE(checkEdge(2,2, size, mainGrid->subWidth, SE) == true);
+    REQUIRE(checkEdge(0,0, size, mainGrid->subWidth, SE) == false);
     //SW
-    REQUIRE(checkEdge(0,2, size, mainGrid.subWidth, SW) == true);
-    REQUIRE(checkEdge(0,0, size, mainGrid.subWidth, SW) == false);
+    REQUIRE(checkEdge(0,2, size, mainGrid->subWidth, SW) == true);
+    REQUIRE(checkEdge(0,0, size, mainGrid->subWidth, SW) == false);
     //N
-    REQUIRE(checkEdge(1,0, size, mainGrid.subWidth, N) == true);
-    REQUIRE(checkEdge(0,1, size, mainGrid.subWidth, N) == false);
+    REQUIRE(checkEdge(1,0, size, mainGrid->subWidth, N) == true);
+    REQUIRE(checkEdge(0,1, size, mainGrid->subWidth, N) == false);
     //E
-    REQUIRE(checkEdge(2,1, size, mainGrid.subWidth, E) == true);
-    REQUIRE(checkEdge(0,0, size, mainGrid.subWidth, E) == false);
+    REQUIRE(checkEdge(2,1, size, mainGrid->subWidth, E) == true);
+    REQUIRE(checkEdge(0,0, size, mainGrid->subWidth, E) == false);
     //S
-    REQUIRE(checkEdge(1,2, size, mainGrid.subWidth, S) == true);
-    REQUIRE(checkEdge(0,0, size, mainGrid.subWidth, S) == false);
+    REQUIRE(checkEdge(1,2, size, mainGrid->subWidth, S) == true);
+    REQUIRE(checkEdge(0,0, size, mainGrid->subWidth, S) == false);
     //W
-    REQUIRE(checkEdge(0,1, size, mainGrid.subWidth, W) == true);
-    REQUIRE(checkEdge(1,0, size, mainGrid.subWidth, W) == false);
+    REQUIRE(checkEdge(0,1, size, mainGrid->subWidth, W) == true);
+    REQUIRE(checkEdge(1,0, size, mainGrid->subWidth, W) == false);
 }
 
 TEST_CASE("pathExists works", "[pathfinding]") {
+    init();
+    //Positive test:
+    //Creating the preprocessed array of positions to pass to the function
+    std::vector<bool> pArr = preprocessValidPositions(MS_10.subcells, mainGrid->subWidth, size);
+    REQUIRE(pathExists(0, 0, size, mainGrid->subWidth, pArr, NW) == true);
+    //Negative test:
+    pArr = preprocessValidPositions(MS_07.subcells, mainGrid->subWidth, size);
+    REQUIRE(pathExists(0, 0, size, mainGrid->subWidth, pArr, NW) == false);
+}
 
+TEST_CASE("pathExistsTo works", "[pathfinding]") {
+    init();
+    //Positive test:
+    //Creating the preprocessed array of positions to pass to the function
+    std::vector<bool> pArr = preprocessValidPositions(MS_10.subcells, mainGrid->subWidth, size);
+    REQUIRE(pathExistsTo(0, 0, mainGrid->subWidth - 1, mainGrid->subWidth - 1, size, mainGrid->subWidth, pArr) == true);
+    //Negative test:
+    pArr = preprocessValidPositions(MS_07.subcells, mainGrid->subWidth, size);
+    REQUIRE(pathExistsTo(0, 0, mainGrid->subWidth - 1, mainGrid->subWidth - 1, size, mainGrid->subWidth, pArr) == false);
+}
+
+TEST_CASE("getStartPos works)", "[pathfinding]") {
+    init();
+    //Going to check each startPosition in pairs, I will just use the empty tile (MS_00) and the filled tile (MS_15) to 
+    //use for the positive and negative test
+    
+    //NW:
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, NW) == std::make_pair(0, 0));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, NW) == std::make_pair(-1, -1));
+
+    //NE:
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, NE) == std::make_pair(mainGrid->subWidth-size, 0));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, NE) == std::make_pair(-1, -1));
+
+    //N:
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, N) == std::make_pair(0, 0));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, N) == std::make_pair(-1, -1));
+
+    //E:
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, E) == std::make_pair(mainGrid->subWidth-size, 0));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, E) == std::make_pair(-1, -1));
+
+    //SE:
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, SE) == std::make_pair(mainGrid->subWidth-size, mainGrid->subWidth-size));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, SE) == std::make_pair(-1, -1));
+
+    //S:
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, S) == std::make_pair(0, mainGrid->subWidth-size));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, S) == std::make_pair(-1, -1));
+
+    //SW:
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, SW) == std::make_pair(0, mainGrid->subWidth-size));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, SW) == std::make_pair(-1, -1));
+
+    //W:
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, W) == std::make_pair(0, 0));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, W) == std::make_pair(-1, -1));
+}
+
+TEST_CASE("isPathable works", "[pathfinding]") {
+    init();
+
+    //Four test cases:
+    //Completely passable tile:
+    REQUIRE(isPathable(MS_00, N, size, mainGrid->subWidth));
+    //Passable partial tile:
+    REQUIRE(isPathable(MS_10, N, size, mainGrid->subWidth));
+    //Impassable partial tile:
+    REQUIRE(!isPathable(MS_07, N, size, mainGrid->subWidth));
+    //Completely impassable tile:
+    REQUIRE(!isPathable(MS_15, N, size, mainGrid->subWidth));
+}
+
+TEST_CASE("combinedTiles works", "[pathfinding]") {
+    init();
+
+    //Create the tile ordering vector:
+    std::vector<std::vector<int>*> tArr = { &MS_00.subcells, &MS_01.subcells, &MS_02.subcells };
+    REQUIRE(combineTiles(tArr, mainGrid->subWidth) == std::vector<int>{0,0,0,0,
+                                                                      0,0,0,0,
+                                                                      0,0,0,0,
+                                                                      0,0,0,0, 0,0,0,0,
+                                                                               0,0,0,0,
+                                                                               1,0,0,0,
+                                                                               1,1,0,0,
+                                                                                        0,0,0,0,
+                                                                                        0,0,0,0,
+                                                                                        0,0,0,1,
+                                                                                        0,0,1,1});
+}
+
+TEST_CASE("getCombinedSubcellGrid works", "[pathfinding]") {
+    init();
+
+    //Setting up the grid tiles:
+    mainGrid->tiles = std::vector<TileData>{MS_02, MS_03, MS_03, MS_01, 
+                                            MS_06, MS_00, MS_00, MS_09,
+                                            MS_06, MS_00, MS_00, MS_09,
+                                            MS_04, MS_12, MS_12, MS_08};
+
+    REQUIRE(getCombinedSubcellGrid(5, mainGrid, N) == combineTiles(std::vector<std::vector<int>*>{&MS_02.subcells, &MS_03.subcells, &MS_03.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(5, mainGrid, E) == combineTiles(std::vector<std::vector<int>*>{&MS_03.subcells, &MS_00.subcells, &MS_00.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(5, mainGrid, S) == combineTiles(std::vector<std::vector<int>*>{&MS_06.subcells, &MS_00.subcells, &MS_00.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(5, mainGrid, W) == combineTiles(std::vector<std::vector<int>*>{&MS_02.subcells, &MS_06.subcells, &MS_06.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(5, mainGrid, SE) == combineTiles(std::vector<std::vector<int>*>{&MS_00.subcells, &MS_00.subcells, &MS_00.subcells, &MS_00.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(5, mainGrid, SW) == combineTiles(std::vector<std::vector<int>*>{&MS_06.subcells, &MS_00.subcells, &MS_06.subcells, &MS_00.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(5, mainGrid, NE)== combineTiles(std::vector<std::vector<int>*>{&MS_03.subcells, &MS_03.subcells, &MS_00.subcells, &MS_00.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(5, mainGrid, NW) == combineTiles(std::vector<std::vector<int>*>{&MS_02.subcells, &MS_03.subcells, &MS_06.subcells, &MS_00.subcells}, mainGrid->gridWidth));
 }

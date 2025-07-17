@@ -46,7 +46,8 @@ enum Direction8 {
 	SE,
 	S,
 	SW,
-	W
+	W,
+	INVALID
 };
 
 enum Direction4 {

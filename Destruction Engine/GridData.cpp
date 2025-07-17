@@ -67,7 +67,8 @@ std::vector<bool> preprocessValidPositions(std::vector<int> subcellArr, int w, i
 
 //Whether an agent of size s standing at position (x, y) touches the edge of a subcell grid
 bool touchesEdge(int x, int y, int s, int n) {
-    return x == 0 || y == 0 || x + s == n || y + s == n;
+    return /*x == 0 || y == 0 || x + s == n || y + s == n || */
+    (x <= 0 && x+s >= 0) || (y <= 0 && x+s >= 0) || (x < n && x+ s>= n) || (y < n && y + s >=n);
 }
 
 //Whether the agent standing at position at (x,y) would exit to the same direction 
@@ -103,6 +104,21 @@ bool checkEdge(int x, int y, int s, int n, Direction8 d) {
     }
 }
 
+Direction8 getStartDirectionByPosition(int x, int y, int w){
+    if((x > 0 && x != w - 1) && ( y > 0 && y != w - 1)) return INVALID; //Something??
+    
+    if(x == 0 && y == 0) return NW;
+    if(x == 0 && (y > 0 && y < w - 1)) return W;
+    if(x == 0 && y == w - 1) return SW;
+    if(x > 0 && x < w - 1 && y == w - 1) return S;
+    if(x == w - 1 && y == w - 1) return SE;
+    if(x == w - 1 && y > 0 && y < w - 1) return E;
+    if(x == w - 1 && y == 0) return NE;
+    if(x > 0 && x < w - 1 && y == 0) return N;
+
+    return INVALID; //Some other bug
+}
+
 //Runs a version of bfs to check if a path exists from a specific starting position for an agent of size s*s 
 //to pass through
 bool pathExists(int startX, int startY, int s, int w, std::vector<bool> pArr, Direction8 startDirection) {
@@ -110,6 +126,7 @@ bool pathExists(int startX, int startY, int s, int w, std::vector<bool> pArr, Di
     //if (!pArr[(startY*w)+startX]) return false;
 
     //Initialise the variables
+    // Direction8 startDirection = getStartDirectionByPosition(startX, startY, w);
     bool found = false;
     bool* visitedArr = (bool*)malloc(w * w * sizeof(bool)); //Marks which nodes we have visited
     if (!visitedArr) return false;
@@ -186,7 +203,7 @@ bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, std:
 
         //If this node is touching an edge, and that edge is not the start edge, then we have found a valid path 
         //out of the subcell array
-        if (p.first == endX && p.second == endY) {
+        if (p.first + s >= endX && p.second + s >= endY) {
             found = true;
             break;
         }
@@ -225,7 +242,7 @@ std::pair<int, int> getStartPos(std::vector<int> subcellArr, int w, int s, Direc
         }
         return std::make_pair(-1, -1);
     case NE:
-        if (isValidPos(subcellArr, w, 0, w - s, s)) return std::make_pair(0, w - s);
+        if (isValidPos(subcellArr, w, 0, w - s, s)) return std::make_pair(w - s, 0);
         return std::make_pair(-1, -1);
     case E:
         for (int y = 0; y <= w - s; y++) {
@@ -281,6 +298,10 @@ std::vector<int> combineTiles(std::vector<std::vector<int>*> tArray, int w) {
     return retArray;
 }
 
+//Gets the combined subcell grid of the cells that need to be passed through
+//Index is the index of the starting cell
+//g is the GridData representing the grid used for navigation
+//d is the direction that we need to be moving in
 std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, Direction8 d) {
     std::vector<std::vector<int>*> tArr; //The vector being passed to combine all the cells
     //The temp array that represents the player position. Only used for diagonal traversals
@@ -290,15 +311,19 @@ std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, 
     switch (d) {
         case N:
         case S:
-            if (index < 0 || index >= g->tiles.size()) {
-                return std::vector<int>();
-            }
+            if(d == N) index -= g->subWidth;
+            else index += g->subWidth;
+            
+            if (index < 0 || index >= g->tiles.size()) return std::vector<int>();
             else if (index % g->gridWidth == 0) tArr = { &g->tiles[index].subcells, &g->tiles[index + 1].subcells };
             else if (index % g->gridWidth == g->gridWidth - 1) tArr = { &g->tiles[index - 1].subcells, &g->tiles[index].subcells };
             else tArr = { &g->tiles[index - 1].subcells, &g->tiles[index].subcells, &g->tiles[index + 1].subcells };
             break;
         case E:
         case W:
+            if(d == E) index += 1;
+            else index -= 1;
+
             if (index < 0 || index >= g->tiles.size()) {
                 return std::vector<int>();
             }
@@ -310,25 +335,25 @@ std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, 
             if (index < 0 || index >= g->tiles.size()) {
                 return std::vector<int>();
             }
-            tArr = {&g->tiles[index].subcells, &g->tiles[index+1].subcells, &g->tiles[index - g->gridWidth].subcells, &tempArr};
+            tArr = {&g->tiles[(index - g->gridWidth) - 1].subcells, &g->tiles[index - g->gridWidth].subcells, &g->tiles[index-1].subcells, &tempArr};
             break;
         case NE:
             if (index < 0 || index >= g->tiles.size()) {
                 return std::vector<int>();
             }
-            tArr = { &g->tiles[index].subcells, &g->tiles[index + 1].subcells, &tempArr, &g->tiles[index - g->gridWidth].subcells };
+            tArr = {&g->tiles[index - (g->gridWidth)].subcells, &g->tiles[(index - g->gridWidth) + 1].subcells, &tempArr, &g->tiles[index+1].subcells};
             break;
         case SW:
             if (index < 0 || index >= g->tiles.size()) {
                 return std::vector<int>();
             }
-            tArr = { &g->tiles[index - g->gridWidth].subcells, &tempArr, &g->tiles[index].subcells, &g->tiles[index + 1].subcells };
+            tArr = { &g->tiles[index - 1].subcells, &tempArr, &g->tiles[(index + g->subWidth) - 1].subcells, &g->tiles[index + g ->subWidth].subcells };
             break;
         case SE:
             if (index < 0 || index >= g->tiles.size()) {
                 return std::vector<int>();
             }
-            tArr = { &tempArr, &g->tiles[index - g->gridWidth].subcells, &g->tiles[index].subcells, &g->tiles[index + 1].subcells };
+            tArr = { &tempArr, &g->tiles[index +1].subcells, &g->tiles[index + g->subWidth].subcells, &g->tiles[index + g->subWidth + 1].subcells };
             break;
     }
     return combineTiles(tArr, g->subWidth);
