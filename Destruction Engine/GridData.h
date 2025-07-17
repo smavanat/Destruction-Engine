@@ -86,6 +86,7 @@ bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, std:
 std::pair<int, int> getStartPos(std::vector<int> subcellArr, int w, int s, Direction8 d);
 std::vector<int> combineTiles(std::vector<std::vector<int>*> tArray, int w);
 std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, Direction8 d);
+int getWidth(int index, int w, Direction8 d);
 bool isAtTopEdge(Vector2 vec);
 bool isAtLeftEdge(Vector2 vec);
 bool isAtRightEdge(Vector2 vec);

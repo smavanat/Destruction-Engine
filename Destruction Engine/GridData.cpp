@@ -1,5 +1,6 @@
 #include "GridData.h"
 #include <queue>
+#include <iostream>
 
 Vector2 gridToWorldPos(std::shared_ptr<GridData> g, Vector2 gridPos) {
     return Vector2{
@@ -307,10 +308,18 @@ std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, 
     //The temp array that represents the player position. Only used for diagonal traversals
     std::vector<int> tempArr(g->subWidth*g->subWidth, 0);
 
+    //Out of bounds check
+    if (index < 0 || index >= g->tiles.size()) return std::vector<int>();
+
     //Getting the order in which we submit the subcell data to be combined together
     switch (d) {
         case N:
         case S:
+            //If we are on the northern/southern edges, then we cannot move north/south
+            if(d == N && index / g->subWidth <= 0) return std::vector<int>();
+            if(d == S && index / g->subWidth >= g->subWidth - 1) return std::vector<int>();
+
+            //Adjusting the starting index
             if(d == N) index -= g->subWidth;
             else index += g->subWidth;
             
@@ -321,36 +330,42 @@ std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, 
             break;
         case E:
         case W:
+            //If we are on the western/easter edges, then we cannot move west/east
+            if(d == W && index % g->subWidth <= 0) return std::vector<int>();
+            if(d == E && index % g->subWidth >= g->subWidth - 1) return std::vector<int>();
+
             if(d == E) index += 1;
             else index -= 1;
 
-            if (index < 0 || index >= g->tiles.size()) {
-                return std::vector<int>();
-            }
+            if (index < 0 || index >= g->tiles.size()) return std::vector<int>();
             else if (index / g->gridWidth == 0) tArr = { &g->tiles[index].subcells, &g->tiles[index + g->gridWidth].subcells };
             else if (index / g->gridWidth == g->gridHeight - 1) tArr = { &g->tiles[index - g->gridWidth].subcells, &g->tiles[index].subcells };
             else tArr = { &g->tiles[index - g->gridWidth].subcells, &g->tiles[index].subcells, &g->tiles[index + g->gridWidth].subcells };
             break;
         case NW:
-            if (index < 0 || index >= g->tiles.size()) {
+            //If we are outside the bounds of the grid, or on the northern or western edges, then we cannot move northwest
+            if (index < 0 || index >= g->tiles.size() || index % g->subWidth == 0 || index / g->subWidth == 0) {
                 return std::vector<int>();
             }
             tArr = {&g->tiles[(index - g->gridWidth) - 1].subcells, &g->tiles[index - g->gridWidth].subcells, &g->tiles[index-1].subcells, &tempArr};
             break;
         case NE:
-            if (index < 0 || index >= g->tiles.size()) {
+            //If we are outside the bounds of the grid, or on the northern or eastern edges, then we cannot move northeast
+            if (index < 0 || index >= g->tiles.size() || index % g->subWidth == g->subWidth - 1 || index / g->subWidth == 0) {
                 return std::vector<int>();
             }
             tArr = {&g->tiles[index - (g->gridWidth)].subcells, &g->tiles[(index - g->gridWidth) + 1].subcells, &tempArr, &g->tiles[index+1].subcells};
             break;
         case SW:
-            if (index < 0 || index >= g->tiles.size()) {
+            //If we are outside the bounds of the grid, or on the southern or eastern edges, then we cannot move southwest
+            if (index < 0 || index >= g->tiles.size() || index % g->subWidth == 0 || index / g->subWidth == g->subWidth - 1) {
                 return std::vector<int>();
             }
             tArr = { &g->tiles[index - 1].subcells, &tempArr, &g->tiles[(index + g->subWidth) - 1].subcells, &g->tiles[index + g ->subWidth].subcells };
             break;
         case SE:
-            if (index < 0 || index >= g->tiles.size()) {
+            //If we are outside the bounds of the grid, or on the sourthern or eastern edges, then we cannot move southeast
+            if (index < 0 || index >= g->tiles.size() || index % g->subWidth == g->subWidth - 1 || index / g->subWidth == g->subWidth - 1) {
                 return std::vector<int>();
             }
             tArr = { &tempArr, &g->tiles[index +1].subcells, &g->tiles[index + g->subWidth].subcells, &g->tiles[index + g->subWidth + 1].subcells };
@@ -359,24 +374,38 @@ std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, 
     return combineTiles(tArr, g->subWidth);
 }
 
+int getWidth(int index, int w, Direction8 d) {
+    int width = 0;
+    if ((d == N || d == S) && (index % w != 0 && index % w != (w - 1)))
+        width = 3;
+    else if ((d == W || d == E) && (index / w != 0 && index / w != (w - 1)))
+        width = 1;
+    else
+        width = 2;
+    width *= w;
+    return width;
+}
+
 //For processing pathfinding across adjacent tiles;
+//index is the index of the starting TileData tile 
+//g is the grid that we are pathfinding in
+//d is the direction we want to move in
+//s is the size of the agent
 bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d, int s) {
     if (numExits(g->tiles[index]) < 2) return false;
 
     //Determining the correct width based on orientation
-    int width;
-    if (d == N || d == S)
-        width = 3;
-    else if (d == W || d == E)
-        width = 1;
-    else
-        width = 2;
-    width *= g->subWidth;
+    
+    int width = getWidth(index, g->subWidth, d);
     
     //THIS ISN'T RIGHT!!!!!!!! WILL FAIL IF CANNOT FIT ONTO TILE AT ALL IN THIS DIRECTION
     //NEED TO CONSIDER ADJACENT TILES IN STARTPOS CALC TOO!!!!!
     //Maybe just set size to 1 to avoid problems for now
-    std::pair<int, int> startPos = getStartPos(g->tiles[index].subcells, g->subWidth, 1, d); //Get the start position
+    //std::pair<int, int> startPos = getStartPos(g->tiles[index].subcells, g->subWidth, 1, d); //Get the start position
+
+    //Possible fix?
+    std::vector<int> combinedCells = getCombinedSubcellGrid(index, g, d); //Get the combined subcell grid
+    std::pair<int, int> startPos = getStartPos(combinedCells, width, s, d); //Get the start position
 
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
 
@@ -389,8 +418,6 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
         startPos.first = g->subWidth;
         startPos.second = g->subWidth;
     }
-
-    std::vector<int> combinedCells = getCombinedSubcellGrid(index, g, d); //Get the combined subcell grid
 
     std::vector<bool> prepArray = preprocessValidPositions(combinedCells, width, s);//Get the valid positions in the array
 

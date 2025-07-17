@@ -315,13 +315,69 @@ TEST_CASE("getCombinedSubcellGrid works", "[pathfinding]") {
                                             MS_06, MS_00, MS_00, MS_09,
                                             MS_06, MS_00, MS_00, MS_09,
                                             MS_04, MS_12, MS_12, MS_08};
-
+    //Success cases
     REQUIRE(getCombinedSubcellGrid(5, mainGrid, N) == combineTiles(std::vector<std::vector<int>*>{&MS_02.subcells, &MS_03.subcells, &MS_03.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(4, mainGrid, N) == combineTiles(std::vector<std::vector<int>*>{&MS_02.subcells, &MS_03.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(7, mainGrid, N) == combineTiles(std::vector<std::vector<int>*>{&MS_03.subcells, &MS_01.subcells}, mainGrid->gridWidth));
+
     REQUIRE(getCombinedSubcellGrid(5, mainGrid, E) == combineTiles(std::vector<std::vector<int>*>{&MS_03.subcells, &MS_00.subcells, &MS_00.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(2, mainGrid, E) == combineTiles(std::vector<std::vector<int>*>{&MS_01.subcells, &MS_09.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(14, mainGrid, E) == combineTiles(std::vector<std::vector<int>*>{&MS_09.subcells, &MS_08.subcells}, mainGrid->gridWidth));
+
     REQUIRE(getCombinedSubcellGrid(5, mainGrid, S) == combineTiles(std::vector<std::vector<int>*>{&MS_06.subcells, &MS_00.subcells, &MS_00.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(8, mainGrid, S) == combineTiles(std::vector<std::vector<int>*>{&MS_04.subcells, &MS_12.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(11, mainGrid, S) == combineTiles(std::vector<std::vector<int>*>{&MS_12.subcells, &MS_08.subcells}, mainGrid->gridWidth));
+
     REQUIRE(getCombinedSubcellGrid(5, mainGrid, W) == combineTiles(std::vector<std::vector<int>*>{&MS_02.subcells, &MS_06.subcells, &MS_06.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(1, mainGrid, W) == combineTiles(std::vector<std::vector<int>*>{&MS_02.subcells, &MS_06.subcells}, mainGrid->gridWidth));
+    REQUIRE(getCombinedSubcellGrid(13, mainGrid, W) == combineTiles(std::vector<std::vector<int>*>{&MS_06.subcells, &MS_04.subcells}, mainGrid->gridWidth));
+
     REQUIRE(getCombinedSubcellGrid(5, mainGrid, SE) == combineTiles(std::vector<std::vector<int>*>{&MS_00.subcells, &MS_00.subcells, &MS_00.subcells, &MS_00.subcells}, mainGrid->gridWidth));
     REQUIRE(getCombinedSubcellGrid(5, mainGrid, SW) == combineTiles(std::vector<std::vector<int>*>{&MS_06.subcells, &MS_00.subcells, &MS_06.subcells, &MS_00.subcells}, mainGrid->gridWidth));
     REQUIRE(getCombinedSubcellGrid(5, mainGrid, NE)== combineTiles(std::vector<std::vector<int>*>{&MS_03.subcells, &MS_03.subcells, &MS_00.subcells, &MS_00.subcells}, mainGrid->gridWidth));
     REQUIRE(getCombinedSubcellGrid(5, mainGrid, NW) == combineTiles(std::vector<std::vector<int>*>{&MS_02.subcells, &MS_03.subcells, &MS_06.subcells, &MS_00.subcells}, mainGrid->gridWidth));
+
+    //Failure cases:
+    REQUIRE(getCombinedSubcellGrid(-1, mainGrid, SE) == std::vector<int>()); //Out of bounds access
+    REQUIRE(getCombinedSubcellGrid((mainGrid->subWidth*mainGrid->subWidth) + 1, mainGrid, SE) == std::vector<int>()); //Out of bounds access
+    REQUIRE(getCombinedSubcellGrid(1, mainGrid, NE) == std::vector<int>()); //Going NE when on northern edge
+    REQUIRE(getCombinedSubcellGrid(7, mainGrid, NE) == std::vector<int>()); //Going NE when on Eastern edge
+    REQUIRE(getCombinedSubcellGrid(1, mainGrid, NW) == std::vector<int>()); //Going NW when on northern edge
+    REQUIRE(getCombinedSubcellGrid(4, mainGrid, NW) == std::vector<int>()); //Going NW when on western edge
+    REQUIRE(getCombinedSubcellGrid(13, mainGrid, SW) == std::vector<int>()); //Going SW when on southern edge
+    REQUIRE(getCombinedSubcellGrid(4, mainGrid, SW) == std::vector<int>()); //Going SW when on western edge
+    REQUIRE(getCombinedSubcellGrid(13, mainGrid, SE) == std::vector<int>()); //Going SE when on southern edge
+    REQUIRE(getCombinedSubcellGrid(7, mainGrid, SE) == std::vector<int>()); //Going SE when on eastern edge
+    REQUIRE(getCombinedSubcellGrid(1, mainGrid, N) == std::vector<int>()); //Going N when on northern edge
+    REQUIRE(getCombinedSubcellGrid(7, mainGrid, E) == std::vector<int>()); //Going E when on eastern edge
+    REQUIRE(getCombinedSubcellGrid(13, mainGrid, S) == std::vector<int>()); //Going S when on southern edge
+    REQUIRE(getCombinedSubcellGrid(4, mainGrid, W) == std::vector<int>()); //Going W when on western edge
+}
+
+TEST_CASE("getWidth works", "[pathfinding]") {
+    init();
+
+    REQUIRE(getWidth(7, mainGrid->subWidth, N) == 2*mainGrid->subWidth);
+}
+
+TEST_CASE("isPathableWithAdjacent works", "[pathfinding]") {
+    init();
+    //Setting up the grid tiles:
+    mainGrid->tiles = std::vector<TileData>{MS_00, MS_14, MS_09, MS_06,
+                                            MS_01, MS_00, MS_00, MS_00,
+                                            MS_00, MS_00, MS_00, MS_00,
+                                            MS_00, MS_00, MS_00, MS_00};
+    REQUIRE(getCombinedSubcellGrid(7, mainGrid, N) == std::vector<int>{
+                                                                    1, 1, 0, 0,
+                                                                    1, 1, 0, 0,
+                                                                    1, 1, 0, 0,
+                                                                    1, 1, 0, 0, 
+                                                                    0, 0, 1, 1,
+                                                                    0, 0, 1, 1,
+                                                                    0, 0, 1, 1,
+                                                                    0, 0, 1, 1});
+    
+    REQUIRE(isPathableWithAdjacent(7, mainGrid, N, largeSize));
+    // REQUIRE(isPathableWithAdjacent(9, mainGrid, NW, largeSize));
+    // REQUIRE(isPathableWithAdjacent(0, mainGrid, SE, largeSize));
 }
