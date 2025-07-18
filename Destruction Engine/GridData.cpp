@@ -497,7 +497,6 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
     std::vector<int> combinedCells = getCombinedSubcellGrid(index, g, d); //Get the combined subcell grid
     std::pair<int, int> startPos = getStartPos(combinedCells, dimensions.first, dimensions.second, s, getOppositeDirection(d)); //Get the start position
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
-    printf("startPos worked\n");
     //Need to adjust start position to work in the overall combined grid
     if (d == N || d == S)
         startPos.first += g->subWidth;
@@ -508,8 +507,6 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
         startPos.second = g->subWidth;
     }
 
-    printf("StartX: %i, StartY: %i", startPos.first, startPos.second);
-
     //I think the issue is that valid positions are not considered adjacent to the edge. This is quite annoying
     std::vector<bool> prepArray = preprocessValidPositions(combinedCells, dimensions.first, s);//Get the valid positions in the array
 
@@ -517,36 +514,36 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
 }
 
 //A bunch of helper bools for the trimCells function
-bool isAtTopEdge(Vector2 vec) {
-    return vec.y == -1;
+bool isAtTopEdge(std::pair<int, int> vec) {
+    return vec.second == -1;
 }
 
-bool isAtLeftEdge(Vector2 vec) {
-    return vec.x == -1;
+bool isAtLeftEdge(std::pair<int, int> vec) {
+    return vec.first == -1;
 }
 
-bool isAtRightEdge(Vector2 vec) {
-    return vec.x == 1;
+bool isAtRightEdge(std::pair<int, int> vec) {
+    return vec.first == 1;
 }
 
-bool isAtBottomEdge(Vector2 vec) {
-    return vec.y == 1;
+bool isAtBottomEdge(std::pair<int, int> vec) {
+    return vec.second == 1;
 }
 
 //Returns a vector of Vector2s that represent all the coordinates of the 
 //"valid" neighbour cells of the current index
 //It removes all the non-valid neighbours (those that would end up outside the grid)
 //from the vector it returns
-std::vector<Vector2> trimCells(int index, int gridWidth, int gridHeight, Direction8 d) {
+std::vector<std::pair<int, int>> trimCells(int index, int gridWidth, int gridHeight, Direction8 d) {
     //Break check on bad indeces
     if(index < 0 || index >= (gridWidth * gridHeight)) {
-        return std::vector<Vector2>();
+        return std::vector<std::pair<int, int>>();
     }
 
     //The basic vector contains all of the coordinates of the neighbour cells, as well as the current cell
-    std::vector<Vector2> retVec = {Vector2(-1, -1), Vector2(0, -1), Vector2(1, -1), 
-                                   Vector2(-1,  0), Vector2(0, 0),  Vector2(1, 0), 
-                                   Vector2(-1, 1),  Vector2(0, 1),  Vector2(1, 1)};
+    std::vector<std::pair<int, int>> retVec = {std::make_pair(-1, -1), std::make_pair(0, -1), std::make_pair(1, -1), 
+                                               std::make_pair(-1,  0), std::make_pair(0, 0),  std::make_pair(1, 0), 
+                                               std::make_pair(-1, 1),  std::make_pair(0, 1),  std::make_pair(1, 1)};
     
     //Trimming the cells based on direction
     switch(d) {
@@ -597,18 +594,18 @@ std::vector<Vector2> trimCells(int index, int gridWidth, int gridHeight, Directi
     return retVec;
 }
 
-std::vector<int>* getNeighbourCells(int index, std::shared_ptr<GridData>g, Vector2 vec) {
-    return &g->tiles[index+ (g->gridWidth*vec.y) + vec.x].subcells;
+std::vector<int>* getNeighbourCells(int index, std::shared_ptr<GridData>g, std::pair<int, int> vec) {
+    return &g->tiles[index+ (g->gridWidth*vec.second) + vec.first].subcells;
 }
 
 std::vector<int> createSurroundGrid(int index, std::shared_ptr<GridData> g, Direction8 d) {
     //Get the coordinates of all of the neighbours of the cell that are inside the grid
-    std::vector<Vector2> neighbours = trimCells(index, g->gridWidth, g->gridHeight, d);
+    std::vector<std::pair<int, int>> neighbours = trimCells(index, g->gridWidth, g->gridHeight, d);
 
     //Create the new vector:
     std::vector<std::vector<int>*> subcellArr(neighbours.size());
     std::transform(neighbours.begin(), neighbours.end(), subcellArr.begin(),
-                    [index, g](Vector2 v) {return getNeighbourCells(index, g, v);});
+                    [index, g](std::pair<int, int> v) {return getNeighbourCells(index, g, v);});
 
     //Combine the neighbour and current cells together
     return combineTiles(subcellArr, g->subWidth, 3, 3);

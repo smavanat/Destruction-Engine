@@ -360,18 +360,6 @@ TEST_CASE("isPathableWithAdjacent works", "[pathfinding]") {
                                             MS_01, MS_00, MS_00, MS_00,
                                             MS_00, MS_00, MS_00, MS_00,
                                             MS_00, MS_00, MS_00, MS_00};
-    // std::vector<int> testGrid = std::vector<int>{1, 1, 0, 0, 0, 0, 1, 1,
-    //                                             1, 1, 0, 0, 0, 0, 1, 1, 
-    //                                             1, 1, 0, 0, 0, 0, 1, 1, 
-    //                                             1, 1, 0, 0, 0, 0, 1, 1};
-    // REQUIRE(getCombinedSubcellGrid(7, mainGrid, N) == std::vector<int>{1, 1, 0, 0, 0, 0, 1, 1,
-    //                                                                    1, 1, 0, 0, 0, 0, 1, 1, 
-    //                                                                    1, 1, 0, 0, 0, 0, 1, 1, 
-    //                                                                    1, 1, 0, 0, 0, 0, 1, 1});
-    // REQUIRE(isValidPos(testGrid, 8, 2, 0, 3));
-    // std::pair<int, int> startPos = getStartPos(testGrid, 8, 4, 3, S);
-    // REQUIRE( startPos.first != -1);
-    // REQUIRE(startPos.second != -1);
     REQUIRE(isPathableWithAdjacent(7, mainGrid, N, largeSize));
     REQUIRE(isPathableWithAdjacent(9, mainGrid, NW, largeSize));
     REQUIRE(isPathableWithAdjacent(0, mainGrid, SE, largeSize));
@@ -380,6 +368,48 @@ TEST_CASE("isPathableWithAdjacent works", "[pathfinding]") {
 
 TEST_CASE("trimCells works", "[pathfinding]"){
     init();
-
     
+    //These are for testing that trims at specific direction correctly
+    REQUIRE(trimCells(4, 3, 3, N) == std::vector<std::pair<int, int>>{std::pair<int, int>(-1, -1), std::pair<int, int>(0, -1), std::pair<int, int>(1, -1),
+		    					                          std::pair<int, int>(-1, 0), std::pair<int, int>(0,0), std::pair<int, int>(1, 0)});
+    
+    REQUIRE(trimCells(4, 3, 3, S) == std::vector<std::pair<int, int>>{std::pair<int, int>(-1, 0), std::pair<int, int>(0,0), std::pair<int, int>(1, 0),
+		    					                          std::pair<int, int>(-1, 1), std::pair<int, int>(0, 1), std::pair<int, int>(1, 1)});
+    
+    REQUIRE(trimCells(4, 3, 3, E) == std::vector<std::pair<int, int>>{std::pair<int, int>(0, -1), std::pair<int, int>(1, -1),
+                                                          std::pair<int, int>(0, 0), std::pair<int, int>(1, 0),
+                                                          std::pair<int, int>(0, 1), std::pair<int, int>(1, 1)});
+    
+    REQUIRE(trimCells(4, 3, 3, W) == std::vector<std::pair<int, int>>{std::pair<int, int>(-1, -1), std::pair<int, int>(0, -1),
+		    					                          std::pair<int, int>(-1, 0), std::pair<int, int>(0, 0),
+							                              std::pair<int, int>(-1, 1), std::pair<int, int>(0, 1)});
+    
+    REQUIRE(trimCells(4, 3, 3, NW) == std::vector<std::pair<int, int>>{std::pair<int, int>(-1, -1), std::pair<int, int>(0, -1),
+		    					                           std::pair<int, int>(-1, 0), std::pair<int, int>(0, 0)});
+
+    REQUIRE(trimCells(4, 3, 3, NE) == std::vector<std::pair<int, int>>{std::pair<int, int>(0, -1), std::pair<int, int>(1, -1),
+		    					                           std::pair<int, int>(0,0), std::pair<int, int>(1, 0)});
+    
+    REQUIRE(trimCells(4, 3, 3, SW) == std::vector<std::pair<int, int>>{std::pair<int, int>(-1, 0), std::pair<int, int>(0,0), 
+		    					                           std::pair<int, int>(-1, 1), std::pair<int, int>(0, 1)});
+    
+    REQUIRE(trimCells(4, 3, 3, SE) == std::vector<std::pair<int, int>>{std::pair<int, int>(0,0), std::pair<int, int>(1, 0),
+		    					                           std::pair<int, int>(0, 1), std::pair<int, int>(1, 1)});
+
+    //These are for testing that it trims at edges correctly
+    REQUIRE(trimCells(5, 3, 3, N) == std::vector<std::pair<int, int>>{std::pair<int, int>(-1, -1), std::pair<int, int>(0, -1),
+		    					                          std::pair<int, int>(-1, 0), std::pair<int, int>(0, 0)});
+    
+    REQUIRE(trimCells(3, 3, 3, N) == std::vector<std::pair<int, int>>{std::pair<int, int>(0, -1), std::pair<int, int>(1, -1),
+		    					                          std::pair<int, int>(0,0), std::pair<int, int>(1, 0)});
+    
+    REQUIRE(trimCells(5, 3, 3, S) == std::vector<std::pair<int, int>>{std::pair<int, int>(-1, 0), std::pair<int, int>(0,0), 
+		    					                          std::pair<int, int>(-1, 1), std::pair<int, int>(0, 1)});
+    
+    REQUIRE(trimCells(3, 3, 3, S) == std::vector<std::pair<int, int>>{std::pair<int, int>(0,0), std::pair<int, int>(1, 0),
+		    					                          std::pair<int, int>(0, 1), std::pair<int, int>(1, 1)});
+}
+
+TEST_CASE("getNeighbourCells works", "[pathfinding]") {
+    init();
 }

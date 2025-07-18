@@ -87,10 +87,10 @@ std::pair<int, int> getStartPos(std::vector<int> subcellArr, int w, int h, int s
 std::vector<int> combineTiles(std::vector<std::vector<int>*> tArray, int tileW, int newGridW, int newGridH);
 std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, Direction8 d);
 int getWidth(int index, int w, Direction8 d);
-bool isAtTopEdge(Vector2 vec);
-bool isAtLeftEdge(Vector2 vec);
-bool isAtRightEdge(Vector2 vec);
-bool isAtBottomEdge(Vector2 vec);
-std::vector<Vector2> trimCells(int index, int gridWidth, int gridHeight, Direction8 d);
-std::vector<int>* getNeighbourCells(int index, std::shared_ptr<GridData>g, Vector2 vec);
+bool isAtTopEdge(std::pair<int, int> vec);
+bool isAtLeftEdge(std::pair<int, int> vec);
+bool isAtRightEdge(std::pair<int, int> vec);
+bool isAtBottomEdge(std::pair<int, int> vec);
+std::vector<std::pair<int, int>> trimCells(int index, int gridWidth, int gridHeight, Direction8 d);
+std::vector<int>* getNeighbourCells(int index, std::shared_ptr<GridData>g, std::pair<int, int> vec);
 std::vector<int> createSurroundGrid(int index, std::shared_ptr<GridData> g, Direction8 d);
