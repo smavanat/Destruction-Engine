@@ -487,11 +487,6 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
     // int width = getWidth(index, g->subWidth, d);
     // int height = getHeight(index, g->subWidth, d);
     std::pair<int, int> dimensions = getDimensions(index, g->subWidth, d);
-    
-    //THIS ISN'T RIGHT!!!!!!!! WILL FAIL IF CANNOT FIT ONTO TILE AT ALL IN THIS DIRECTION
-    //NEED TO CONSIDER ADJACENT TILES IN STARTPOS CALC TOO!!!!!
-    //Maybe just set size to 1 to avoid problems for now
-    //std::pair<int, int> startPos = getStartPos(g->tiles[index].subcells, g->subWidth, 1, d); //Get the start position
 
     //Possible fix?
     std::vector<int> combinedCells = getCombinedSubcellGrid(index, g, d); //Get the combined subcell grid
@@ -531,7 +526,7 @@ bool isAtBottomEdge(std::pair<int, int> vec) {
 }
 
 //Returns a vector of Vector2s that represent all the coordinates of the 
-//"valid" neighbour cells of the current index
+//"valid" neighbour cells of the current index for pathfinding if moving in a certain direction
 //It removes all the non-valid neighbours (those that would end up outside the grid)
 //from the vector it returns
 std::vector<std::pair<int, int>> trimCells(int index, int gridWidth, int gridHeight, Direction8 d) {
@@ -595,7 +590,11 @@ std::vector<std::pair<int, int>> trimCells(int index, int gridWidth, int gridHei
 }
 
 std::vector<int>* getNeighbourCells(int index, std::shared_ptr<GridData>g, std::pair<int, int> vec) {
-    return &g->tiles[index+ (g->gridWidth*vec.second) + vec.first].subcells;
+    //Check to make sure we are only checking direct neighbours and we don't have weird neighbour vectors
+    //if((abs(vec.first) != 0 || abs(vec.first) != 1 && abs(vec.second) != 0 || abs(vec.second) != 1 )) return nullptr;
+    int nIndex = index+ (g->gridWidth*vec.second) + vec.first;
+    //if(nIndex < 0 || nIndex > g->gridHeight*g->gridWidth) return nullptr; //Check that we are not out of bounds
+    return &g->tiles[nIndex].subcells;
 }
 
 std::vector<int> createSurroundGrid(int index, std::shared_ptr<GridData> g, Direction8 d) {
@@ -629,14 +628,6 @@ bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, 
     if (endPos == std::make_pair(-1, -1)) return false; //Check that it is valid
 
     //Need to adjust start position to work in the overall combined grid
-    /*if (from == N || from == S)
-        startPos.first += g->subWidth;
-    else if (from == W || from == E)
-        startPos.second += g->subWidth;
-    else {
-        startPos.first = g->subWidth;
-        startPos.second = g->subWidth;
-    }*/
     //I think these are the correct adjusted start and end positions
     switch(from) {
         case N:

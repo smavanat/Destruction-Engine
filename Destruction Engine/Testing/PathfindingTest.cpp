@@ -412,4 +412,10 @@ TEST_CASE("trimCells works", "[pathfinding]"){
 
 TEST_CASE("getNeighbourCells works", "[pathfinding]") {
     init();
+    
+    mainGrid->tiles = std::vector<TileData>{MS_00, MS_01, MS_02,
+	    				    MS_03, MS_04, MS_05,
+					    MS_06, MS_07, MS_08};
+
+    REQUIRE(*getNeighbourCells(4, mainGrid, std::make_pair(-1, 0)) == MS_03.subcells);
 }
