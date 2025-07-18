@@ -243,36 +243,36 @@ TEST_CASE("getStartPos works)", "[pathfinding]") {
     //use for the positive and negative test
     
     //NW:
-    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, NW) == std::make_pair(0, 0));
-    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, NW) == std::make_pair(-1, -1));
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, mainGrid->subWidth, size, NW) == std::make_pair(0, 0));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, mainGrid->subWidth,size, NW) == std::make_pair(-1, -1));
 
     //NE:
-    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, NE) == std::make_pair(mainGrid->subWidth-size, 0));
-    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, NE) == std::make_pair(-1, -1));
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, mainGrid->subWidth, size, NE) == std::make_pair(mainGrid->subWidth-size, 0));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, mainGrid->subWidth, size, NE) == std::make_pair(-1, -1));
 
     //N:
-    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, N) == std::make_pair(0, 0));
-    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, N) == std::make_pair(-1, -1));
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, mainGrid->subWidth, size, N) == std::make_pair(0, 0));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, mainGrid->subWidth, size, N) == std::make_pair(-1, -1));
 
     //E:
-    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, E) == std::make_pair(mainGrid->subWidth-size, 0));
-    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, E) == std::make_pair(-1, -1));
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, mainGrid->subWidth, size, E) == std::make_pair(mainGrid->subWidth-size, 0));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, mainGrid->subWidth, size, E) == std::make_pair(-1, -1));
 
     //SE:
-    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, SE) == std::make_pair(mainGrid->subWidth-size, mainGrid->subWidth-size));
-    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, SE) == std::make_pair(-1, -1));
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, mainGrid->subWidth, size, SE) == std::make_pair(mainGrid->subWidth-size, mainGrid->subWidth-size));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, mainGrid->subWidth, size, SE) == std::make_pair(-1, -1));
 
     //S:
-    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, S) == std::make_pair(0, mainGrid->subWidth-size));
-    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, S) == std::make_pair(-1, -1));
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, mainGrid->subWidth, size, S) == std::make_pair(0, mainGrid->subWidth-size));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, mainGrid->subWidth, size, S) == std::make_pair(-1, -1));
 
     //SW:
-    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, SW) == std::make_pair(0, mainGrid->subWidth-size));
-    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, SW) == std::make_pair(-1, -1));
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, mainGrid->subWidth, size, SW) == std::make_pair(0, mainGrid->subWidth-size));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, mainGrid->subWidth, size, SW) == std::make_pair(-1, -1));
 
     //W:
-    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, size, W) == std::make_pair(0, 0));
-    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, size, W) == std::make_pair(-1, -1));
+    REQUIRE(getStartPos(MS_00.subcells, mainGrid->subWidth, mainGrid->subWidth, size, W) == std::make_pair(0, 0));
+    REQUIRE(getStartPos(MS_15.subcells, mainGrid->subWidth, mainGrid->subWidth, size, W) == std::make_pair(-1, -1));
 }
 
 TEST_CASE("isPathable works", "[pathfinding]") {
@@ -360,13 +360,26 @@ TEST_CASE("isPathableWithAdjacent works", "[pathfinding]") {
                                             MS_01, MS_00, MS_00, MS_00,
                                             MS_00, MS_00, MS_00, MS_00,
                                             MS_00, MS_00, MS_00, MS_00};
-    REQUIRE(getCombinedSubcellGrid(7, mainGrid, N) == std::vector<int>{
-                                                                    1, 1, 0, 0, 1, 1, 0, 0,
-                                                                    1, 1, 0, 0, 1, 1, 0, 0, 
-                                                                    0, 0, 1, 1, 0, 0, 1, 1,
-                                                                    0, 0, 1, 1, 0, 0, 1, 1});
-    
+    // std::vector<int> testGrid = std::vector<int>{1, 1, 0, 0, 0, 0, 1, 1,
+    //                                             1, 1, 0, 0, 0, 0, 1, 1, 
+    //                                             1, 1, 0, 0, 0, 0, 1, 1, 
+    //                                             1, 1, 0, 0, 0, 0, 1, 1};
+    // REQUIRE(getCombinedSubcellGrid(7, mainGrid, N) == std::vector<int>{1, 1, 0, 0, 0, 0, 1, 1,
+    //                                                                    1, 1, 0, 0, 0, 0, 1, 1, 
+    //                                                                    1, 1, 0, 0, 0, 0, 1, 1, 
+    //                                                                    1, 1, 0, 0, 0, 0, 1, 1});
+    // REQUIRE(isValidPos(testGrid, 8, 2, 0, 3));
+    // std::pair<int, int> startPos = getStartPos(testGrid, 8, 4, 3, S);
+    // REQUIRE( startPos.first != -1);
+    // REQUIRE(startPos.second != -1);
     REQUIRE(isPathableWithAdjacent(7, mainGrid, N, largeSize));
-    // REQUIRE(isPathableWithAdjacent(9, mainGrid, NW, largeSize));
-    // REQUIRE(isPathableWithAdjacent(0, mainGrid, SE, largeSize));
+    REQUIRE(isPathableWithAdjacent(9, mainGrid, NW, largeSize));
+    REQUIRE(isPathableWithAdjacent(0, mainGrid, SE, largeSize));
+
+}
+
+TEST_CASE("trimCells works", "[pathfinding]"){
+    init();
+
+    
 }

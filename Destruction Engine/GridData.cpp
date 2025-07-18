@@ -44,9 +44,9 @@ bool isValidPos(std::vector<int> subcellArr, int w, int x, int y, int s) {
     if (x + s > w || y + s > w) //All tiles are square
         return false;
     //Checking if any of the subcells in the s*s grid with top-left at (x,y) are filled
-    for (int i = x; i < x + s; i++) {
-        for (int j = y; j < y + s; j++) {
-            if (subcellArr[(i * w) + j] == 1)
+    for (int i = x; i < x + s; i++) {//x position
+        for (int j = y; j < y + s; j++) {//y position
+            if (subcellArr[(j * w) + i] == 1)
                 return false;
         }
     }
@@ -56,11 +56,11 @@ bool isValidPos(std::vector<int> subcellArr, int w, int x, int y, int s) {
 //Returns an array of positions where an agent of size s*s can stand in a subcell grid
 std::vector<bool> preprocessValidPositions(std::vector<int> subcellArr, int w, int s) {
     std::vector<bool> retArr(w*w, false);//The array being returned. Initially assume all positions are impassible
-    for (int i = 0; i < w; i++) {
-        for (int j = 0; j < w; j++) {
+    for (int i = 0; i < w; i++) {//x position
+        for (int j = 0; j < w; j++) {//y position
             //If this position is passable by the agent, can set it to true
             if (isValidPos(subcellArr, w, i, j, s))
-                retArr[(i * w) + j] = true;
+                retArr[(j * w) + i] = true;
         }
     }
     return retArr;
@@ -245,7 +245,7 @@ bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, std:
 //subcellArr is the subcell array we are working with
 //w is the width of the array
 //s is the size of the agent
-std::pair<int, int> getStartPos(std::vector<int> subcellArr, int w, int s, Direction8 d) {
+std::pair<int, int> getStartPos(std::vector<int> subcellArr, int w, int h, int s, Direction8 d) {
     switch (d) {
     case NW:
         if (isValidPos(subcellArr, w, 0, 0, s)) return std::make_pair(0, 0);
@@ -256,26 +256,26 @@ std::pair<int, int> getStartPos(std::vector<int> subcellArr, int w, int s, Direc
         }
         return std::make_pair(-1, -1);
     case NE:
-        if (isValidPos(subcellArr, w, 0, w - s, s)) return std::make_pair(w - s, 0);
+        if (isValidPos(subcellArr, w, w - s, 0, s)) return std::make_pair(w - s, 0);
         return std::make_pair(-1, -1);
     case E:
-        for (int y = 0; y <= w - s; y++) {
+        for (int y = 0; y <= h - s; y++) {
             if (isValidPos(subcellArr, w, w - s, y, s)) return std::make_pair(w - s, y);
         }
         return std::make_pair(-1, -1);
     case SE:
-        if (isValidPos(subcellArr, w, w - s, w - s, s)) return std::make_pair(w - s, w - s);
+        if (isValidPos(subcellArr, w, w - s, h - s, s)) return std::make_pair(w - s, h - s);
         return std::make_pair(-1, -1);
     case S:
         for (int x = 0; x <= w - s; x++) {
-            if (isValidPos(subcellArr, w, x, w - s, s)) return std::make_pair(x, w - s);
+            if (isValidPos(subcellArr, w, x, h - s, s)) return std::make_pair(x, h - s);
         }
         return std::make_pair(-1, -1);
     case SW:
-        if (isValidPos(subcellArr, w, 0, w - s, s)) return std::make_pair(0, w - s);
+        if (isValidPos(subcellArr, w, 0, h - s, s)) return std::make_pair(0, h - s);
         return std::make_pair(-1, -1);
     case W:
-        for (int y = 0; y <= w - s; y++) {
+        for (int y = 0; y <= h - s; y++) {
             if (isValidPos(subcellArr, w, 0, y, s)) return std::make_pair(0, y);
         }
         return std::make_pair(-1, -1);
@@ -302,7 +302,7 @@ bool isPathable(const TileData& t, Direction8 d, int s, int w) {
     if (numExits(t) < 2)
         return false;
 
-    std::pair<int, int> startPos = getStartPos(t.subcells, w, s, getOppositeDirection(d)); //Get the start position
+    std::pair<int, int> startPos = getStartPos(t.subcells, w, w, s, getOppositeDirection(d)); //Get the start position
 
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
 
@@ -437,6 +437,39 @@ int getWidth(int index, int w, Direction8 d) {
     return width;
 }
 
+std::pair<int, int> getDimensions(int index, int w, Direction8 d) {
+    int width = 0;
+    int height = 0;
+
+    if (d == N || d == S){
+        if (index % w != 0 && index % w != (w - 1)) {
+            width = 3;
+            height = 1;
+        }
+        else {
+            width = 2;
+            height = 1;
+        }
+    }
+    else if (d == W || d == E) {
+        if (index / w != 0 && index / w != (w - 1)) {
+            width = 1;
+            height = 3;
+        }
+        else {
+            width = 1;
+            height = 2;
+        }
+    }
+    else{
+        height = 2;
+        width = 2;
+    }
+    width *= w;
+    height *= w;
+    return std::make_pair(width, height);
+}
+
 //For processing pathfinding across adjacent tiles;
 //index is the index of the starting TileData tile 
 //g is the grid that we are pathfinding in
@@ -451,7 +484,9 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
 
     //Determining the correct width based on orientation
     
-    int width = getWidth(index, g->gridWidth, d);
+    // int width = getWidth(index, g->subWidth, d);
+    // int height = getHeight(index, g->subWidth, d);
+    std::pair<int, int> dimensions = getDimensions(index, g->subWidth, d);
     
     //THIS ISN'T RIGHT!!!!!!!! WILL FAIL IF CANNOT FIT ONTO TILE AT ALL IN THIS DIRECTION
     //NEED TO CONSIDER ADJACENT TILES IN STARTPOS CALC TOO!!!!!
@@ -460,7 +495,7 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
 
     //Possible fix?
     std::vector<int> combinedCells = getCombinedSubcellGrid(index, g, d); //Get the combined subcell grid
-    std::pair<int, int> startPos = getStartPos(combinedCells, width, s, getOppositeDirection(d)); //Get the start position
+    std::pair<int, int> startPos = getStartPos(combinedCells, dimensions.first, dimensions.second, s, getOppositeDirection(d)); //Get the start position
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
     printf("startPos worked\n");
     //Need to adjust start position to work in the overall combined grid
@@ -476,9 +511,9 @@ bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d
     printf("StartX: %i, StartY: %i", startPos.first, startPos.second);
 
     //I think the issue is that valid positions are not considered adjacent to the edge. This is quite annoying
-    std::vector<bool> prepArray = preprocessValidPositions(combinedCells, width, s);//Get the valid positions in the array
+    std::vector<bool> prepArray = preprocessValidPositions(combinedCells, dimensions.first, s);//Get the valid positions in the array
 
-    return pathExists(startPos.first, startPos.second, s, width, prepArray, getOppositeDirection(d)); //Check that a valid path exists through the tile
+    return pathExists(startPos.first, startPos.second, s, dimensions.first, prepArray, getOppositeDirection(d)); //Check that a valid path exists through the tile
 }
 
 //A bunch of helper bools for the trimCells function
@@ -584,13 +619,16 @@ bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, 
     std::vector<int> combinedCells = createSurroundGrid(indexAt, g, to);
 
     //The width of the combined grid
-    int width = (indexAt % g->gridWidth == 0 || indexAt % g->gridWidth == g->gridWidth-1) ? 2 : 3;
-    width *= g->subWidth;
+    //This is wrong I think also need to add height. Just use dummy variables for now, need to test other functions first
+    // int width = (indexAt % g->gridWidth == 0 || indexAt % g->gridWidth == g->gridWidth-1) ? 2 : 3;
+    // width *= g->subWidth;
+    int width = 0;
+    int height = 0;
 
     //Find startPosition and endPosition depending on from and to
-    std::pair<int, int> startPos = getStartPos(g->tiles[indexAt].subcells, g->subWidth, s, from);
+    std::pair<int, int> startPos = getStartPos(g->tiles[indexAt].subcells, width, height, s, from); //This and the one below are also wrong I think
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
-    std::pair<int, int> endPos = getStartPos(g->tiles[indexTo].subcells, width, s, to);
+    std::pair<int, int> endPos = getStartPos(g->tiles[indexTo].subcells, width, height, s, to);
     if (endPos == std::make_pair(-1, -1)) return false; //Check that it is valid
 
     //Need to adjust start position to work in the overall combined grid

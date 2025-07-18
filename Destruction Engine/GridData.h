@@ -83,7 +83,7 @@ bool touchesEdge(int x, int y, int s, int n);
 bool checkEdge(int x, int y, int s, int n, Direction8 d); 
 bool pathExists(int startX, int startY, int s, int w, std::vector<bool> pArr, Direction8 startDirection); 
 bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, std::vector<bool> pArr);
-std::pair<int, int> getStartPos(std::vector<int> subcellArr, int w, int s, Direction8 d);
+std::pair<int, int> getStartPos(std::vector<int> subcellArr, int w, int h, int s, Direction8 d);
 std::vector<int> combineTiles(std::vector<std::vector<int>*> tArray, int tileW, int newGridW, int newGridH);
 std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, Direction8 d);
 int getWidth(int index, int w, Direction8 d);
