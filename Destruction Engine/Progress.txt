@@ -34,8 +34,7 @@ is added after gCoordinator init is called, its fucked, and have to do it manual
 add manual init() calls all the time, since this will mean double initialisations. I think the bool is the best option
 for now
 Could use tags to have multiple tile/grid systems and use this with archetypes to allow many grids and pathfinding layouts
-Need to get rid of use of magic numbers when dealing with TileData subcells. Need to find more robust way of calc/
-holding grid dimensions.
+Need to get rid of use of magic numbers when dealing with TileData subcells. 
 
 Week 1 Notes:
 Implemented an Event Bus

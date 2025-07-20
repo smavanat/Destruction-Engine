@@ -414,8 +414,57 @@ TEST_CASE("getNeighbourCells works", "[pathfinding]") {
     init();
     
     mainGrid->tiles = std::vector<TileData>{MS_00, MS_01, MS_02,
-	    				    MS_03, MS_04, MS_05,
-					    MS_06, MS_07, MS_08};
+	    				                    MS_03, MS_04, MS_05,
+					                        MS_06, MS_07, MS_08};
 
     REQUIRE(*getNeighbourCells(4, mainGrid, std::make_pair(-1, 0)) == MS_03.subcells);
+}
+
+TEST_CASE("createSurroundGrid works", "[pathfinding]"){
+    init();
+
+    mainGrid->tiles = std::vector<TileData>{MS_00, MS_01, MS_02, MS_03, 
+                                            MS_04, MS_05, MS_06, MS_07, 
+                                            MS_08, MS_09, MS_10, MS_11,
+                                            MS_12, MS_13, MS_14, MS_15};
+
+    REQUIRE(createSurroundGrid(5, mainGrid, N) == combineTiles(std::vector<std::vector<int>*>{&MS_00.subcells, &MS_01.subcells,
+                             &MS_02.subcells, &MS_04.subcells, &MS_05.subcells, &MS_06.subcells}, mainGrid->subWidth, 3, 2));
+
+    REQUIRE(createSurroundGrid(5, mainGrid, E) == combineTiles(std::vector<std::vector<int>*>{&MS_01.subcells, &MS_02.subcells,
+                             &MS_05.subcells, &MS_06.subcells, &MS_09.subcells, &MS_10.subcells}, mainGrid->subWidth, 2, 3));
+
+    REQUIRE(createSurroundGrid(5, mainGrid, W) == combineTiles(std::vector<std::vector<int>*>{&MS_00.subcells, &MS_01.subcells,
+                             &MS_04.subcells, &MS_05.subcells, &MS_08.subcells, &MS_09.subcells}, mainGrid->subWidth, 2, 3));
+
+    REQUIRE(createSurroundGrid(5, mainGrid, S) == combineTiles(std::vector<std::vector<int>*>{&MS_04.subcells, &MS_05.subcells,
+                             &MS_06.subcells, &MS_08.subcells, &MS_09.subcells, &MS_10.subcells}, mainGrid->subWidth, 3, 2));
+
+    REQUIRE(createSurroundGrid(5, mainGrid, NW) == combineTiles(std::vector<std::vector<int>*>{&MS_00.subcells, &MS_01.subcells,
+                             &MS_04.subcells, &MS_05.subcells}, mainGrid->subWidth, 2, 2));
+
+    REQUIRE(createSurroundGrid(5, mainGrid, NE) == combineTiles(std::vector<std::vector<int>*>{&MS_01.subcells, &MS_02.subcells, 
+			    &MS_05.subcells, &MS_06.subcells}, mainGrid->subWidth, 2, 2));
+
+    REQUIRE(createSurroundGrid(5, mainGrid, S) == combineTiles(std::vector<std::vector<int>*>{&MS_04.subcells, &MS_05.subcells,
+                             &MS_06.subcells, &MS_08.subcells, &MS_09.subcells, &MS_10.subcells}, mainGrid->subWidth, 3, 2));
+
+    REQUIRE(createSurroundGrid(5, mainGrid, SW) == combineTiles(std::vector<std::vector<int>*>{&MS_04.subcells, &MS_05.subcells,
+                            &MS_08.subcells, &MS_09.subcells}, mainGrid->subWidth, 2, 2));
+
+    REQUIRE(createSurroundGrid(5, mainGrid, SE) == combineTiles(std::vector<std::vector<int>*>{&MS_05.subcells, &MS_06.subcells,
+                            &MS_09.subcells, &MS_10.subcells}, mainGrid->subWidth, 2, 2));
+
+}
+
+TEST_CASE("isPathBetween works", "[pathfinding]") {
+    init();
+
+    mainGrid->tiles = std::vector<TileData>{MS_00, MS_00, MS_00, MS_00,
+                                            MS_00, MS_06, MS_00, MS_00,
+                                            MS_00, MS_00, MS_00, MS_00,
+                                            MS_00, MS_00, MS_00, MS_00};
+
+    //REQUIRE(isPathBetween(S, N, mainGrid, 5, 1, 3));
+    REQUIRE(!isPathBetween(S, NE, mainGrid, 5, 2, 2));
 }

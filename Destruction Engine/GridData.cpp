@@ -600,6 +600,20 @@ std::vector<int>* getNeighbourCells(int index, std::shared_ptr<GridData>g, std::
 std::vector<int> createSurroundGrid(int index, std::shared_ptr<GridData> g, Direction8 d) {
     //Get the coordinates of all of the neighbours of the cell that are inside the grid
     std::vector<std::pair<int, int>> neighbours = trimCells(index, g->gridWidth, g->gridHeight, d);
+    std::pair<int, int> dimensions = std::make_pair(0,0);
+
+    if(neighbours.size() == 4) {
+        dimensions.first = 2;
+        dimensions.second =2;
+    }
+    else if (d == N || d == S) {
+        dimensions.first = 3;
+        dimensions.second = 2;
+    }
+    else {
+        dimensions.first = 2;
+        dimensions.second = 3;
+    }
 
     //Create the new vector:
     std::vector<std::vector<int>*> subcellArr(neighbours.size());
@@ -607,9 +621,16 @@ std::vector<int> createSurroundGrid(int index, std::shared_ptr<GridData> g, Dire
                     [index, g](std::pair<int, int> v) {return getNeighbourCells(index, g, v);});
 
     //Combine the neighbour and current cells together
-    return combineTiles(subcellArr, g->subWidth, 3, 3);
+    return combineTiles(subcellArr, g->subWidth, dimensions.first, dimensions.second);
 }
 
+//This function finds whether there is a path using the current cell to the neighbour at a specific direciton
+//from represents where we are entering the current cell from
+//to represents where we want to exit the cell to (to reach the desired neighbour)
+//g is the GridData pointer
+//indexAt is the index of the current TileData in g
+//indexTo is the index of the neighbour TileData in g
+//s is the size of the agent passing through
 bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int indexTo, int s) {
     //Make the grid subset that we need to path on to get to the desired direction
     std::vector<int> combinedCells = createSurroundGrid(indexAt, g, to);
@@ -618,13 +639,30 @@ bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, 
     //This is wrong I think also need to add height. Just use dummy variables for now, need to test other functions first
     // int width = (indexAt % g->gridWidth == 0 || indexAt % g->gridWidth == g->gridWidth-1) ? 2 : 3;
     // width *= g->subWidth;
-    int width = 0;
-    int height = 0;
+    // int width = 0;
+    // int height = 0;
+
+    std::pair<int, int> dimensions = std::make_pair(0,0);
+
+    if(combinedCells.size() == 4) {
+        dimensions.first = 2;
+        dimensions.second =2;
+    }
+    else if (to == N || to == S) {
+        dimensions.first = 3;
+        dimensions.second = 2;
+    }
+    else {
+        dimensions.first = 2;
+        dimensions.second = 3;
+    }
 
     //Find startPosition and endPosition depending on from and to
-    std::pair<int, int> startPos = getStartPos(g->tiles[indexAt].subcells, width, height, s, from); //This and the one below are also wrong I think
+    std::pair<int, int> startPos = getStartPos(g->tiles[indexAt].subcells, dimensions.first, dimensions.second, s, getOppositeDirection(from)); //This and the one below are also wrong I think
+    printf("SX: %i, SY: %i\n", startPos.first, startPos.second);
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
-    std::pair<int, int> endPos = getStartPos(g->tiles[indexTo].subcells, width, height, s, to);
+    std::pair<int, int> endPos = getStartPos(g->tiles[indexTo].subcells, dimensions.first, dimensions.second, s, getOppositeDirection(to));
+    printf("EX: %i, EY: %i\n", endPos.first, endPos.second);
     if (endPos == std::make_pair(-1, -1)) return false; //Check that it is valid
 
     //Need to adjust start position to work in the overall combined grid
@@ -679,7 +717,7 @@ bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, 
             break;
     }
     //Find if there is a path between them 
-    std::vector<bool> prepArray = preprocessValidPositions(combinedCells, width, s);//Get the valid positions in the array
+    std::vector<bool> prepArray = preprocessValidPositions(combinedCells, dimensions.first, s);//Get the valid positions in the array
 
-    return pathExistsTo(startPos.first, startPos.second, endPos.first, endPos.second, s, width, prepArray); //Check that a valid path exists through the tile
+    return pathExistsTo(startPos.first, startPos.second, endPos.first, endPos.second, s, dimensions.first, prepArray); //Check that a valid path exists through the tile
 }
