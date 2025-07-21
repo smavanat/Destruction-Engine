@@ -4,6 +4,9 @@
 #include<array>
 #include <algorithm>
 #include <unordered_set>
+#include <unordered_map>
+#include <cmath>
+#include <limits.h>
 #include "Maths.h"
 
 //For now, just have these be constants. Need to figure out how to link grid and pathfinding properly
