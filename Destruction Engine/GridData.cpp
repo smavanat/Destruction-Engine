@@ -176,7 +176,7 @@ bool isAtBottomEdge(std::pair<int, int> vec) {
 //"valid" neighbour cells of the current index for pathfinding if moving in a certain direction
 //It removes all the non-valid neighbours (those that would end up outside the grid)
 //from the vector it returns
-std::vector<std::pair<int, int>> trimCells2(int index, int gridWidth, int gridHeight, std::pair<int, int> *startPos) {
+std::vector<std::pair<int, int>> trimCells(int index, int gridWidth, int gridHeight, std::pair<int, int> *startPos) {
     //Break check on bad indeces
     if(index < 0 || index >= (gridWidth * gridHeight)) {
         return std::vector<std::pair<int, int>>();
@@ -215,9 +215,9 @@ std::vector<int>* getNeighbourCells(int index, std::shared_ptr<GridData>g, std::
     return &g->tiles[nIndex].subcells;
 }
 
-std::vector<int> createSurroundGrid2(int index, std::shared_ptr<GridData> g, std::pair<int, int> *startPos, std::pair<int, int> *dimensions) {
+std::vector<int> createSurroundGrid(int index, std::shared_ptr<GridData> g, std::pair<int, int> *startPos, std::pair<int, int> *dimensions) {
     //Get the coordinates of all of the neighbours of the cell that are inside the grid
-    std::vector<std::pair<int, int>> neighbours = trimCells2(index, g->gridWidth, g->gridHeight, startPos);
+    std::vector<std::pair<int, int>> neighbours = trimCells(index, g->gridWidth, g->gridHeight, startPos);
     //std::pair<int, int> dimensions = std::make_pair(0,0);
 
     if(neighbours.size() == 4) {
@@ -286,6 +286,7 @@ std::pair<int, int> getRestrictedStartPos(std::vector<int> subcellArr, int w, in
     }
 }
 
+//Need to fix this one and restrictedPreprocessed positions to work for 1x1 entities
 std::pair<int, int> getRestrictedEndPos(std::vector<int> subcellArr, int w, int offsetX, int offsetY, int s, Direction8 d) {
     int overallWidth = w*3;
     switch (d) {
@@ -350,49 +351,33 @@ bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, 
     std::pair<int, int> startTile = std::make_pair(1, 1); //Represents the coordinates of the starting tile in the 3x3 grid where (0,0) is the top left
 
     //Make the grid subset that we need to path on to get to the desired direction
-    std::vector<int> combinedCells = createSurroundGrid2(indexAt, g, &startTile, &dimensions);
+    std::vector<int> combinedCells = createSurroundGrid(indexAt, g, &startTile, &dimensions);
 
     int offsetX = startTile.first*g->subWidth;
-    int offsetY = startTile.second*g->subWidth;
-
-    printf("OffsetX: %i, OffsetY: %i\n", offsetX, offsetY);
-    printf("DimensionX: %i, DimensionY: %i\n", dimensions.first, dimensions.second);
-
-    for(int i = 0; i < combinedCells.size(); i++) {
-        printf("%i ", combinedCells[i]);
-    }
-
-    std::cout << "\n";
-    
+    int offsetY = startTile.second*g->subWidth;    
 
     //Find startPosition and endPosition depending on from and to
     std::pair<int, int> startPos = getRestrictedStartPos(combinedCells, g->subWidth, offsetX, offsetY, s, getOppositeDirection(from));
-    printf("SX: %i, SY: %i\n", startPos.first, startPos.second);
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
     std::pair<int, int> endPos = getRestrictedEndPos(combinedCells, g->subWidth, offsetX, offsetY, s, getOppositeDirection(to));
-    printf("EX: %i, EY: %i\n", endPos.first, endPos.second);
     if (endPos == std::make_pair(-1, -1)) return false; //Check that it is valid
 
     //Find if there is a path between them 
     std::vector<bool> prepArray = preprocessRestrictedValidPositions(combinedCells, g->subWidth, s, offsetX, offsetY);//Get the valid positions in the array
-    for(int i = 0; i < prepArray.size(); i++) {
-        std::cout << prepArray[i] << " ";
-    }
-    std::cout << "\n";
 
     return pathExistsTo(startPos.first, startPos.second, endPos.first, endPos.second, s, dimensions.first, prepArray); //Check that a valid path exists through the tile
 }
 
 //Gets the relevant node from the world position
-Node nodeFromWorldPos(Vector2 pos) {
-	return Node(static_cast<int>(floor(pos.x / TILE_WIDTH)), static_cast<int>(floor(pos.y / TILE_HEIGHT)));
+Node nodeFromWorldPos(Vector2 pos, int w, int h) {
+	return Node(static_cast<int>(floor(pos.x / w)), static_cast<int>(floor(pos.y / h)));
 }   
 
 //Converts a node's grid position to its world position
-Vector2 nodeToWorldPos(Node n) {
+Vector2 nodeToWorldPos(Node n, int w) {
     return Vector2{
-        n.x * TILE_WIDTH + TILE_WIDTH / 2.0f,
-        n.y * TILE_HEIGHT + TILE_HEIGHT / 2.0f
+        n.x * w + w / 2.0f,
+        n.y * w + w / 2.0f
     };
 }
 
@@ -405,7 +390,8 @@ int getDistance(Node a, Node b) {
     return 14 * dstX + 10 * (dstY - dstX);
 }
 
-std::vector<Node> FindPath2(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid) {
+//Need to fix diagonals when going from empty to empty node in this one -> have to check the partial way
+std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid, int size) {
     //Represents the (x,y) coordinates of all possible neighbours
     const int directionX[] = { -1, 0, 1, 0, 1, 1, -1, -1 };
     const int directionY[] = { 0, 1, 0, -1, 1, -1, 1, -1 };
@@ -427,8 +413,8 @@ std::vector<Node> FindPath2(Vector2 start, Vector2 goal, std::shared_ptr<GridDat
     std::vector<int> gScore(rows * cols, INT_MAX);//Holds the gScore of every node 
 
     // Initialize start node
-    Node startNode = nodeFromWorldPos(start);
-    Node goalNode = nodeFromWorldPos(goal);
+    Node startNode = nodeFromWorldPos(start, grid->tileWidth, grid->tileHeight);
+    Node goalNode = nodeFromWorldPos(goal, grid->tileWidth, grid->tileHeight);
     startNode.g = 0;
     startNode.h = getDistance(startNode, goalNode);
     startNode.f = startNode.g + startNode.h;
@@ -454,6 +440,9 @@ std::vector<Node> FindPath2(Vector2 start, Vector2 goal, std::shared_ptr<GridDat
             path.push_back(startNode);
             //Reverse it so it is in the correct order
             reverse(path.begin(), path.end());
+            for(int i = 0; i < path.size(); i++) {
+                printf("NodeX: %i, NodeY: %i\n", path[i].x, path[i].y);
+            }
             return path;
         }
 
@@ -479,8 +468,8 @@ std::vector<Node> FindPath2(Vector2 start, Vector2 goal, std::shared_ptr<GridDat
 
                     if (grid->tiles[index].status == 2) { //If neighbour is partial
                         auto direction = directionMap.at(Vector2(newX, newY));
-                        auto directionFrom = directionMap.at(Vector2(current.x - cameFrom[current].x, current.y - cameFrom[current].y));
-                        if (isPathBetween(directionFrom, direction, grid, toIndex(grid, Vector2(current.x, current.y)), toIndex(grid, Vector2(newX, newY)), 2)) {
+                        auto directionFrom = (current == startNode) ? N : directionMap.at(Vector2(current.x - cameFrom[current].x, current.y - cameFrom[current].y));
+                        if (isPathBetween(directionFrom, direction, grid, toIndex(grid, Vector2(current.x, current.y)), toIndex(grid, Vector2(newX, newY)), size)) {
                             goodNeighbours.push_back(Node(newX, newY));
                         }
                     }
@@ -497,9 +486,9 @@ std::vector<Node> FindPath2(Vector2 start, Vector2 goal, std::shared_ptr<GridDat
                 //Making sure we don't go out of grid bounds and crash the program
                 if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
                     auto direction = directionMap.at(Vector2(newX, newY));
-                    auto directionFrom = directionMap.at(Vector2(current.x - cameFrom[current].x, current.y - cameFrom[current].y));
+                    auto directionFrom = (current == startNode) ? N : directionMap.at(Vector2(current.x - cameFrom[current].x, current.y - cameFrom[current].y));
                     //Need to figure out how to get direction that we are coming from.
-                    if(isPathBetween(directionFrom, direction, grid, toIndex(grid, Vector2(current.x, current.y)), toIndex(grid, Vector2(newX, newY)), 2)) {
+                    if(isPathBetween(directionFrom, direction, grid, toIndex(grid, Vector2(current.x, current.y)), toIndex(grid, Vector2(newX, newY)), size)) {
                         goodNeighbours.push_back(Node(newX, newY));
                     }
                 }

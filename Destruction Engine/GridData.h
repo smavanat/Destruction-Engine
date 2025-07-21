@@ -99,6 +99,8 @@ int numExits(const TileData& t);
 //Determines whether there is a path, standing in the tile, for an agent to move between
 //one direction and another
 bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int indexTo, int s);
+//Returns the path between two positions
+std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid, int size);
 
 //These functions should not be included in this header file in the final build
 //They are here for now so I can run unit tests on them in the testbed
