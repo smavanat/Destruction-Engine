@@ -96,11 +96,6 @@ int toIndex(std::shared_ptr<GridData> g, Vector2 gridPos);
 bool inBounds(std::shared_ptr<GridData> g, Vector2 gridPos);
 //Determines the number of exitable sides that a tile has
 int numExits(const TileData& t);
-//Determines whether an agent of a certain size could walk through this tile
-bool isPathable(const TileData& t, Direction8 d, int s, int w);
-//Determines whether a path exists for an agent of a certain size through the subcell grid
-//For processing pathfinding across adjacent tiles
-bool isPathableWithAdjacent(int index, std::shared_ptr<GridData> g, Direction8 d, int s);
 //Determines whether there is a path, standing in the tile, for an agent to move between
 //one direction and another
 bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int indexTo, int s);
@@ -108,15 +103,9 @@ bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, 
 //These functions should not be included in this header file in the final build
 //They are here for now so I can run unit tests on them in the testbed
 bool isValidPos(std::vector<int> subcellArr, int w, int x, int y, int s); 
-std::vector<bool> preprocessValidPositions(std::vector<int> subcellArr, int w, int s); 
-bool touchesEdge(int x, int y, int s, int n); 
-bool checkEdge(int x, int y, int s, int n, Direction8 d); 
-bool pathExists(int startX, int startY, int s, int w, std::vector<bool> pArr, Direction8 startDirection); 
 bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, std::vector<bool> pArr);
-std::pair<int, int> getStartPos(std::vector<int> subcellArr, int w, int h, int s, Direction8 d);
 std::vector<int> combineTiles(std::vector<std::vector<int>*> tArray, int tileW, int newGridW, int newGridH);
 std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, Direction8 d);
-int getWidth(int index, int w, Direction8 d);
 bool isAtTopEdge(std::pair<int, int> vec);
 bool isAtLeftEdge(std::pair<int, int> vec);
 bool isAtRightEdge(std::pair<int, int> vec);

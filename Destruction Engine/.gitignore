@@ -4,3 +4,4 @@ Destruction Engine.vcxproj
 Destruction Engine.vcxproj.filters
 test.exe
 Testing
+catch.hpp

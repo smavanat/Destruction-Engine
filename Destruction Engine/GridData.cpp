@@ -252,19 +252,19 @@ std::pair<int, int> getRestrictedStartPos(std::vector<int> subcellArr, int w, in
     int overallWidth = w*3;
     switch (d) {
     case NW:
-        if (isValidPos(subcellArr, overallWidth, 0+offsetX-1, 0+offsetY-1, s)) return std::make_pair(0+offsetX, 0+offsetY);
+        if (isValidPos(subcellArr, overallWidth, 0+offsetX, 0+offsetY, s)) return std::make_pair(0+offsetX, 0+offsetY);
         return std::make_pair(-1, -1);
     case N:
         for (int i = 0; i < w; i++) {
-            if (isValidPos(subcellArr, overallWidth, i+offsetX, 0+offsetY-1, s)) return std::make_pair(i+offsetX, 0+offsetY);
+            if (isValidPos(subcellArr, overallWidth, i+offsetX, 0+offsetY, s)) return std::make_pair(i+offsetX, 0+offsetY);
         }
         return std::make_pair(-1, -1);
     case NE:
-        if (isValidPos(subcellArr, overallWidth, overallWidth - s +offsetX+1, 0+offsetY-1, s)) return std::make_pair(overallWidth - s+offsetX, 0+offsetY);
+        if (isValidPos(subcellArr, overallWidth, overallWidth - s +offsetX, 0+offsetY, s)) return std::make_pair(overallWidth - s+offsetX, 0+offsetY);
         return std::make_pair(-1, -1);
     case E:
         for (int y = 0; y < w; y++) {
-            if (isValidPos(subcellArr, overallWidth, overallWidth - s+offsetX+1, y+offsetY, s)) return std::make_pair(overallWidth - s+offsetX, y+offsetY);
+            if (isValidPos(subcellArr, overallWidth, overallWidth - s+offsetX, y+offsetY, s)) return std::make_pair(overallWidth - s+offsetX, y+offsetY);
         }
         return std::make_pair(-1, -1);
     case SE:
@@ -287,7 +287,41 @@ std::pair<int, int> getRestrictedStartPos(std::vector<int> subcellArr, int w, in
 }
 
 std::pair<int, int> getRestrictedEndPos(std::vector<int> subcellArr, int w, int offsetX, int offsetY, int s, Direction8 d) {
-
+    int overallWidth = w*3;
+    switch (d) {
+    case NW:
+        if (isValidPos(subcellArr, overallWidth, 0+offsetX-1, 0+offsetY-1, s)) return std::make_pair(0+offsetX, 0+offsetY);
+        return std::make_pair(-1, -1);
+    case N:
+        for (int i = 0; i < w; i++) {
+            if (isValidPos(subcellArr, overallWidth, i+offsetX, 0+offsetY-1, s)) return std::make_pair(i+offsetX, 0+offsetY);
+        }
+        return std::make_pair(-1, -1);
+    case NE:
+        if (isValidPos(subcellArr, overallWidth, overallWidth - s +offsetX+1, 0+offsetY-1, s)) return std::make_pair(overallWidth - s+offsetX, 0+offsetY);
+        return std::make_pair(-1, -1);
+    case E:
+        for (int y = 0; y < w; y++) {
+            if (isValidPos(subcellArr, overallWidth, overallWidth - s+offsetX+1, y+offsetY, s)) return std::make_pair(overallWidth - s+offsetX, y+offsetY);
+        }
+        return std::make_pair(-1, -1);
+    case SE:
+        if (isValidPos(subcellArr, overallWidth, overallWidth - s+offsetX+1, overallWidth - s+offsetY+1, s)) return std::make_pair(overallWidth - s+offsetX, overallWidth - s+offsetY);
+        return std::make_pair(-1, -1);
+    case S:
+        for (int x = 0; x < w; x++) {
+            if (isValidPos(subcellArr, overallWidth, x+offsetX, overallWidth - s+offsetY+1, s)) return std::make_pair(x+offsetX, overallWidth - s+offsetY);
+        }
+        return std::make_pair(-1, -1);
+    case SW:
+        if (isValidPos(subcellArr, overallWidth, 0+offsetX-1, overallWidth - s+offsetY+1, s)) return std::make_pair(0+offsetX, overallWidth - s+offsetY);
+        return std::make_pair(-1, -1);
+    case W:
+        for (int y = 0; y < w; y++) {
+            if (isValidPos(subcellArr, overallWidth, 0+offsetX-1, y+offsetY, s)) return std::make_pair(0+offsetX, y+offsetY);
+        }
+        return std::make_pair(-1, -1);
+    }
 }
 
 //Returns an array of positions where an agent of size s*s can stand in a subcell grid
@@ -334,7 +368,7 @@ bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, 
     std::pair<int, int> startPos = getRestrictedStartPos(combinedCells, g->subWidth, offsetX, offsetY, s, getOppositeDirection(from));
     printf("SX: %i, SY: %i\n", startPos.first, startPos.second);
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
-    std::pair<int, int> endPos = getRestrictedStartPos(combinedCells, g->subWidth, offsetX, offsetY, s, getOppositeDirection(to));
+    std::pair<int, int> endPos = getRestrictedEndPos(combinedCells, g->subWidth, offsetX, offsetY, s, getOppositeDirection(to));
     printf("EX: %i, EY: %i\n", endPos.first, endPos.second);
     if (endPos == std::make_pair(-1, -1)) return false; //Check that it is valid
 
@@ -444,7 +478,8 @@ std::vector<Node> FindPath2(Vector2 start, Vector2 goal, std::shared_ptr<GridDat
 
                     if (grid->tiles[index].status == 2) { //If neighbour is partial
                         auto direction = directionMap.at(Vector2(newX, newY));
-                        if (isPathable(grid->tiles[index], direction, 2, grid->subWidth) || isPathableWithAdjacent(index, grid, direction, 2)) {
+                        auto directionFrom = directionMap.at(Vector2(current.x - cameFrom[current].x, current.y - cameFrom[current].y));
+                        if (isPathBetween(directionFrom, direction, grid, toIndex(grid, Vector2(current.x, current.y)), toIndex(grid, Vector2(newX, newY)), 2)) {
                             goodNeighbours.push_back(Node(newX, newY));
                         }
                     }
