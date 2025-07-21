@@ -3,6 +3,7 @@
 #include <memory>
 #include<array>
 #include <algorithm>
+#include <unordered_set>
 #include "Maths.h"
 
 //For now, just have these be constants. Need to figure out how to link grid and pathfinding properly
@@ -53,6 +54,32 @@ enum Direction8 {
 enum Direction4 {
 	N_4, E_4, W_4, S_4
 };
+
+//This struct is used for a* pathfinding and nothing else
+struct Node {
+	int x, y; //Coordinates of the node in the graph
+	int f, g, h; //Values used by the A* algorithm
+	bool partial; //Whether or not the node is somewhat destroyed
+
+	Node() = default;
+
+	Node(int xPos, int yPos);
+
+	//Comparison operators for pq
+	bool operator > (const Node& other) const;
+	bool operator == (const Node& other) const;
+};
+
+//Need to provide a hash definition so that Nodes can work with a hashmap. Only want it based on 
+//x and y since that is how we define equalities between nodes
+namespace std {
+	template<>
+	struct hash<Node> {
+		std::size_t operator()(const Node& node) const {
+			return (std::hash<int>()(node.x) ^ (std::hash<int>()(node.y) << 1));
+		}
+	};
+}
 
 //Global methods that need to be used by both Path and Grid systems
 

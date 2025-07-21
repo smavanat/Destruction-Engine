@@ -465,6 +465,6 @@ TEST_CASE("isPathBetween works", "[pathfinding]") {
                                             MS_00, MS_00, MS_00, MS_00,
                                             MS_00, MS_00, MS_00, MS_00};
 
-    //REQUIRE(isPathBetween(S, N, mainGrid, 5, 1, 3));
+    REQUIRE(isPathBetween(S, N, mainGrid, 5, 1, 3));
     REQUIRE(!isPathBetween(S, NE, mainGrid, 5, 2, 2));
 }

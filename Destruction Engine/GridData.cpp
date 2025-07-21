@@ -23,6 +23,16 @@ bool inBounds(std::shared_ptr<GridData> g, Vector2 gridPos) {
     return gridPos.x >= 0 && gridPos.y >= 0 && gridPos.x < g->gridWidth && gridPos.y < g->gridHeight;
 }
 
+//Node constructor
+Node::Node(int xPos, int yPos) : x(xPos), y(yPos), f(0), g(0), h(0), partial(false) {}
+
+bool Node::operator>(const Node& other) const {
+	return f > other.f;
+}
+
+bool Node::operator==(const Node& other) const {
+	return x == other.x && y == other.y;
+}
 //Gets the number of exitable sides a subcell grid has
 int numExits(const TileData& t) {
     //Simple for loop
@@ -658,10 +668,10 @@ bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, 
     }
 
     //Find startPosition and endPosition depending on from and to
-    std::pair<int, int> startPos = getStartPos(g->tiles[indexAt].subcells, dimensions.first, dimensions.second, s, getOppositeDirection(from)); //This and the one below are also wrong I think
+    std::pair<int, int> startPos = getStartPos(g->tiles[indexAt].subcells, g->subWidth, g->subWidth, s, getOppositeDirection(from)); //This and the one below are also wrong I think
     printf("SX: %i, SY: %i\n", startPos.first, startPos.second);
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
-    std::pair<int, int> endPos = getStartPos(g->tiles[indexTo].subcells, dimensions.first, dimensions.second, s, getOppositeDirection(to));
+    std::pair<int, int> endPos = getStartPos(g->tiles[indexTo].subcells, g->subWidth, g->subWidth, s, getOppositeDirection(to));
     printf("EX: %i, EY: %i\n", endPos.first, endPos.second);
     if (endPos == std::make_pair(-1, -1)) return false; //Check that it is valid
 
@@ -720,4 +730,161 @@ bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, 
     std::vector<bool> prepArray = preprocessValidPositions(combinedCells, dimensions.first, s);//Get the valid positions in the array
 
     return pathExistsTo(startPos.first, startPos.second, endPos.first, endPos.second, s, dimensions.first, prepArray); //Check that a valid path exists through the tile
+}
+
+const std::unordered_map<Vector2, Direction8>& getDirectionMap() {
+    std::unordered_map<Vector2, Direction8> directionMap = {{Vector2(-1, -1), NW}, {Vector2(0, -1), N},
+                                                            {Vector2(1, -1), NE},  {Vector2(-1, 0), E},
+                                                            {Vector2(1, 0), SE},   {Vector2(-1, 1), S}, 
+                                                            {Vector2(0, 1), SW},   {Vector2(1, 1), W}};
+    return directionMap;
+}
+
+//Gets the relevant node from the world position
+Node nodeFromWorldPos(Vector2 pos) {
+	return Node(static_cast<int>(floor(pos.x / TILE_WIDTH)), static_cast<int>(floor(pos.y / TILE_HEIGHT)));
+}   
+
+//Converts a node's grid position to its world position
+Vector2 nodeToWorldPos(Node n) {
+    return Vector2{
+        n.x * TILE_WIDTH + TILE_WIDTH / 2.0f,
+        n.y * TILE_HEIGHT + TILE_HEIGHT / 2.0f
+    };
+}
+
+//Gets the distance between two nodes as the crow flies
+int getDistance(Node a, Node b) {
+    int dstX = (int)abs(a.x - b.x);
+    int dstY = (int)abs(a.y - b.y);
+    if (dstX > dstY)
+        return 14 * dstY + 10 * (dstX - dstY);
+    return 14 * dstX + 10 * (dstY - dstX);
+}
+
+std::vector<Node> FindPath2(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid) {
+    //Represents the (x,y) coordinates of all possible neighbours
+    const int directionX[] = { -1, 0, 1, 0, 1, 1, -1, -1 };
+    const int directionY[] = { 0, 1, 0, -1, 1, -1, 1, -1 };
+
+    const int straightCost = 10; //Cost of moving straight -> 1* 10
+    const int diagonalCost = 14; //Cost of moving diagonally ~sqrt(2) *10
+
+    int rows = grid->gridHeight;
+    int cols = grid->gridWidth;
+
+    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList; //Nodes to visit
+    std::unordered_set<Node> closedList; //Nodes visited
+    std::unordered_map<Node, Node, std::hash<Node>> cameFrom; //Holds the parents of each node -> the one visited before 
+    std::vector<int> gScore(rows * cols, INT_MAX);//Holds the gScore of every node 
+
+    // Initialize start node
+    Node startNode = nodeFromWorldPos(start);
+    Node goalNode = nodeFromWorldPos(goal);
+    startNode.g = 0;
+    startNode.h = getDistance(startNode, goalNode);
+    startNode.f = startNode.g + startNode.h;
+
+    gScore[toIndex(grid, Vector2(startNode.x, startNode.y))] = 0;
+    openList.push(startNode);
+
+    //While there are nodes to visit
+    while (!openList.empty()) {
+        //Since openList is a pq, this will get the node with the lowest f score
+        Node current = openList.top();
+        openList.pop();
+
+        //If we have reached the end
+        if (current == goalNode) {
+            //Get all of the nodes in the path from the start to the end
+            std::vector<Node> path;
+            Node trace = current;
+            while (!(trace == startNode)) {
+                path.push_back(trace);
+                trace = cameFrom[trace];
+            }
+            path.push_back(startNode);
+            //Reverse it so it is in the correct order
+            reverse(path.begin(), path.end());
+            return path;
+        }
+
+        //Otherwise mark the current node as visited
+        closedList.insert(current);
+        
+        std::vector<Node> goodNeighbours;
+
+        if (grid->tiles[toIndex(grid, Vector2(current.x, current.y))].status == 0) {
+            //Visit all of its neighbours and insert them into the openList
+            for (int i = 0; i < 8; ++i) {
+                //The neighbour's coordinates
+                int newX = current.x + directionX[i];
+                int newY = current.y + directionY[i];
+
+                //Making sure we don't go out of grid bounds and crash the program
+                if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+                    int index = toIndex(grid, Vector2(newX, newY));
+                    bool updateNeighbour = false; //Bool that holds if we can add a new neighbour to the open list or not
+                    if (grid->tiles[index].status == 0) { //If neighbour is walkable
+                        goodNeighbours.push_back(Node(newX, newY));
+                    }
+
+                    if (grid->tiles[index].status == 2) { //If neighbour is partial
+                        auto direction = getDirectionMap().at(Vector2(newX, newY));
+                        if (isPathable(grid->tiles[index], direction, 2, grid->subWidth) || isPathableWithAdjacent(index, grid, direction, 2)) {
+                            goodNeighbours.push_back(Node(newX, newY));
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            //Figure out how we are going to pathfind on partial tiles
+            //I mean we could do it by just manually checking each direction,
+            //Seeing if it is pathable, and then just checking the three tiles there?
+            //Sounds stupid, but doable.
+            //Essentially, what we need to do is to have each Node struct also store the direction
+            //that we would be coming from to reach it. Then we need to determine if there is a 
+            //path between that origin direction and the destination direction, even if it is exitable on that
+            //side. Will have to do it using adjacent cells, because otherwise then can't determine if the 
+            //agent fits or not. Then we do the stupid tile checks
+            const TileData& t = grid->tiles[toIndex(grid, Vector2(current.x, current.y))];
+            for(int i = 0; i < 8; i++) {
+                //The neighbour's coordinates
+                int newX = current.x + directionX[i];
+                int newY = current.y + directionY[i];
+
+                //Making sure we don't go out of grid bounds and crash the program
+                if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+                    auto direction = getDirectionMap().at(Vector2(newX, newY));
+                    auto directionFrom = getDirectionMap().at(Vector2(current.x - cameFrom[current].x, current.y - cameFrom[current].y));
+                    //Need to figure out how to get direction that we are coming from.
+                    if(isPathBetween(directionFrom, direction, grid, toIndex(grid, Vector2(current.x, current.y)), toIndex(grid, Vector2(newX, newY)), 2)) {
+                        goodNeighbours.push_back(Node(newX, newY));
+                    }
+                }
+            }
+        }
+
+        //If we can add the neighbour to the openList, do so.
+        for(auto neighbor : goodNeighbours) {
+            //If it is not already visited
+            if (closedList.find(neighbor) == closedList.end()) {
+                int moveCost = ((current.x - neighbor.x) != 0 && (current.y -neighbor.y) != 0) ? diagonalCost : straightCost;
+                int index = toIndex(grid, Vector2(neighbor.x, neighbor.y));
+                int tentativeG = gScore[toIndex(grid, Vector2(current.x, current.y))] + moveCost;
+
+                if (tentativeG < gScore[index]) {
+                    gScore[index] = tentativeG;
+                    neighbor.g = tentativeG;
+                    neighbor.h = getDistance(neighbor, goalNode);
+                    neighbor.f = neighbor.g + neighbor.h;
+                    cameFrom[neighbor] = current;
+                    openList.push(neighbor);
+                }
+            }
+        }
+    }
+
+    return std::vector<Node>(); // No path found
 }
