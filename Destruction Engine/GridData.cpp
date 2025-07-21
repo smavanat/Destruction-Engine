@@ -255,28 +255,28 @@ std::pair<int, int> getRestrictedStartPos(std::vector<int> subcellArr, int w, in
         if (isValidPos(subcellArr, overallWidth, 0+offsetX, 0+offsetY, s)) return std::make_pair(0+offsetX, 0+offsetY);
         return std::make_pair(-1, -1);
     case N:
-        for (int i = 0; i < w; i++) {
-            if (isValidPos(subcellArr, overallWidth, i+offsetX, 0+offsetY, s)) return std::make_pair(i+offsetX, 0+offsetY);
+        for (int x = 0; x < w; x++) {
+            if (isValidPos(subcellArr, overallWidth, x+offsetX, 0+offsetY, s)) return std::make_pair(x+offsetX, 0+offsetY);
         }
         return std::make_pair(-1, -1);
     case NE:
-        if (isValidPos(subcellArr, overallWidth, overallWidth - s +offsetX, 0+offsetY, s)) return std::make_pair(overallWidth - s+offsetX, 0+offsetY);
+        if (isValidPos(subcellArr, overallWidth, w - s +offsetX, 0+offsetY, s)) return std::make_pair(w - s+offsetX, 0+offsetY);
         return std::make_pair(-1, -1);
     case E:
         for (int y = 0; y < w; y++) {
-            if (isValidPos(subcellArr, overallWidth, overallWidth - s+offsetX, y+offsetY, s)) return std::make_pair(overallWidth - s+offsetX, y+offsetY);
+            if (isValidPos(subcellArr, overallWidth, w - s+offsetX, y+offsetY, s)) return std::make_pair(w - s+offsetX, y+offsetY);
         }
         return std::make_pair(-1, -1);
     case SE:
-        if (isValidPos(subcellArr, overallWidth, overallWidth - s+offsetX, overallWidth - s+offsetY, s)) return std::make_pair(overallWidth - s+offsetX, overallWidth - s+offsetY);
+        if (isValidPos(subcellArr, overallWidth, w - s+offsetX, w - s+offsetY, s)) return std::make_pair(w - s+offsetX, w - s+offsetY);
         return std::make_pair(-1, -1);
     case S:
         for (int x = 0; x < w; x++) {
-            if (isValidPos(subcellArr, overallWidth, x+offsetX, overallWidth - s+offsetY, s)) return std::make_pair(x+offsetX, overallWidth - s+offsetY);
+            if (isValidPos(subcellArr, overallWidth, x+offsetX, w - s+offsetY, s)) return std::make_pair(x+offsetX, w - s+offsetY);
         }
         return std::make_pair(-1, -1);
     case SW:
-        if (isValidPos(subcellArr, overallWidth, 0+offsetX, overallWidth - s+offsetY, s)) return std::make_pair(0+offsetX, overallWidth - s+offsetY);
+        if (isValidPos(subcellArr, overallWidth, 0+offsetX, w - s+offsetY, s)) return std::make_pair(0+offsetX, w - s+offsetY);
         return std::make_pair(-1, -1);
     case W:
         for (int y = 0; y < w; y++) {
@@ -293,32 +293,33 @@ std::pair<int, int> getRestrictedEndPos(std::vector<int> subcellArr, int w, int 
         if (isValidPos(subcellArr, overallWidth, 0+offsetX-1, 0+offsetY-1, s)) return std::make_pair(0+offsetX, 0+offsetY);
         return std::make_pair(-1, -1);
     case N:
-        for (int i = 0; i < w; i++) {
-            if (isValidPos(subcellArr, overallWidth, i+offsetX, 0+offsetY-1, s)) return std::make_pair(i+offsetX, 0+offsetY);
+        for (int x = 0; x < w; x++) {
+            if (isValidPos(subcellArr, overallWidth, x+offsetX, 0+offsetY-1, s)) return std::make_pair(x+offsetX, 0+offsetY-1);
         }
         return std::make_pair(-1, -1);
     case NE:
-        if (isValidPos(subcellArr, overallWidth, overallWidth - s +offsetX+1, 0+offsetY-1, s)) return std::make_pair(overallWidth - s+offsetX, 0+offsetY);
+        if (isValidPos(subcellArr, overallWidth, w - s +offsetX+1, 0+offsetY-1, s)) return std::make_pair(w - s+offsetX+1, 0+offsetY-1);
         return std::make_pair(-1, -1);
     case E:
         for (int y = 0; y < w; y++) {
-            if (isValidPos(subcellArr, overallWidth, overallWidth - s+offsetX+1, y+offsetY, s)) return std::make_pair(overallWidth - s+offsetX, y+offsetY);
+            if (isValidPos(subcellArr, overallWidth, w - s+offsetX+1, y+offsetY, s)) return std::make_pair(w - s+offsetX+1, y+offsetY);
         }
         return std::make_pair(-1, -1);
     case SE:
-        if (isValidPos(subcellArr, overallWidth, overallWidth - s+offsetX+1, overallWidth - s+offsetY+1, s)) return std::make_pair(overallWidth - s+offsetX, overallWidth - s+offsetY);
+        if (isValidPos(subcellArr, overallWidth, w - s+offsetX+1, w - s+offsetY+1, s)) return std::make_pair(w - s+offsetX+1, w - s+offsetY+1);
         return std::make_pair(-1, -1);
     case S:
         for (int x = 0; x < w; x++) {
-            if (isValidPos(subcellArr, overallWidth, x+offsetX, overallWidth - s+offsetY+1, s)) return std::make_pair(x+offsetX, overallWidth - s+offsetY);
+            printf("X: %i, Y: %i\n", x+offsetX, w - s+offsetY+1);
+            if (isValidPos(subcellArr, overallWidth, x+offsetX, w - s+offsetY+1, s)) return std::make_pair(x+offsetX, w - s+offsetY+1);
         }
         return std::make_pair(-1, -1);
     case SW:
-        if (isValidPos(subcellArr, overallWidth, 0+offsetX-1, overallWidth - s+offsetY+1, s)) return std::make_pair(0+offsetX, overallWidth - s+offsetY);
+        if (isValidPos(subcellArr, overallWidth, 0+offsetX-1, w - s+offsetY+1, s)) return std::make_pair(0+offsetX-1, w - s+offsetY+1);
         return std::make_pair(-1, -1);
     case W:
         for (int y = 0; y < w; y++) {
-            if (isValidPos(subcellArr, overallWidth, 0+offsetX-1, y+offsetY, s)) return std::make_pair(0+offsetX, y+offsetY);
+            if (isValidPos(subcellArr, overallWidth, 0+offsetX-1, y+offsetY, s)) return std::make_pair(0+offsetX+1, y+offsetY);
         }
         return std::make_pair(-1, -1);
     }
@@ -327,8 +328,8 @@ std::pair<int, int> getRestrictedEndPos(std::vector<int> subcellArr, int w, int 
 //Returns an array of positions where an agent of size s*s can stand in a subcell grid
 std::vector<bool> preprocessRestrictedValidPositions(std::vector<int> subcellArr, int w, int s, int offsetX, int offsetY) {
     std::vector<bool> retArr(subcellArr.size(), false);//The array being returned. Initially assume all positions are impassible
-    for (int i = 0; i < w; i++) {//x position
-        for (int j = 0; j < w; j++) {//y position
+    for (int i = -1; i < w; i++) {//x position
+        for (int j = -1; j < w; j++) {//y position
             //If this position is passable by the agent, can set it to true
             if (isValidPos(subcellArr, w*3, i+offsetX, j+offsetY, s))
                 retArr[((j+offsetY) * w*3) + i+offsetX] = true;
