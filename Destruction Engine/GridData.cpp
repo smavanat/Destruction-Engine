@@ -286,7 +286,6 @@ std::pair<int, int> getRestrictedStartPos(std::vector<int> subcellArr, int w, in
     }
 }
 
-//Need to fix this one and restrictedPreprocessed positions to work for 1x1 entities
 std::pair<int, int> getRestrictedEndPos(std::vector<int> subcellArr, int w, int offsetX, int offsetY, int s, Direction8 d) {
     int overallWidth = w*3;
     switch (d) {
@@ -311,7 +310,6 @@ std::pair<int, int> getRestrictedEndPos(std::vector<int> subcellArr, int w, int 
         return std::make_pair(-1, -1);
     case S:
         for (int x = 0; x < w; x++) {
-            printf("X: %i, Y: %i\n", x+offsetX, w - s+offsetY+1);
             if (isValidPos(subcellArr, overallWidth, x+offsetX, w - s+offsetY+1, s)) return std::make_pair(x+offsetX, w - s+offsetY+1);
         }
         return std::make_pair(-1, -1);
@@ -329,8 +327,17 @@ std::pair<int, int> getRestrictedEndPos(std::vector<int> subcellArr, int w, int 
 //Returns an array of positions where an agent of size s*s can stand in a subcell grid
 std::vector<bool> preprocessRestrictedValidPositions(std::vector<int> subcellArr, int w, int s, int offsetX, int offsetY) {
     std::vector<bool> retArr(subcellArr.size(), false);//The array being returned. Initially assume all positions are impassible
-    for (int i = -1; i < w; i++) {//x position
-        for (int j = -1; j < w; j++) {//y position
+    for (int i = -1; i <= w; i++) {//x position
+        for (int j = -1; j <= w; j++) {//y position
+            //This should avoid the issue of agents of size 1 being able to "go around" impassible subcells
+            //by going through passible subcells on neighbouring tiles to reach the desired target, which 
+            //would seriously mess up the A*
+            if(s == 1) 
+                if(i == -1 && subcellArr[((j+offsetY)*w*3) + offsetX] == 1||
+                   i == w && subcellArr[((j+offsetY)*w*3) + w-1 + offsetX] == 1||
+                   j == -1 && subcellArr[(offsetY*w*3) + i+offsetX] == 1 ||
+                   j == w && subcellArr[(offsetY*2*w*3) + i + offsetX] == 1) 
+                    continue;
             //If this position is passable by the agent, can set it to true
             if (isValidPos(subcellArr, w*3, i+offsetX, j+offsetY, s))
                 retArr[((j+offsetY) * w*3) + i+offsetX] = true;
