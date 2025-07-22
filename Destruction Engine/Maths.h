@@ -32,7 +32,7 @@ struct Vector2
 		if (a.x == x && a.y == y) return true;
 		else return false;
 	}
-
+	
 	void operator = (const b2Vec2& a) {
 		x = a.x;
 		y = a.y;

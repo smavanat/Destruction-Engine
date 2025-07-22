@@ -98,20 +98,6 @@ bool inBounds(std::shared_ptr<GridData> g, Vector2 gridPos);
 int numExits(const TileData& t);
 //Determines whether there is a path, standing in the tile, for an agent to move between
 //one direction and another
-bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int indexTo, int s);
+bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int s);
 //Returns the path between two positions
 std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid, int size);
-
-//These functions should not be included in this header file in the final build
-//They are here for now so I can run unit tests on them in the testbed
-bool isValidPos(std::vector<int> subcellArr, int w, int x, int y, int s); 
-bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, std::vector<bool> pArr);
-std::vector<int> combineTiles(std::vector<std::vector<int>*> tArray, int tileW, int newGridW, int newGridH);
-std::vector<int> getCombinedSubcellGrid(int index, std::shared_ptr<GridData> g, Direction8 d);
-bool isAtTopEdge(std::pair<int, int> vec);
-bool isAtLeftEdge(std::pair<int, int> vec);
-bool isAtRightEdge(std::pair<int, int> vec);
-bool isAtBottomEdge(std::pair<int, int> vec);
-std::vector<std::pair<int, int>> trimCells(int index, int gridWidth, int gridHeight, Direction8 d);
-std::vector<int>* getNeighbourCells(int index, std::shared_ptr<GridData>g, std::pair<int, int> vec);
-std::vector<int> createSurroundGrid(int index, std::shared_ptr<GridData> g, Direction8 d);

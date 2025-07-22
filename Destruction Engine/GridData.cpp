@@ -47,11 +47,11 @@ int numExits(const TileData& t) {
 }
 
 //If an agent of dimensions s*s can stand in a position (x,y) in a subcell grid
-bool isValidPos(std::vector<int> subcellArr, int w, int x, int y, int s) {
+bool isValidPos(std::vector<int>& subcellArr, int w, int x, int y, int s) {
     //The x and y values represent the coords of the top-left corner of the agent. 
     //If this, plus the agent's size in subcells is outside the dimensions of the subcells grid,
     //return false
-    if (x + s > w || y + s > w) //All tiles are square
+    if (x < 0 || y < 0 || x + s > w || y + s > (subcellArr.size()/ w)) //All tiles are square
         return false;
     //Checking if any of the subcells in the s*s grid with top-left at (x,y) are filled
     for (int i = x; i < x + s; i++) {//x position
@@ -68,15 +68,15 @@ bool isValidPos(std::vector<int> subcellArr, int w, int x, int y, int s) {
 //s is the size of the agent
 //w is the width of the subcell array we are working on
 //pArr is the array of preprocessed valid positions
-bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, std::vector<bool> pArr) {
+bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, std::vector<bool>& pArr) {
     //If the start is invalid, return false
     //if (!pArr[(startY*w)+startX] ||!pArr[(endY*w)+endX]) return false;
 
     //Initialise the variables
     bool found = false;
-    bool* visitedArr = (bool*)malloc(w * w * sizeof(bool)); //Marks which nodes we have visited
+    bool* visitedArr = (bool*)malloc(pArr.size() * sizeof(bool)); //Marks which nodes we have visited
     if (!visitedArr) return false;
-    memset(visitedArr, false, w * w * sizeof(bool)); //All nodes are initially unvisited
+    memset(visitedArr, false, pArr.size() * sizeof(bool)); //All nodes are initially unvisited
     std::queue<std::pair<int, int>> validPositions; //Queue to hold all of the positions to visit in bfs.
     //For iterating over neighbour coordinates
     //We can only allow diagonal traversal between valid tiles when agents are of size > 1, since the 
@@ -106,7 +106,7 @@ bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, std:
             int newY = p.second + directionY[i];
 
             //Checking bounds are fine
-            if (newX >= 0 && newX < w && newY >= 0 && newY < w && !visitedArr[(newY * w) + newX]) {
+            if (newX >= 0 && newX < w && newY >= 0 && newY < (pArr.size()/w) && !visitedArr[(newY * w) + newX]) {
                 visitedArr[(newY * w) + newX] = true; //Marking it as visited
                 //Checking that it is a valid position, and pushing to the queue if it is
                 if (pArr[(newY*w)+newX]) {
@@ -122,7 +122,7 @@ bool pathExistsTo(int startX, int startY, int endX, int endY, int s, int w, std:
     return found; //No path out of the subcell grid found
 }
 
-std::vector<int> combineTiles(std::vector<std::vector<int>*> tArray, int tileW, int newGridW, int newGridH) {
+std::vector<int> combineTiles(std::vector<std::vector<int>*>& tArray, int tileW, int newGridW, int newGridH) {
     std::vector<int> retArray(tileW*tileW*tArray.size(), 0);
 
     //This is incredibly disgusting, and unfortunately very necessary 
@@ -140,19 +140,6 @@ std::vector<int> combineTiles(std::vector<std::vector<int>*> tArray, int tileW, 
         }
     }
     return retArray;
-}
-
-Direction8 getOppositeDirection(Direction8 d) {
-    switch(d) {
-        case N: return S;
-        case E: return W;
-        case S: return N;
-        case W: return E;
-        case NW: return SE;
-        case NE: return SW;
-        case SE: return NW;
-        case SW: return NE;
-    }
 }
 
 //A bunch of helper bools for the trimCells function
@@ -248,99 +235,110 @@ std::vector<int> createSurroundGrid(int index, std::shared_ptr<GridData> g, std:
     return combineTiles(subcellArr, g->subWidth, dimensions->first, dimensions->second);
 }
 
-std::pair<int, int> getRestrictedStartPos(std::vector<int> subcellArr, int w, int offsetX, int offsetY, int s, Direction8 d) {
-    int overallWidth = w*3;
+std::pair<int, int> getRestrictedStartPos(std::vector<int>& subcellArr, int w, int gW, int offsetX, int offsetY, int s, Direction8 d) {
     switch (d) {
     case NW:
-        if (isValidPos(subcellArr, overallWidth, 0+offsetX, 0+offsetY, s)) return std::make_pair(0+offsetX, 0+offsetY);
+        if (isValidPos(subcellArr, gW, offsetX, offsetY, s)) return std::make_pair(offsetX, offsetY);
         return std::make_pair(-1, -1);
     case N:
         for (int x = 0; x < w; x++) {
-            if (isValidPos(subcellArr, overallWidth, x+offsetX, 0+offsetY, s)) return std::make_pair(x+offsetX, 0+offsetY);
+            if (isValidPos(subcellArr, gW, x+offsetX, offsetY, s)) return std::make_pair(x+offsetX, offsetY);
         }
         return std::make_pair(-1, -1);
     case NE:
-        if (isValidPos(subcellArr, overallWidth, w - s +offsetX, 0+offsetY, s)) return std::make_pair(w - s+offsetX, 0+offsetY);
+        if (isValidPos(subcellArr, gW, w - s +offsetX, offsetY, s)) return std::make_pair(w - s+offsetX, offsetY);
         return std::make_pair(-1, -1);
     case E:
         for (int y = 0; y < w; y++) {
-            if (isValidPos(subcellArr, overallWidth, w - s+offsetX, y+offsetY, s)) return std::make_pair(w - s+offsetX, y+offsetY);
+            if (isValidPos(subcellArr, gW, w - s+offsetX, y+offsetY, s)) return std::make_pair(w - s+offsetX, y+offsetY);
         }
         return std::make_pair(-1, -1);
     case SE:
-        if (isValidPos(subcellArr, overallWidth, w - s+offsetX, w - s+offsetY, s)) return std::make_pair(w - s+offsetX, w - s+offsetY);
+        if (isValidPos(subcellArr, gW, w - s+offsetX, w - s+offsetY, s)) return std::make_pair(w - s+offsetX, w - s+offsetY);
         return std::make_pair(-1, -1);
     case S:
         for (int x = 0; x < w; x++) {
-            if (isValidPos(subcellArr, overallWidth, x+offsetX, w - s+offsetY, s)) return std::make_pair(x+offsetX, w - s+offsetY);
+            if (isValidPos(subcellArr, gW, x+offsetX, w - s+offsetY, s)) return std::make_pair(x+offsetX, w - s+offsetY);
         }
         return std::make_pair(-1, -1);
     case SW:
-        if (isValidPos(subcellArr, overallWidth, 0+offsetX, w - s+offsetY, s)) return std::make_pair(0+offsetX, w - s+offsetY);
+        if (isValidPos(subcellArr, gW, offsetX, w - s+offsetY, s)) return std::make_pair(offsetX, w - s+offsetY);
         return std::make_pair(-1, -1);
     case W:
         for (int y = 0; y < w; y++) {
-            if (isValidPos(subcellArr, overallWidth, 0+offsetX, y+offsetY, s)) return std::make_pair(0+offsetX, y+offsetY);
+            if (isValidPos(subcellArr, gW, offsetX, y+offsetY, s)) return std::make_pair(offsetX, y+offsetY);
         }
         return std::make_pair(-1, -1);
     }
 }
 
-std::pair<int, int> getRestrictedEndPos(std::vector<int> subcellArr, int w, int offsetX, int offsetY, int s, Direction8 d) {
-    int overallWidth = w*3;
+std::pair<int, int> getRestrictedEndPos(std::vector<int>& subcellArr, int w, int gW, int offsetX, int offsetY, int s, Direction8 d) {
     switch (d) {
     case NW:
-        if (isValidPos(subcellArr, overallWidth, 0+offsetX-1, 0+offsetY-1, s)) return std::make_pair(0+offsetX, 0+offsetY);
+        if(s == 1 && !isValidPos(subcellArr, gW, offsetX, offsetY - 1, s) && !isValidPos(subcellArr, gW, offsetX-1, offsetY, s))
+            return std::make_pair(-1, -1);
+        if (isValidPos(subcellArr, gW, offsetX-1, offsetY-1, s)) return std::make_pair(offsetX-1, offsetY-1);
         return std::make_pair(-1, -1);
     case N:
         for (int x = 0; x < w; x++) {
-            if (isValidPos(subcellArr, overallWidth, x+offsetX, 0+offsetY-1, s)) return std::make_pair(x+offsetX, 0+offsetY-1);
+            if (s == 1 && !isValidPos(subcellArr, gW, x + offsetX, offsetY, s)) continue;
+            if (isValidPos(subcellArr, gW, x+offsetX, offsetY-1, s)) return std::make_pair(x+offsetX, offsetY-1);
         }
         return std::make_pair(-1, -1);
     case NE:
-        if (isValidPos(subcellArr, overallWidth, w - s +offsetX+1, 0+offsetY-1, s)) return std::make_pair(w - s+offsetX+1, 0+offsetY-1);
+        if (s == 1 && !isValidPos(subcellArr, gW, w - s + offsetX, offsetY - 1, s) && !isValidPos(subcellArr, gW, w - s + offsetX + 1, offsetY, s))
+            return std::make_pair(-1, -1);
+        if (isValidPos(subcellArr, gW, w - s +offsetX+1, offsetY-1, s)) return std::make_pair(w - s+offsetX+1, offsetY-1);
         return std::make_pair(-1, -1);
     case E:
         for (int y = 0; y < w; y++) {
-            if (isValidPos(subcellArr, overallWidth, w - s+offsetX+1, y+offsetY, s)) return std::make_pair(w - s+offsetX+1, y+offsetY);
+            if (s == 1 && !isValidPos(subcellArr, gW, w - s + offsetX, y + offsetY, s)) continue;
+            if (isValidPos(subcellArr, gW, w - s+offsetX+1, y+offsetY, s)) return std::make_pair(w - s+offsetX+1, y+offsetY);
         }
         return std::make_pair(-1, -1);
     case SE:
-        if (isValidPos(subcellArr, overallWidth, w - s+offsetX+1, w - s+offsetY+1, s)) return std::make_pair(w - s+offsetX+1, w - s+offsetY+1);
+        if (s == 1 && !isValidPos(subcellArr, gW, w - s + offsetX, w - s + offsetY + 1, s) && !isValidPos(subcellArr, gW, w - s + offsetX + 1, w - s + offsetY, s))
+            return std::make_pair(-1, -1);
+        if (isValidPos(subcellArr, gW, w - s+offsetX+1, w - s+offsetY+1, s)) return std::make_pair(w - s+offsetX+1, w - s+offsetY+1);
         return std::make_pair(-1, -1);
     case S:
         for (int x = 0; x < w; x++) {
-            if (isValidPos(subcellArr, overallWidth, x+offsetX, w - s+offsetY+1, s)) return std::make_pair(x+offsetX, w - s+offsetY+1);
+            if (s == 1 && !isValidPos(subcellArr, gW, x + offsetX, w - s + offsetY, s)) continue;
+            if (isValidPos(subcellArr, gW, x+offsetX, w - s+offsetY+1, s)) return std::make_pair(x+offsetX, w - s+offsetY+1);
         }
         return std::make_pair(-1, -1);
     case SW:
-        if (isValidPos(subcellArr, overallWidth, 0+offsetX-1, w - s+offsetY+1, s)) return std::make_pair(0+offsetX-1, w - s+offsetY+1);
+        if (s == 1 && !isValidPos(subcellArr, gW, offsetX, w - s + offsetY + 1, s) && !isValidPos(subcellArr, gW, offsetX - 1, w - s + offsetY, s))
+            return std::make_pair(-1, -1);
+        if (isValidPos(subcellArr, gW, offsetX-1, w - s+offsetY+1, s)) return std::make_pair(offsetX-1, w - s+offsetY+1);
         return std::make_pair(-1, -1);
     case W:
         for (int y = 0; y < w; y++) {
-            if (isValidPos(subcellArr, overallWidth, 0+offsetX-1, y+offsetY, s)) return std::make_pair(0+offsetX+1, y+offsetY);
+            if (s == 1 && !isValidPos(subcellArr, gW, offsetX, y+ offsetY, s)) continue;
+            if (isValidPos(subcellArr, gW, offsetX-1, y+offsetY, s)) return std::make_pair(offsetX-1, y+offsetY);
         }
         return std::make_pair(-1, -1);
     }
 }
 
 //Returns an array of positions where an agent of size s*s can stand in a subcell grid
-std::vector<bool> preprocessRestrictedValidPositions(std::vector<int> subcellArr, int w, int s, int offsetX, int offsetY) {
+std::vector<bool> preprocessRestrictedValidPositions(std::vector<int> subcellArr, int w, int gW, int s, int offsetX, int offsetY) {
     std::vector<bool> retArr(subcellArr.size(), false);//The array being returned. Initially assume all positions are impassible
     for (int i = -1; i <= w; i++) {//x position
         for (int j = -1; j <= w; j++) {//y position
             //This should avoid the issue of agents of size 1 being able to "go around" impassible subcells
             //by going through passible subcells on neighbouring tiles to reach the desired target, which 
             //would seriously mess up the A*
+            if (j + offsetY < 0 || i + offsetX < 0 || i + offsetX >= gW || j + offsetY >= subcellArr.size()/gW ) continue;
             if(s == 1) 
-                if(i == -1 && subcellArr[((j+offsetY)*w*3) + offsetX] == 1||
-                   i == w && subcellArr[((j+offsetY)*w*3) + w-1 + offsetX] == 1||
-                   j == -1 && subcellArr[(offsetY*w*3) + i+offsetX] == 1 ||
-                   j == w && subcellArr[(offsetY*2*w*3) + i + offsetX] == 1) 
+                if(i == -1 && subcellArr[((j+offsetY)*gW) + offsetX] == 1||
+                   i == w && subcellArr[((j+offsetY)*gW) + w-1 + offsetX] == 1||
+                   j == -1 && subcellArr[(offsetY*gW) + i+offsetX] == 1 ||
+                   j == w && subcellArr[((j-1+offsetY)*gW) + i + offsetX] == 1) 
                     continue;
             //If this position is passable by the agent, can set it to true
-            if (isValidPos(subcellArr, w*3, i+offsetX, j+offsetY, s))
-                retArr[((j+offsetY) * w*3) + i+offsetX] = true;
+            if (isValidPos(subcellArr, gW, i+offsetX, j+offsetY, s))
+                retArr[((j+offsetY) * gW) + i+offsetX] = true;
         }
     }
     return retArr;
@@ -351,9 +349,8 @@ std::vector<bool> preprocessRestrictedValidPositions(std::vector<int> subcellArr
 //to represents where we want to exit the cell to (to reach the desired neighbour)
 //g is the GridData pointer
 //indexAt is the index of the current TileData in g
-//indexTo is the index of the neighbour TileData in g
 //s is the size of the agent passing through
-bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int indexTo, int s) {
+bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int s) {
     std::pair<int, int> dimensions = std::make_pair(0,0);
     std::pair<int, int> startTile = std::make_pair(1, 1); //Represents the coordinates of the starting tile in the 3x3 grid where (0,0) is the top left
 
@@ -364,15 +361,14 @@ bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, 
     int offsetY = startTile.second*g->subWidth;    
 
     //Find startPosition and endPosition depending on from and to
-    std::pair<int, int> startPos = getRestrictedStartPos(combinedCells, g->subWidth, offsetX, offsetY, s, getOppositeDirection(from));
+    std::pair<int, int> startPos = getRestrictedStartPos(combinedCells, g->subWidth, g->subWidth * dimensions.first, offsetX, offsetY, s, from);
     if (startPos == std::make_pair(-1, -1)) return false; //Check that it is valid
-    std::pair<int, int> endPos = getRestrictedEndPos(combinedCells, g->subWidth, offsetX, offsetY, s, getOppositeDirection(to));
+    std::pair<int, int> endPos = getRestrictedEndPos(combinedCells, g->subWidth, g->subWidth * dimensions.first, offsetX, offsetY, s, to);
     if (endPos == std::make_pair(-1, -1)) return false; //Check that it is valid
 
     //Find if there is a path between them 
-    std::vector<bool> prepArray = preprocessRestrictedValidPositions(combinedCells, g->subWidth, s, offsetX, offsetY);//Get the valid positions in the array
-
-    return pathExistsTo(startPos.first, startPos.second, endPos.first, endPos.second, s, dimensions.first, prepArray); //Check that a valid path exists through the tile
+    std::vector<bool> prepArray = preprocessRestrictedValidPositions(combinedCells, g->subWidth, g->subWidth*dimensions.first, s, offsetX, offsetY);//Get the valid positions in the array
+    return pathExistsTo(startPos.first, startPos.second, endPos.first, endPos.second, s, dimensions.first*g->subWidth, prepArray); //Check that a valid path exists through the tile
 }
 
 //Gets the relevant node from the world position
@@ -447,16 +443,12 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
             path.push_back(startNode);
             //Reverse it so it is in the correct order
             reverse(path.begin(), path.end());
-            for(int i = 0; i < path.size(); i++) {
-                printf("NodeX: %i, NodeY: %i\n", path[i].x, path[i].y);
-            }
             return path;
         }
-
         //Otherwise mark the current node as visited
         closedList.insert(current);
         
-        std::vector<Node> goodNeighbours;
+        std::vector<Node> goodNeighbours; //For holding neighbour nodes to be processed and added to the openList
 
         if (grid->tiles[toIndex(grid, Vector2(current.x, current.y))].status == 0) {
             //Visit all of its neighbours and insert them into the openList
@@ -468,15 +460,26 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
                 //Making sure we don't go out of grid bounds and crash the program
                 if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
                     int index = toIndex(grid, Vector2(newX, newY));
-                    bool updateNeighbour = false; //Bool that holds if we can add a new neighbour to the open list or not
                     if (grid->tiles[index].status == 0) { //If neighbour is walkable
-                        goodNeighbours.push_back(Node(newX, newY));
+                        //If we are walking to a neighbour that is walkable, but diagonally adjacent, 
+                        //need to manually check if there is a path between these tiles, otherwise 
+                        //the agent will get stuck ramming itself into a corner.
+                        if (directionX[i] != 0 && directionY[i] != 0) {
+                            auto direction = directionMap.at(Vector2(directionX[i], directionY[i]));
+                            auto directionFrom = (current == startNode) ? S : directionMap.at(Vector2(cameFrom[current].x - current.x, cameFrom[current].y - current.y));
+                            if (isPathBetween(directionFrom, direction, grid, toIndex(grid, Vector2(current.x, current.y)), size)) {
+                                goodNeighbours.push_back(Node(newX, newY));
+                            }
+                        }
+                        else {
+                            goodNeighbours.push_back(Node(newX, newY));
+                        }
                     }
 
                     if (grid->tiles[index].status == 2) { //If neighbour is partial
-                        auto direction = directionMap.at(Vector2(newX, newY));
-                        auto directionFrom = (current == startNode) ? N : directionMap.at(Vector2(current.x - cameFrom[current].x, current.y - cameFrom[current].y));
-                        if (isPathBetween(directionFrom, direction, grid, toIndex(grid, Vector2(current.x, current.y)), toIndex(grid, Vector2(newX, newY)), size)) {
+                        auto direction = directionMap.at(Vector2(directionX[i], directionY[i]));
+                        auto directionFrom = (current == startNode) ? S : directionMap.at(Vector2(cameFrom[current].x - current.x, cameFrom[current].y - current.y));
+                        if (isPathBetween(directionFrom, direction, grid, toIndex(grid, Vector2(current.x, current.y)), size)) {
                             goodNeighbours.push_back(Node(newX, newY));
                         }
                     }
@@ -492,17 +495,17 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
 
                 //Making sure we don't go out of grid bounds and crash the program
                 if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
-                    auto direction = directionMap.at(Vector2(newX, newY));
-                    auto directionFrom = (current == startNode) ? N : directionMap.at(Vector2(current.x - cameFrom[current].x, current.y - cameFrom[current].y));
+                    auto direction = directionMap.at(Vector2(directionX[i], directionY[i]));
+                    auto directionFrom = (current == startNode) ? S : directionMap.at(Vector2(cameFrom[current].x - current.x, cameFrom[current].y - current.y));
                     //Need to figure out how to get direction that we are coming from.
-                    if(isPathBetween(directionFrom, direction, grid, toIndex(grid, Vector2(current.x, current.y)), toIndex(grid, Vector2(newX, newY)), size)) {
+                    if(isPathBetween(directionFrom, direction, grid, toIndex(grid, Vector2(current.x, current.y)), size)) {
                         goodNeighbours.push_back(Node(newX, newY));
                     }
                 }
             }
         }
 
-        //If we can add the neighbour to the openList, do so.
+        //Deferring adding nodes to the openList to the end to avoid copying code in this function
         for(auto neighbor : goodNeighbours) {
             //If it is not already visited
             if (closedList.find(neighbor) == closedList.end()) {
