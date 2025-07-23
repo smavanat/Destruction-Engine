@@ -1,7 +1,7 @@
 .vscode
 x64
-Destruction Engine.vcxproj
-Destruction Engine.vcxproj.filters
+SDL Falling Sand Simulation.vcxproj
+SDL Falling Sand Simulation.vcxproj.filters
 test.exe
 Testing
 catch.hpp
