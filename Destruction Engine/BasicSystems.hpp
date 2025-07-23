@@ -24,7 +24,7 @@ public:
 
 			sprite.centre = transform.position;
 			sprite.angle = transform.rotation;
-			s_render(sprite, gRenderer);
+			render(sprite, gRenderer);
 		}
 	}
 };
@@ -62,7 +62,7 @@ public:
 		for (Entity entity : registeredEntities) {
 			Sprite& s = gCoordinator.getComponent<Sprite>(entity);
 			if (s.needsSplitting) {
-				for (Sprite &newSprite : s_splitTextureAtEdge(s, gRenderer)) {
+				for (Sprite &newSprite : splitTextureAtEdge(s, gRenderer)) {
 					spritesToAdd.push_back(newSprite);
 				}
 				s.needsSplitting = false;
@@ -71,7 +71,7 @@ public:
 		}
 
 		for (Sprite s : spritesToAdd) {
-			std::vector<int> tempPoints = s_marchingSquares(s);
+			std::vector<int> tempPoints = marchingSquares(s);
 
 			std::vector<int> temprdpPoints;
 			//Position at size()-2 is where 0 is stored. This will give us the 
@@ -81,7 +81,7 @@ public:
 			Entity e = gCoordinator.createEntity();
 			gCoordinator.addComponent(e, Transform(s.centre, s.angle));
 			gCoordinator.addComponent(e, s);
-			gCoordinator.addComponent(e, Collider(s_createTexturePolygon(temprdpPoints, s.width, worldId, s)));
+			gCoordinator.addComponent(e, Collider(createTexturePolygon(temprdpPoints, s.width, worldId, s)));
 		}
 		spritesToAdd.clear();
 
@@ -97,10 +97,10 @@ public:
 			for (Entity entity : registeredEntities) {
 				Sprite &s = gCoordinator.getComponent<Sprite>(entity);
 				Vector2 rotated = rotateAboutPoint(Vector2(in->mouseX, in->mouseY), s.centre, -s.angle, false);
-				if (rotated.x >= s_getOrigin(s).x && rotated.x < s_getOrigin(s).x + s.width &&
-					rotated.y < s_getOrigin(s).y + s.height && rotated.y >= s_getOrigin(s).y
+				if (rotated.x >= getOrigin(s).x && rotated.x < getOrigin(s).x + s.width &&
+					rotated.y < getOrigin(s).y + s.height && rotated.y >= getOrigin(s).y
 					) {
-					s_erasePixels(s, gRenderer, scale, in->mouseX, in->mouseY);
+					erasePixels(s, gRenderer, scale, in->mouseX, in->mouseY);
 				}
 			}
 		}

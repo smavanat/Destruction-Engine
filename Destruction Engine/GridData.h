@@ -101,3 +101,4 @@ int numExits(const TileData& t);
 bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int s);
 //Returns the path between two positions
 std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid, int size);
+Vector2 nodeToWorldPos(Node n, int w);

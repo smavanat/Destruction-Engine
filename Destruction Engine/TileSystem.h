@@ -9,20 +9,6 @@
 #include "BasicComponents.h"
 #include "GridData.h"
 
-//The different tile sprites
-//const int TILE_RED = 0;
-//const int TILE_GREEN = 1;
-//const int TILE_BLUE = 2;
-//const int TILE_CENTER = 3;
-//const int TILE_TOP = 4;
-//const int TILE_TOPRIGHT = 5;
-//const int TILE_RIGHT = 6;
-//const int TILE_BOTTOMRIGHT = 7;
-//const int TILE_BOTTOM = 8;
-//const int TILE_BOTTOMLEFT = 9;
-//const int TILE_LEFT = 10;
-//const int TILE_TOPLEFT = 11;
-
 const int TILE_00 = 0;
 const int TILE_01 = 1;
 const int TILE_02 = 2;
@@ -45,6 +31,8 @@ extern SDL_Renderer* gRenderer;
 
 class TileSystem : public System {
 public:
+	TileSystem();
+	TileSystem(bool forColliders);
 	void init();
 
 	//Sets tiles from tile map
@@ -53,4 +41,6 @@ public:
 	bool loadTileSet(std::string tilePath, std::string setPath);
 
 	void update(float dt);
+
+	bool forColliders;
 };

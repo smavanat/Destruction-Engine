@@ -527,3 +527,87 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
 
     return std::vector<Node>(); // No path found
 }
+
+//Original pure A* implementation:
+std::vector<Node> FindPathAStar(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid) {
+    //Represents the (x,y) coordinates of all possible neighbours
+    const int directionX[] = { -1, 0, 1, 0, 1, 1, -1, -1 };
+    const int directionY[] = { 0, 1, 0, -1, 1, -1, 1, -1 };
+    
+    const int straightCost = 10; //Cost of moving straight -> 1* 10
+    const int diagonalCost = 14; //Cost of moving diagonally ~sqrt(2) *10
+
+    int rows = grid->gridHeight;
+    int cols = grid->gridWidth;
+
+    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList; //Nodes to visit
+    std::unordered_set<Node> closedList; //Nodes visited
+    std::unordered_map<Node, Node, std::hash<Node>> cameFrom; //Holds the parents of each node -> the one visited before 
+    std::vector<int> gScore(rows * cols, INT_MAX);//Holds the gScore of every node 
+
+    // Initialize start node
+    Node startNode = nodeFromWorldPos(start, grid->tileWidth, grid->tileHeight);
+    Node goalNode = nodeFromWorldPos(goal, grid->tileWidth, grid->tileHeight);
+    startNode.g = 0;
+    startNode.h = getDistance(startNode, goalNode);
+    startNode.f = startNode.g + startNode.h;
+
+    gScore[toIndex(grid, Vector2(startNode.x, startNode.y))] = 0;
+    openList.push(startNode);
+
+    //While there are nodes to visit
+    while (!openList.empty()) {
+        //Since openList is a pq, this will get the node with the lowest f score
+        Node current = openList.top();
+        openList.pop();
+
+        //If we have reached the end
+        if (current == goalNode) {
+            //Get all of the nodes in the path from the start to the end
+            std::vector<Node> path;
+            Node trace = current;
+            while (!(trace == startNode)) {
+                path.push_back(trace);
+                trace = cameFrom[trace];
+            }
+            path.push_back(startNode);
+            //Reverse it so it is in the correct order
+            reverse(path.begin(), path.end());
+            return path;
+        }
+
+        //Otherwise mark the current node as visited
+        closedList.insert(current);
+
+        //Visit all of its neighbours and insert them into the openList
+        for (int i = 0; i < 8; ++i) {
+            //The neighbour's coordinates
+            int newX = current.x + directionX[i];
+            int newY = current.y + directionY[i];
+
+            //Making sure we don't go out of grid bounds and crash the program
+            if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+                if (grid->tiles[toIndex(grid, Vector2(newX, newY))].status == 0) { //If it walkable
+                    Node neighbor(newX, newY);
+                    //If it is not already visited
+                    if (closedList.find(neighbor) == closedList.end()) {
+                        int moveCost = (directionX[i] != 0 && directionY[i] != 0) ? diagonalCost : straightCost;
+
+                        int tentativeG = gScore[toIndex(grid, Vector2(current.x, current.y))] + moveCost;
+
+                        if (tentativeG < gScore[toIndex(grid, Vector2(newX, newY))]) {
+                            gScore[toIndex(grid, Vector2(newX, newY))] = tentativeG;
+                            neighbor.g = tentativeG;
+                            neighbor.h = getDistance(neighbor, goalNode);
+                            neighbor.f = neighbor.g + neighbor.h;
+                            cameFrom[neighbor] = current;
+                            openList.push(neighbor);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return std::vector<Node>(); // No path found
+}

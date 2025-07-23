@@ -7,13 +7,13 @@
 #pragma region splitTexture
 //Erases pixels in a texture in a circular radius determined by scale and marks the texture for alteration. 
 //If all the pixels in the radius have been erased, then the texture is not marked for alteration.
-void s_erasePixels(Sprite &s, SDL_Renderer* gRenderer, int scale, int x, int y) {
+void erasePixels(Sprite &s, SDL_Renderer* gRenderer, int scale, int x, int y) {
 	Vector2 newOrigin = rotateAboutPoint(Vector2(x, y), s.centre, -s.angle, false);
 
-	x = newOrigin.x - s_getOrigin(s).x;
-	y = newOrigin.y - s_getOrigin(s).y;
+	x = newOrigin.x - getOrigin(s).x;
+	y = newOrigin.y - getOrigin(s).y;
 
-	Uint32* pixels = s_getPixels32(s);
+	Uint32* pixels = getPixels32(s);
 
 	if (scale > 0) {
 		for (int w = 0; w < scale * 2; w++)
@@ -37,7 +37,7 @@ void s_erasePixels(Sprite &s, SDL_Renderer* gRenderer, int scale, int x, int y) 
 		pixels[y * s.width + x] = NO_PIXEL_COLOUR;
 	}
 
-	s_loadFromPixels(s, gRenderer);
+	loadFromPixels(s, gRenderer);
 }
 
 bool isAtTopEdge(int pixelPosition, int arrayWidth) {
@@ -151,7 +151,7 @@ std::vector<int> bfs(int index, int arrayWidth, int arrayLength, Uint32* pixels,
 	return indexes;
 }
 
-Sprite s_constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int arrayWidth, Sprite s, SDL_Renderer* gRenderer) {
+Sprite constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int arrayWidth, Sprite s, SDL_Renderer* gRenderer) {
 	Uint32* newPixelBuffer;
 	Sprite newSprite;
 	int width = 0;
@@ -222,8 +222,8 @@ Sprite s_constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int a
 	}
 
 	//This works now. Cieling it gives the correct value. However I now get a memory error somewhere
-	float originX = ceilf(s_getOrigin(s).x + (startLinePos)) - 1.0f; //Assume original textures also have transparent border
-	float originY = ceilf(s_getOrigin(s).y + ((int)floor(indexes[0] / arrayWidth))) - 1.0f;
+	float originX = ceilf(getOrigin(s).x + (startLinePos)) - 1.0f; //Assume original textures also have transparent border
+	float originY = ceilf(getOrigin(s).y + ((int)floor(indexes[0] / arrayWidth))) - 1.0f;
 
 	printf("ORIGINAL OriginX: %f ORIGINAL OriginY: %f\n", originX, originY);
 
@@ -234,7 +234,7 @@ Sprite s_constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int a
 	printf("ORIGINAL CentreX: %f ORIGINAL CentreY: %f\n", centreX, centreY);
 
 	//Set this as a pointer as otherwise this variable will be destroyed once this method finishes.
-	newSprite = s_createSprite(centreX, centreY, width, height, newPixelBuffer, gRenderer, s.angle);
+	newSprite = createSprite(centreX, centreY, width, height, newPixelBuffer, gRenderer, s.angle);
 
 	cleanup(pixels, indexes);
 	return newSprite;
@@ -242,11 +242,11 @@ Sprite s_constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int a
 	//delete[] newPixelBuffer; //This needs to be commented out since we are actively using newPixelBuffer to create our texture.
 }
 
-std::vector<Sprite> s_splitTextureAtEdge(Sprite s, SDL_Renderer* gRenderer) {
+std::vector<Sprite> splitTextureAtEdge(Sprite s, SDL_Renderer* gRenderer) {
 	if (!s.needsSplitting) return {};
 
 	//Get the texture pixels
-	Uint32* pixels = s_getPixels32(s); //This has the correct alpha values for the pixels (checked)
+	Uint32* pixels = getPixels32(s); //This has the correct alpha values for the pixels (checked)
 	//This is the transparent pixel colour
 	//Uint32 noPixelColour = texture->mapRGBA(0xFF, 0xFF, 0xFF, 0x00);
 	//A placement int that gets the length of the pixel 1D array
@@ -266,7 +266,7 @@ std::vector<Sprite> s_splitTextureAtEdge(Sprite s, SDL_Renderer* gRenderer) {
 			possibleStarts = bfs(i, s.width, arrayLength, pixels, visitedTracker);
 			//printf("bfs size: %i\n", possibleStarts.size());
 			if (!possibleStarts.empty()) {
-				newTextures.push_back(s_constructNewPixelBuffer(possibleStarts, pixels, s.width, s, gRenderer));
+				newTextures.push_back(constructNewPixelBuffer(possibleStarts, pixels, s.width, s, gRenderer));
 			}
 		}
 	}
@@ -320,8 +320,8 @@ std::vector<Sprite> s_splitTextureAtEdge(Sprite s, SDL_Renderer* gRenderer) {
 	//Actual marching squares method. Requires that every texture has a one-pixel transparent border so that
 	//it does not get confused by the lack of empty textueres.
 
-	std::vector<int> s_marchingSquares(Sprite s) {
-		Uint32* pixels = s_getPixels32(s);
+	std::vector<int> marchingSquares(Sprite s) {
+		Uint32* pixels = getPixels32(s);
 		int width = s.width;
 		int length = s.height * width;
 		int totalPixels = width * length;
@@ -521,7 +521,7 @@ std::vector<Sprite> s_splitTextureAtEdge(Sprite s, SDL_Renderer* gRenderer) {
 
 	//Creates a texture polygon by using pure triangulation, and then moves the origin so that it is in the centre of the 
 	//shape rather than at the top-left corner.
-	b2BodyId s_createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Sprite s) {
+	b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Sprite s) {
 		//Getting points
 		b2Vec2* points = getVec2Array(rdpPoints, arrayWidth);
 		//printf("CentreX: %f, CentreY, %f\n", texture->getCentre().x, texture->getCentre().y);

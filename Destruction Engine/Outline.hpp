@@ -10,7 +10,7 @@ const float metresToPixels = 50.0f;
 const float pixelsToMetres = 1.0f / metresToPixels;
 const Uint32 NO_PIXEL_COLOUR = SDL_MapRGBA(SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_ARGB8888), NULL, 0xff, 0xff, 0xff, 0x00);
 
-void s_erasePixels(Sprite &s, SDL_Renderer* gRenderer, int scale, int x, int y);
+void erasePixels(Sprite &s, SDL_Renderer* gRenderer, int scale, int x, int y);
 
 bool isAtTopEdge(int pixelPosition, int arrayWidth);
 
@@ -30,15 +30,15 @@ void cleanup(Uint32* pixels, std::vector<int> indexes);
 
 std::vector<int> bfs(int index, int arrayWidth, int arrayLength, Uint32* pixels, int* visitedTracker);
 
-Sprite s_constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int arrayWidth, Sprite s, SDL_Renderer* gRenderer);
+Sprite constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int arrayWidth, Sprite s, SDL_Renderer* gRenderer);
 
-std::vector<Sprite> s_splitTextureAtEdge(Sprite s, SDL_Renderer* gRenderer);
+std::vector<Sprite> splitTextureAtEdge(Sprite s, SDL_Renderer* gRenderer);
 
 int getStartingPixel(Uint32* pixels, int arrayLength);
 
 int getCurrentSquare(int startIndex, int textureWidth, int textureLength, const Uint32* pixels);
 
-std::vector<int> s_marchingSquares(Sprite s);
+std::vector<int> marchingSquares(Sprite s);
 
 int* convertIndexToCoords(int index, int arrayWidth);
 
@@ -54,4 +54,4 @@ b2Vec2* convertToVec2(TPPLPoint* polyPoints, int numPoints);
 
 void rotateTranslate(b2Vec2& vector, float angle);
 
-b2BodyId s_createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Sprite s);
+b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Sprite s);

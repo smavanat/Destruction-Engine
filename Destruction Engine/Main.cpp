@@ -145,13 +145,13 @@ bool loadMedia()
 	gCoordinator.addComponent(testTexture, Sprite(NULL, NULL, Vector2(1420.0f, 440.0f), 0, 0, 0.0, false));
 	Sprite &s = gCoordinator.getComponent<Sprite>(testTexture);
 	//Load Foo' texture
-	if (!s_loadPixelsFromFile(s, "assets/foo.png"))
+	if (!loadPixelsFromFile(s, "assets/foo.png"))
 	{
 		printf("Failed to load Foo' texture!\n");
 		success = false;
 	}
 	else {
-		if (!s_loadFromPixels(s, gRenderer))
+		if (!loadFromPixels(s, gRenderer))
 		{
 			printf("Unable to load Foo' texture from surface!\n");
 		}
@@ -169,7 +169,7 @@ bool loadMedia()
 
 	//So that there is some sort of default collider to go along with a default texture.
 	std::vector<int> points = { 0, (s.height - 1) * s.width, (s.height * s.width) - 1, s.width - 1 };
-	b2BodyId tempId = s_createTexturePolygon(points, s.width, worldId, s);
+	b2BodyId tempId = createTexturePolygon(points, s.width, worldId, s);
 	gCoordinator.addComponent(testTexture, Collider(tempId));
 
 	return success;

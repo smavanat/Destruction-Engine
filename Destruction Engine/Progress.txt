@@ -130,3 +130,27 @@ something that I plan to revisit once I have a full working version of this path
 Currently, this is only being used to determine pathable neighbours in my modified A*. There is currently no 
 version of this algorithm that actually figures out where to go if a partial tile is the current tile. That needs
 to be added.
+
+Week 4 (and a little bit of 5):
+Finished the destructible pathfinding system.
+My first attempt at the algorithm was as follows:
+	Do normal A*, with the following cases
+	(1)If the current tile is walkable, and the neighbour tile is walkable, do A* as normal
+	(2)If the current tile is walkable, and the neighbour tile is partial, check if the neighbour
+	tile is pathable by itself, then with an adjacent tile. If it is, push it to the open list.
+	(3)If the current tile is partial, for each of its neighbours, check if there is a path from 
+	the current tile to the adjacent tile without crossing another tile.
+I quickly realised that I could replace step 2 with just checking if there is a path from the current
+tile to the partial tile as in step 3. This reduced the size of my code by about 1/3
+The checking for a path works the same as defined in my notes for week 3, except now the algorithm 
+is modified to find a proper ending position that the tile can reach. This is done by checking all of 
+the subcells adjacent to the current tile. If there is a subcell on the target neighboour tile that is 
+considered walkable (just being able to fit partially on it, not the whole agent), then that is a 
+satisfactory goal position and we run bfs to get a path from the start position to the end position.
+
+There is currently a clear optimisation in that the algorithm keeps recalculating the pathable subcells
+for each neighbour, even though these would be the same for each, only the goal position changes.
+
+Currently the assumptions for the algorithm remain the same. I do plan on addressing these and the optimisation
+in future, I just want to work on other parts of the program and first to have a somewhat working
+prototype.
