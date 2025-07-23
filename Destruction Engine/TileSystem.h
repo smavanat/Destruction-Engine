@@ -5,9 +5,10 @@
 #include <stdio.h>
 #include <string>
 #include "Coordinator.h"
-#include "math.h"
 #include "BasicComponents.h"
 #include "GridData.h"
+#include "Outline.hpp"
+#include <box2d/box2d.h>
 
 const int TILE_00 = 0;
 const int TILE_01 = 1;
@@ -28,6 +29,7 @@ const int TILE_15 = 15;
 
 extern Coordinator gCoordinator;
 extern SDL_Renderer* gRenderer;
+extern b2WorldId worldId;
 
 class TileSystem : public System {
 public:

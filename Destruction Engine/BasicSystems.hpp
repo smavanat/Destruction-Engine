@@ -22,8 +22,8 @@ public:
 			Transform transform = gCoordinator.getComponent<Transform>(entity);
 			Sprite sprite = gCoordinator.getComponent<Sprite>(entity);
 
-			sprite.centre = transform.position;
-			sprite.angle = transform.rotation;
+			// sprite.centre = transform.position;
+			// sprite.angle = transform.rotation;
 			render(sprite, gRenderer);
 		}
 	}

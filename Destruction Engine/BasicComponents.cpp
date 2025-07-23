@@ -157,4 +157,17 @@ void render(Sprite s, SDL_Renderer* gRenderer) {
 SDL_PixelFormat getPixelFormat(Sprite s) {
     return s.surfacePixels->format;
 }
+
+//Creates a copy of a sprite at a new position
+Sprite duplicateSprite(int x, int y, double d, Sprite* original, SDL_Renderer* gRenderer, SDL_FRect* srcRect) {
+    Uint32* newPixelArray = (Uint32*)malloc(srcRect->h * srcRect->w * sizeof(Uint32));
+    for (int row = 0; row < srcRect->h; ++row) {
+        int srcIndex = (srcRect->y + row) * original->width + srcRect->x;
+        int dstIndex = row * srcRect->w;
+
+        memcpy(&newPixelArray[dstIndex], &original->surfacePixels[srcIndex], srcRect->w * sizeof(Uint32));
+    }
+
+    return createSprite(x, y, srcRect->w, srcRect->h, newPixelArray, gRenderer, d);
+}
 #pragma endregion

@@ -5,7 +5,7 @@ Entity tileSet;
 TileSystem::TileSystem() {}
 
 TileSystem::TileSystem(bool isColliding) {
-	isColliding = isColliding;
+	forColliders = isColliding;
 }
 
 void TileSystem :: init() {}
@@ -49,6 +49,15 @@ bool TileSystem::setTiles(std::string path) {
 				Entity e = gCoordinator.createEntity();
 				gCoordinator.addComponent(e, Transform(Vector2(x, y), 0));
 				gCoordinator.addComponent(e, TileType(tileType));
+				if (forColliders) {
+					//I guess add a component here?
+					Sprite s = gCoordinator.getComponent<Sprite>(tileSet);
+					gCoordinator.addComponent(e, duplicateSprite(x, y , 0, &s, gRenderer, &gTileClips[tileType]));
+
+					std::vector<int> points = { 0, (s.height - 1) * s.width, (s.height * s.width) - 1, s.width - 1 };
+					b2BodyId tempId = createTexturePolygon(points, s.width, worldId, s);
+					gCoordinator.addComponent(e, tempId);
+				}
 			}
 			else {
 				//Stop loading the map 

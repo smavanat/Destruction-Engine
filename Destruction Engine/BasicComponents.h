@@ -141,3 +141,5 @@ void renderBasic(Sprite s, SDL_Renderer* gRenderer);
 void render(Sprite s, SDL_Renderer* gRenderer);
 
 SDL_PixelFormat getPixelFormat(Sprite s);
+
+Sprite duplicateSprite(int x, int y, double d, Sprite* original, SDL_Renderer* gRenderer, SDL_FRect* srcRect);
