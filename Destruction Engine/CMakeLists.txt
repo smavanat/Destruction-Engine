@@ -24,7 +24,7 @@ if(MSVC)
     target_link_libraries(my_app,
         PRIVATE 
         "${CMAKE_SOURCE_DIR}/externals/libs/SDL3.lib"
-        "${CMAKE_SOURCE_DIR}/externals/libs/SDL3_image."
+        "${CMAKE_SOURCE_DIR}/externals/libs/SDL3_image.lib"
         "${CMAKE_SOURCE_DIR}/externals/libs/box2dd.lib"
         user32 gdi32 winmm imm32 ole32 oleaut32 shell32 uuid version
         )

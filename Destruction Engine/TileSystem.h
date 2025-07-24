@@ -33,8 +33,6 @@ extern b2WorldId worldId;
 
 class TileSystem : public System {
 public:
-	TileSystem();
-	TileSystem(bool forColliders);
 	void init();
 
 	//Sets tiles from tile map

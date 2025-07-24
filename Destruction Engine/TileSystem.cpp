@@ -2,93 +2,87 @@
 SDL_FRect gTileClips[TOTAL_TILE_SPRITES];
 Entity tileSet;
 
-TileSystem::TileSystem() {
+void TileSystem :: init() {
 	gTileClips[TILE_00].x = 0;
-	gTileClips[TILE_00].y = 0;
-	gTileClips[TILE_00].w = TILE_WIDTH;
-	gTileClips[TILE_00].h = TILE_HEIGHT;
+			gTileClips[TILE_00].y = 0;
+			gTileClips[TILE_00].w = TILE_WIDTH;
+			gTileClips[TILE_00].h = TILE_HEIGHT;
 
-	gTileClips[TILE_01].x = 80;
-	gTileClips[TILE_01].y = 0;
-	gTileClips[TILE_01].w = TILE_WIDTH;
-	gTileClips[TILE_01].h = TILE_HEIGHT;
+			gTileClips[TILE_01].x = 80;
+			gTileClips[TILE_01].y = 0;
+			gTileClips[TILE_01].w = TILE_WIDTH;
+			gTileClips[TILE_01].h = TILE_HEIGHT;
 
-	gTileClips[TILE_02].x = 160;
-	gTileClips[TILE_02].y = 0;
-	gTileClips[TILE_02].w = TILE_WIDTH;
-	gTileClips[TILE_02].h = TILE_HEIGHT;
+			gTileClips[TILE_02].x = 160;
+			gTileClips[TILE_02].y = 0;
+			gTileClips[TILE_02].w = TILE_WIDTH;
+			gTileClips[TILE_02].h = TILE_HEIGHT;
 
-	gTileClips[TILE_03].x = 240;
-	gTileClips[TILE_03].y = 0;
-	gTileClips[TILE_03].w = TILE_WIDTH;
-	gTileClips[TILE_03].h = TILE_HEIGHT;
+			gTileClips[TILE_03].x = 240;
+			gTileClips[TILE_03].y = 0;
+			gTileClips[TILE_03].w = TILE_WIDTH;
+			gTileClips[TILE_03].h = TILE_HEIGHT;
 
-	gTileClips[TILE_04].x = 0;
-	gTileClips[TILE_04].y = 80;
-	gTileClips[TILE_04].w = TILE_WIDTH;
-	gTileClips[TILE_04].h = TILE_HEIGHT;
+			gTileClips[TILE_04].x = 0;
+			gTileClips[TILE_04].y = 80;
+			gTileClips[TILE_04].w = TILE_WIDTH;
+			gTileClips[TILE_04].h = TILE_HEIGHT;
 
-	gTileClips[TILE_05].x = 80;
-	gTileClips[TILE_05].y = 80;
-	gTileClips[TILE_05].w = TILE_WIDTH;
-	gTileClips[TILE_05].h = TILE_HEIGHT;
+			gTileClips[TILE_05].x = 80;
+			gTileClips[TILE_05].y = 80;
+			gTileClips[TILE_05].w = TILE_WIDTH;
+			gTileClips[TILE_05].h = TILE_HEIGHT;
 
-	gTileClips[TILE_06].x = 160;
-	gTileClips[TILE_06].y = 80;
-	gTileClips[TILE_06].w = TILE_WIDTH;
-	gTileClips[TILE_06].h = TILE_HEIGHT;
+			gTileClips[TILE_06].x = 160;
+			gTileClips[TILE_06].y = 80;
+			gTileClips[TILE_06].w = TILE_WIDTH;
+			gTileClips[TILE_06].h = TILE_HEIGHT;
 
-	gTileClips[TILE_07].x = 240;
-	gTileClips[TILE_07].y = 80;
-	gTileClips[TILE_07].w = TILE_WIDTH;
-	gTileClips[TILE_07].h = TILE_HEIGHT;
+			gTileClips[TILE_07].x = 240;
+			gTileClips[TILE_07].y = 80;
+			gTileClips[TILE_07].w = TILE_WIDTH;
+			gTileClips[TILE_07].h = TILE_HEIGHT;
 
-	gTileClips[TILE_08].x = 0;
-	gTileClips[TILE_08].y = 160;
-	gTileClips[TILE_08].w = TILE_WIDTH;
-	gTileClips[TILE_08].h = TILE_HEIGHT;
+			gTileClips[TILE_08].x = 0;
+			gTileClips[TILE_08].y = 160;
+			gTileClips[TILE_08].w = TILE_WIDTH;
+			gTileClips[TILE_08].h = TILE_HEIGHT;
 
-	gTileClips[TILE_09].x = 80;
-	gTileClips[TILE_09].y = 160;
-	gTileClips[TILE_09].w = TILE_WIDTH;
-	gTileClips[TILE_09].h = TILE_HEIGHT;
+			gTileClips[TILE_09].x = 80;
+			gTileClips[TILE_09].y = 160;
+			gTileClips[TILE_09].w = TILE_WIDTH;
+			gTileClips[TILE_09].h = TILE_HEIGHT;
 
-	gTileClips[TILE_10].x = 160;
-	gTileClips[TILE_10].y = 160;
-	gTileClips[TILE_10].w = TILE_WIDTH;
-	gTileClips[TILE_10].h = TILE_HEIGHT;
+			gTileClips[TILE_10].x = 160;
+			gTileClips[TILE_10].y = 160;
+			gTileClips[TILE_10].w = TILE_WIDTH;
+			gTileClips[TILE_10].h = TILE_HEIGHT;
 
-	gTileClips[TILE_11].x = 240;
-	gTileClips[TILE_11].y = 160;
-	gTileClips[TILE_11].w = TILE_WIDTH;
-	gTileClips[TILE_11].h = TILE_HEIGHT;
+			gTileClips[TILE_11].x = 240;
+			gTileClips[TILE_11].y = 160;
+			gTileClips[TILE_11].w = TILE_WIDTH;
+			gTileClips[TILE_11].h = TILE_HEIGHT;
 
-	gTileClips[TILE_12].x = 0;
-	gTileClips[TILE_12].y = 240;
-	gTileClips[TILE_12].w = TILE_WIDTH;
-	gTileClips[TILE_12].h = TILE_HEIGHT;
+			gTileClips[TILE_12].x = 0;
+			gTileClips[TILE_12].y = 240;
+			gTileClips[TILE_12].w = TILE_WIDTH;
+			gTileClips[TILE_12].h = TILE_HEIGHT;
 
-	gTileClips[TILE_13].x = 80;
-	gTileClips[TILE_13].y = 240;
-	gTileClips[TILE_13].w = TILE_WIDTH;
-	gTileClips[TILE_13].h = TILE_HEIGHT;
+			gTileClips[TILE_13].x = 80;
+			gTileClips[TILE_13].y = 240;
+			gTileClips[TILE_13].w = TILE_WIDTH;
+			gTileClips[TILE_13].h = TILE_HEIGHT;
 
-	gTileClips[TILE_14].x = 160;
-	gTileClips[TILE_14].y = 240;
-	gTileClips[TILE_14].w = TILE_WIDTH;
-	gTileClips[TILE_14].h = TILE_HEIGHT;
+			gTileClips[TILE_14].x = 160;
+			gTileClips[TILE_14].y = 240;
+			gTileClips[TILE_14].w = TILE_WIDTH;
+			gTileClips[TILE_14].h = TILE_HEIGHT;
 
-	gTileClips[TILE_15].x = 240;
-	gTileClips[TILE_15].y = 240;
-	gTileClips[TILE_15].w = TILE_WIDTH;
-	gTileClips[TILE_15].h = TILE_HEIGHT;
+			gTileClips[TILE_15].x = 240;
+			gTileClips[TILE_15].y = 240;
+			gTileClips[TILE_15].w = TILE_WIDTH;
+			gTileClips[TILE_15].h = TILE_HEIGHT;
 }
-
-TileSystem::TileSystem(bool isColliding) {
-	forColliders = isColliding;
-}
-
-void TileSystem :: init() {}
 
 bool TileSystem::setTiles(std::string path) {
 	//Success flag
@@ -159,7 +153,7 @@ bool TileSystem::setTiles(std::string path) {
 			}
 		}
 
-		//Clip the spriteSheet
+		// //Clip the spriteSheet
 		// if (tilesLoaded)
 		// {
 		// 	gTileClips[TILE_00].x = 0;
