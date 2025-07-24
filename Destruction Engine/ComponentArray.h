@@ -68,7 +68,7 @@ private:
 	//Need to have both index-to-entity map and entity-to-index map so that we can represent a two-way relation.
 	//Unfortunately takes up more space, but will reduce runtime operations.
 	std::unordered_map<int, Entity> indexToEntityMap;
-	std::unordered_map<Entity, int> entityToIndexMap;
+	std::unordered_map<Entity, int, EntityHasher> entityToIndexMap;
 	std::array<T, MAX_ENTITIES> componentArray;
 	int size = 0;
 };

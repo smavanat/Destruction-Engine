@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include<SDL3_image/SDL_image.h>
+#include<SDL3/SDL.h>
 #include<iostream>
 #include "box2d/base.h"
 #include "Maths.h"

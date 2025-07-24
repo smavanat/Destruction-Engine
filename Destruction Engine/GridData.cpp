@@ -399,7 +399,7 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
     const int directionX[] = { -1, 0, 1, 0, 1, 1, -1, -1 };
     const int directionY[] = { 0, 1, 0, -1, 1, -1, 1, -1 };
 
-    std::unordered_map<Vector2, Direction8> directionMap = {{Vector2(-1, -1), NW}, {Vector2(0, -1), N},
+    std::unordered_map<Vector2, Direction8, Vector2Hasher> directionMap = {{Vector2(-1, -1), NW}, {Vector2(0, -1), N},
                                                             {Vector2(1, -1), NE},  {Vector2(-1, 0), W},
                                                             {Vector2(1, 0), E},   {Vector2(-1, 1), SW}, 
                                                             {Vector2(0, 1), S},   {Vector2(1, 1), SE}};
@@ -411,8 +411,8 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
     int cols = grid->gridWidth;
 
     std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList; //Nodes to visit
-    std::unordered_set<Node> closedList; //Nodes visited
-    std::unordered_map<Node, Node, std::hash<Node>> cameFrom; //Holds the parents of each node -> the one visited before 
+    std::unordered_set<Node, NodeHasher> closedList; //Nodes visited
+    std::unordered_map<Node, Node, NodeHasher> cameFrom; //Holds the parents of each node -> the one visited before 
     std::vector<int> gScore(rows * cols, INT_MAX);//Holds the gScore of every node 
 
     // Initialize start node
@@ -541,8 +541,8 @@ std::vector<Node> FindPathAStar(Vector2 start, Vector2 goal, std::shared_ptr<Gri
     int cols = grid->gridWidth;
 
     std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList; //Nodes to visit
-    std::unordered_set<Node> closedList; //Nodes visited
-    std::unordered_map<Node, Node, std::hash<Node>> cameFrom; //Holds the parents of each node -> the one visited before 
+    std::unordered_set<Node, NodeHasher> closedList; //Nodes visited
+    std::unordered_map<Node, Node, NodeHasher> cameFrom; //Holds the parents of each node -> the one visited before 
     std::vector<int> gScore(rows * cols, INT_MAX);//Holds the gScore of every node 
 
     // Initialize start node

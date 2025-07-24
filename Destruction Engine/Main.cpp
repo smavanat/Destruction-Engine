@@ -42,7 +42,7 @@ bool loadMedia();
 
 //Necessary to check which colliders to remove from vector since c++ does not generate default comparators for structs.
 bool operator ==(const b2BodyId& lhs, const b2BodyId& rhs) {
-	if (lhs.index1 == rhs.index1 && lhs.revision == rhs.revision && lhs.world0 == rhs.world0) return true;
+	if (lhs.index1 == rhs.index1 && lhs.generation == rhs.generation && lhs.world0 == rhs.world0) return true;
 	else return false;
 }
 

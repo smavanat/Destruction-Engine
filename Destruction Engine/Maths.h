@@ -39,20 +39,16 @@ struct Vector2
 	}
 };
 
+struct Vector2Hasher {
+	std::size_t operator()(const Vector2& v) const noexcept {
+		// Use std::hash<float> for x and y, combine them:
+		std::size_t h1 = std::hash<float>{}(v.x);
+		std::size_t h2 = std::hash<float>{}(v.y);
 
-namespace std {
-	template<>
-	struct hash<Vector2> {
-		std::size_t operator()(const Vector2& v) const noexcept {
-			// Use std::hash<float> for x and y, combine them:
-			std::size_t h1 = std::hash<float>{}(v.x);
-			std::size_t h2 = std::hash<float>{}(v.y);
-
-			// Combine hashes (a common way):
-			return h1 ^ (h2 << 1);
-		}
-	};
-}
+		// Combine hashes (a common way):
+		return h1 ^ (h2 << 1);
+	}
+};
 
 struct Vector3 {
 	float x;

@@ -1,15 +1,5 @@
 #include "GridSystem.h"
 #include <algorithm>
-#include <unordered_set>
-
-const std::unordered_map<Vector2, Direction8>& getDirectionMap() {
-    std::unordered_map<Vector2, Direction8> directionMap = {{Vector2(-1, -1), NW}, {Vector2(0, -1), N},
-                                                            {Vector2(1, -1), NE},  {Vector2(-1, 0), E},
-                                                            {Vector2(1, 0), SE},   {Vector2(-1, 1), S}, 
-                                                            {Vector2(0, 1), SW},   {Vector2(1, 1), W}};
-    return directionMap;
-}
-
 //Initialises the signature for the grid system and creates the tiles for the grid
 void GridSystem::init() {
     //Create the tiles

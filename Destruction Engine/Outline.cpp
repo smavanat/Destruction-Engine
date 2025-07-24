@@ -583,8 +583,9 @@ std::vector<Sprite> splitTextureAtEdge(Sprite s, SDL_Renderer* gRenderer) {
 			else {
 				b2Polygon testagon = b2MakePolygon(&hull, 0.0f);
 				b2ShapeDef testshapeDef = b2DefaultShapeDef();
-				testshapeDef.friction = 0.3f;
-				b2CreatePolygonShape(testId, &testshapeDef, &testagon);
+				//testshapeDef.friction = 0.3f;
+				b2ShapeId testShapeId = b2CreatePolygonShape(testId, &testshapeDef, &testagon);
+				b2Shape_SetFriction(testShapeId, 0.3);
 			}
 		}
 		//printf("Number of shapes on the body: %i\n", b2Body_GetShapeCount(testId));

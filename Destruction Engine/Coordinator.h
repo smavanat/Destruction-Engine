@@ -75,7 +75,7 @@ public:
 	//Remove a component from an entity
 	template<typename T>
 	void removeComponent(Entity& e, T&& c) {
-		compManager->removeComponent(e);
+		compManager->removeComponent<T>(e);
 		auto sig = entManager->getSignature(e);
 		sig.removeComponent(c);
 		sysManager->entitySignatureChanged(e, sig);

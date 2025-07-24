@@ -75,14 +75,11 @@ struct Node {
 
 //Need to provide a hash definition so that Nodes can work with a hashmap. Only want it based on 
 //x and y since that is how we define equalities between nodes
-namespace std {
-	template<>
-	struct hash<Node> {
-		std::size_t operator()(const Node& node) const {
-			return (std::hash<int>()(node.x) ^ (std::hash<int>()(node.y) << 1));
-		}
-	};
-}
+struct NodeHasher {
+	std::size_t operator()(const Node& node) const {
+		return (std::hash<int>()(node.x) ^ (std::hash<int>()(node.y) << 1));
+	}
+};
 
 //Global methods that need to be used by both Path and Grid systems
 

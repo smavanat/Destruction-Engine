@@ -5,3 +5,5 @@ SDL Falling Sand Simulation.vcxproj.filters
 test.exe
 Testing
 catch.hpp
+build
+cmake commands.txt
