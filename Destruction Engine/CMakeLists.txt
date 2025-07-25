@@ -18,10 +18,10 @@ target_include_directories(my_app
 )
 
 # Link the SDL and Box2D libraries
-#Set platform-specific libraries:
+# Set platform-specific libraries:
 if(WIN32) 
     if(MSVC)
-        #Set .lib files on msvc
+        # Set .lib files on msvc
         target_link_libraries(my_app,
             PRIVATE 
             "${CMAKE_SOURCE_DIR}/externals/libs/SDL3.lib"
@@ -30,6 +30,7 @@ if(WIN32)
             user32 gdi32 winmm imm32 ole32 oleaut32 shell32 uuid version
             )
     else()
+    # Assume other users are using MinGW.
         target_link_libraries(my_app
             PRIVATE
                 "${CMAKE_SOURCE_DIR}/externals/libs/libSDL3.dll.a"
@@ -38,16 +39,17 @@ if(WIN32)
                 mingw32 user32 gdi32 winmm imm32 ole32 oleaut32 shell32 uuid version
         )
     endif()
-endif()
 
-# Optional: Copy SDL2.dll to output directory on build (Windows only)
+# Copy .dll to output directory on build (Windows only)
 add_custom_command(TARGET my_app POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${PROJECT_SOURCE_DIR}/externals/libs/SDL3.dll"
         "${PROJECT_SOURCE_DIR}/externals/libs/SDL3_image.dll"
         $<TARGET_FILE_DIR:my_app>
 )
+endif()
 
+# Have to copy all of the assets to the output directory
 add_custom_command(TARGET my_app POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/assets"

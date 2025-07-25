@@ -7,11 +7,11 @@
 #pragma region splitTexture
 //Erases pixels in a texture in a circular radius determined by scale and marks the texture for alteration. 
 //If all the pixels in the radius have been erased, then the texture is not marked for alteration.
-void erasePixels(Sprite &s, SDL_Renderer* gRenderer, int scale, int x, int y) {
-	Vector2 newOrigin = rotateAboutPoint(Vector2(x, y), s.centre, -s.angle, false);
+void erasePixels(Sprite &s, Transform& t, SDL_Renderer* gRenderer, int scale, int x, int y) {
+	Vector2 newOrigin = rotateAboutPoint(Vector2(x, y), t.position, -t.rotation, false);
 
-	x = newOrigin.x - getOrigin(s).x;
-	y = newOrigin.y - getOrigin(s).y;
+	x = newOrigin.x - getOrigin(s, t).x;
+	y = newOrigin.y - getOrigin(s, t).y;
 
 	Uint32* pixels = getPixels32(s);
 
@@ -151,7 +151,7 @@ std::vector<int> bfs(int index, int arrayWidth, int arrayLength, Uint32* pixels,
 	return indexes;
 }
 
-Sprite constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int arrayWidth, Sprite s, SDL_Renderer* gRenderer) {
+std::pair<Sprite, Transform> constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int arrayWidth, Sprite& s, Transform& t, SDL_Renderer* gRenderer) {
 	Uint32* newPixelBuffer;
 	Sprite newSprite;
 	int width = 0;
@@ -222,8 +222,8 @@ Sprite constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int arr
 	}
 
 	//This works now. Cieling it gives the correct value. However I now get a memory error somewhere
-	float originX = ceilf(getOrigin(s).x + (startLinePos)) - 1.0f; //Assume original textures also have transparent border
-	float originY = ceilf(getOrigin(s).y + ((int)floor(indexes[0] / arrayWidth))) - 1.0f;
+	float originX = ceilf(getOrigin(s, t).x + (startLinePos)) - 1.0f; //Assume original textures also have transparent border
+	float originY = ceilf(getOrigin(s, t).y + ((int)floor(indexes[0] / arrayWidth))) - 1.0f;
 
 	printf("ORIGINAL OriginX: %f ORIGINAL OriginY: %f\n", originX, originY);
 
@@ -234,21 +234,20 @@ Sprite constructNewPixelBuffer(std::vector<int> indexes, Uint32* pixels, int arr
 	printf("ORIGINAL CentreX: %f ORIGINAL CentreY: %f\n", centreX, centreY);
 
 	//Set this as a pointer as otherwise this variable will be destroyed once this method finishes.
-	newSprite = createSprite(centreX, centreY, width, height, newPixelBuffer, gRenderer, s.angle);
+	newSprite = createSprite(width, height, newPixelBuffer, gRenderer);
+	Transform newTransform = Transform(Vector2(centreX, centreY), t.rotation);
 
 	cleanup(pixels, indexes);
-	return newSprite;
+	return std::make_pair(newSprite, newTransform);
 
 	//delete[] newPixelBuffer; //This needs to be commented out since we are actively using newPixelBuffer to create our texture.
 }
 
-std::vector<Sprite> splitTextureAtEdge(Sprite s, SDL_Renderer* gRenderer) {
+std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transform& t, SDL_Renderer* gRenderer) {
 	if (!s.needsSplitting) return {};
 
 	//Get the texture pixels
 	Uint32* pixels = getPixels32(s); //This has the correct alpha values for the pixels (checked)
-	//This is the transparent pixel colour
-	//Uint32 noPixelColour = texture->mapRGBA(0xFF, 0xFF, 0xFF, 0x00);
 	//A placement int that gets the length of the pixel 1D array
 	int arrayLength = s.width * s.height;
 	//A bitmap that remembers if we visited a pixel before or not.
@@ -258,21 +257,20 @@ std::vector<Sprite> splitTextureAtEdge(Sprite s, SDL_Renderer* gRenderer) {
 	//Pixel buffer vector
 	std::vector<int> possibleStarts;
 	//Vector for all the new textures that are being formed. This method will return them
-	std::vector<Sprite> newTextures;
+	std::vector<std::pair<Sprite, Transform>> retArr;
 
 	//For loop to get all the split texture parts.
 	for (int i = 0; i < arrayLength; i++) {
 		if (pixels[i] != NO_PIXEL_COLOUR) {
 			possibleStarts = bfs(i, s.width, arrayLength, pixels, visitedTracker);
-			//printf("bfs size: %i\n", possibleStarts.size());
 			if (!possibleStarts.empty()) {
-				newTextures.push_back(constructNewPixelBuffer(possibleStarts, pixels, s.width, s, gRenderer));
+				retArr.push_back(constructNewPixelBuffer(possibleStarts, pixels, s.width, s, t, gRenderer));
 			}
 		}
 	}
 
 	delete[] visitedTracker;
-	return newTextures;
+	return retArr;
 }
 #pragma endregion
 
@@ -521,7 +519,7 @@ std::vector<Sprite> splitTextureAtEdge(Sprite s, SDL_Renderer* gRenderer) {
 
 	//Creates a texture polygon by using pure triangulation, and then moves the origin so that it is in the centre of the 
 	//shape rather than at the top-left corner.
-	b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Sprite s) {
+	b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Sprite& s, Transform& t) {
 		//Getting points
 		b2Vec2* points = getVec2Array(rdpPoints, arrayWidth);
 		//printf("CentreX: %f, CentreY, %f\n", texture->getCentre().x, texture->getCentre().y);
@@ -529,10 +527,10 @@ std::vector<Sprite> splitTextureAtEdge(Sprite s, SDL_Renderer* gRenderer) {
 		//Creating the b2Body
 		b2BodyDef testbodyDef = b2DefaultBodyDef();
 		testbodyDef.type = b2_dynamicBody;
-		testbodyDef.position = { s.centre.x * pixelsToMetres, s.centre.y * pixelsToMetres };
+		testbodyDef.position = { t.position.x * pixelsToMetres, t.position.y * pixelsToMetres };
 		//testbodyDef.position = { static_cast<float>(centre.x) * pixelsToMetres, static_cast<float>(centre.y) * pixelsToMetres };
 		//printf("ColliderPositionX: %f, ColliderPositionY: %f\n", testbodyDef.position.x * metresToPixels, testbodyDef.position.y * metresToPixels);
-		testbodyDef.rotation = { (float)cos(s.angle * DEGREES_TO_RADIANS), (float)sin(s.angle * DEGREES_TO_RADIANS) };
+		testbodyDef.rotation = { (float)cos(t.rotation * DEGREES_TO_RADIANS), (float)sin(t.rotation * DEGREES_TO_RADIANS) };
 		b2BodyId testId = b2CreateBody(worldId, &testbodyDef);
 
 		//I am going to partition the polygon regardless of whether or not the number of vertices is less than 8, because

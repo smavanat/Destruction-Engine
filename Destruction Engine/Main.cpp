@@ -60,6 +60,7 @@ bool init()
 
 	{
 		Signature sig;
+		sig.addComponent<Transform>();
 		sig.addComponent<Sprite>();
 		sig.addComponent<Collider>();
 		destructionSystem = gCoordinator.addSystem<DestructionSystem>(sig);
@@ -142,7 +143,7 @@ bool loadMedia()
 {
 	//Loading success flag
 	bool success = true;
-	gCoordinator.addComponent(testTexture, Sprite(NULL, NULL, Vector2(1420.0f, 440.0f), 0, 0, 0.0, false));
+	gCoordinator.addComponent(testTexture, Sprite(NULL, NULL, 0, 0, false));
 	Sprite &s = gCoordinator.getComponent<Sprite>(testTexture);
 	//Load Foo' texture
 	if (!loadPixelsFromFile(s, "assets/foo.png"))
@@ -169,7 +170,7 @@ bool loadMedia()
 
 	//So that there is some sort of default collider to go along with a default texture.
 	std::vector<int> points = { 0, (s.height - 1) * s.width, (s.height * s.width) - 1, s.width - 1 };
-	b2BodyId tempId = createTexturePolygon(points, s.width, worldId, s);
+	b2BodyId tempId = createTexturePolygon(points, s.width, worldId, s, gCoordinator.getComponent<Transform>(testTexture));
 	gCoordinator.addComponent(testTexture, Collider(tempId));
 
 	return success;

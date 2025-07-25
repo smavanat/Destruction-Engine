@@ -7,6 +7,13 @@
 #include "Maths.h"
 #include <vector>
 
+//Need to forward declare these above the other functions/structs so that the default value for the Sprite constructor is held
+struct Sprite;
+struct Transform;
+//When need a rotateable texture. 
+void render(Sprite& s, Transform& t, SDL_Renderer* gRenderer);
+
+
 //Holds the position and rotation of an entity
 struct Transform : public Component<Transform> {
 	Vector2 position;
@@ -27,28 +34,29 @@ struct Transform : public Component<Transform> {
 struct Sprite : public Component<Sprite> {
     SDL_Texture* texture = nullptr;
     SDL_Surface* surfacePixels = nullptr;
-    Vector2 centre = {};
+    //Vector2 centre = Vector2(0,0);
     int width = 0;
     int height = 0;
-    double angle = 0.0;
+    //double angle = 0.0;
     bool needsSplitting = false;
+    void (*renderfunc)(Sprite& s, Transform& t, SDL_Renderer* gRenderer) = &render; //I cannot decide if this is really cool, or really cursed
 
     Sprite() = default;
 
     Sprite(
         SDL_Texture* texture,
         SDL_Surface* surfacePixels,
-        const Vector2& centre,
+        //const Vector2& centre,
         int width,
         int height,
-        double angle,
+        //double angle,
         bool needsSplitting)
         : texture(texture),
         surfacePixels(surfacePixels),
-        centre(centre),
+        //centre(centre),
         width(width),
         height(height),
-        angle(angle),
+        //angle(angle),
         needsSplitting(needsSplitting)
     {}
 };
@@ -112,7 +120,7 @@ struct Pathfinding : public Component<Pathfinding> {
     Pathfinding(Vector2 s, Vector2 e) : startPos(s), endPos(e), path(std::vector<Vector2>()) {};
 };
 
-Vector2 getOrigin(Sprite s);
+Vector2 getOrigin(Sprite& s, Transform& t);
 
 void free(Sprite &s);
 
@@ -126,21 +134,21 @@ bool loadFromFile(Sprite &s, std::string path, SDL_Renderer* gRenderer);
 Sprite createSprite(int x, int y);
 
 //Controlled sprite creation (when making an object after destruction)
-Sprite createSprite(int x, int y, int w, int h, Uint32* pixels, SDL_Renderer* gRenderer, double d);
+Sprite createSprite(int w, int h, Uint32* pixels, SDL_Renderer* gRenderer);
 
-bool clickedOnTransparent(Sprite s, int x, int y);
+bool clickedOnTransparent(Sprite& s, Transform& t, int x, int y);
 
-Uint32* getPixels32(Sprite s);
+Uint32* getPixels32(Sprite& s);
 
-Uint32 getPitch32(Sprite s);
+Uint32 getPitch32(Sprite& s);
 
 Uint32 mapRGBA(Sprite &s, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
-void renderBasic(Sprite s, SDL_Renderer* gRenderer);
+void renderBasic(Sprite& s, Transform& t, SDL_Renderer* gRenderer);
 
-//When need a rotateable texture
-void render(Sprite s, SDL_Renderer* gRenderer);
+//When rendering the sprite from another texture
+void renderPart(Sprite& s, Transform& t, SDL_FRect* srcRect, SDL_Renderer* gRenderer);
 
 SDL_PixelFormat getPixelFormat(Sprite s);
 
-Sprite duplicateSprite(int x, int y, double d, Sprite* original, SDL_Renderer* gRenderer, SDL_FRect* srcRect);
+Sprite duplicateSprite(Sprite* original, SDL_Renderer* gRenderer, SDL_FRect* srcRect);

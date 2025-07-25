@@ -2,13 +2,11 @@
 #include <SDL3/SDL.h>
 #include<SDL3_image/SDL_image.h>
 #include <fstream>
-#include <stdio.h>
 #include <string>
 #include "Coordinator.h"
 #include "BasicComponents.h"
 #include "GridData.h"
 #include "Outline.hpp"
-#include <box2d/box2d.h>
 
 const int TILE_00 = 0;
 const int TILE_01 = 1;
@@ -46,12 +44,18 @@ public:
 };
 
 
-struct Tile {
-	SDL_FRect* dimensions;
+struct TileClip {
+	SDL_FRect dimensions;
 	bool colliding;
 };
 
-struct TileSystem2 {
-	Sprite srcSprite;
-	std::vector<Tile*> tileClips;
+struct TileSet {
+	Sprite* srcTex = NULL;
+	std::vector<TileClip*> tileClips = std::vector<TileClip*>();
+	std::vector<Vector2*> tilePositions = std::vector<Vector2*>();
+	Vector2 origin = Vector2(0, 0);
 };
+
+SDL_Texture* loadTextureFromFile(SDL_Renderer* gRenderer, std::string path);
+int createNewTileClip(TileSet& t, SDL_FRect d, bool colliding);
+bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path);
