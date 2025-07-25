@@ -44,3 +44,14 @@ public:
 
 	bool forColliders;
 };
+
+
+struct Tile {
+	SDL_FRect* dimensions;
+	bool colliding;
+};
+
+struct TileSystem2 {
+	Sprite srcSprite;
+	std::vector<Tile*> tileClips;
+};
