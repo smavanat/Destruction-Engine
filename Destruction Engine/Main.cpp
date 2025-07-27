@@ -158,7 +158,7 @@ bool loadMedia()
 	}
 
 	//So that there is some sort of default collider to go along with a default texture.
-	std::vector<int> points = { (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
+	std::vector<int> points = {0, (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
 	b2BodyId tempId = createTexturePolygon(points, s.surfacePixels->w, worldId, s, gCoordinator.getComponent<Transform>(testTexture));
 	gCoordinator.addComponent(testTexture, Collider(tempId));
 

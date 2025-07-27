@@ -1,7 +1,4 @@
 .vscode
-x64
-SDL Falling Sand Simulation.vcxproj
-SDL Falling Sand Simulation.vcxproj.filters
 test.exe
 Testing
 catch.hpp

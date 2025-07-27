@@ -154,3 +154,17 @@ for each neighbour, even though these would be the same for each, only the goal 
 Currently the assumptions for the algorithm remain the same. I do plan on addressing these and the optimisation
 in future, I just want to work on other parts of the program and first to have a somewhat working
 prototype.
+
+Week 5 (Rest of):
+I have successfully created a CMakeLists.txt file, so the project can now be built on x64 Windows using either 
+Visual Studio or MinGW. The reason for this platform specificity is because of SDL3, which requires different library 
+files for each different platform and system architecture, and setting up this minimal functionality took me two days 
+(I had hoped for half an hour). 
+
+I have started working on adding functionality to update the pathfinding grid at runtime to reflect the destruction of tiles. 
+I have begun modifying my minimal TileSystem class to reflect this, and I have successfully completed this task somewhat, however,
+the tile system works the same as before now. But everything else is so broken, including: collider rendering (only for the start collider), 
+grid rendering (the positioning is off), and for some reason the grid destruction doesn't work even though the new tile entities 
+should have colliders. Another interesting note, every time we split a texture, our memory use doubles. But cpu use has halved (yay)
+
+Week 6:

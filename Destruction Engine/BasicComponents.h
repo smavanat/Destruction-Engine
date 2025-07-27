@@ -33,8 +33,8 @@ struct Transform : public Component<Transform> {
 //Holds sprite texture data
 struct Sprite : public Component<Sprite> {
     SDL_Texture* texture = nullptr;
-    SDL_Surface* surfacePixels = nullptr;
-    SDL_FRect* srcRect = nullptr;
+    SDL_Surface* surfacePixels = nullptr; //I think I could make a union of this and the srcRect pointer, since Sprites usually
+    SDL_FRect* srcRect = nullptr;         //only use one or the other. Will have to have a look later
     bool needsSplitting = false; //How can we get rid of this bool to avoid wasting space
     void (*renderfunc)(Sprite& s, Transform& t, SDL_Renderer* gRenderer) = &render; //I cannot decide if this is really cool, or really cursed
 
