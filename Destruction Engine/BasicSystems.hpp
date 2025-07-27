@@ -22,8 +22,6 @@ public:
 			Transform transform = gCoordinator.getComponent<Transform>(entity);
 			Sprite sprite = gCoordinator.getComponent<Sprite>(entity);
 
-			// sprite.centre = transform.position;
-			// sprite.angle = transform.rotation;
 			sprite.renderfunc(sprite, transform, gRenderer);
 		}
 	}
@@ -72,8 +70,6 @@ public:
 				entitiesToRemove.push_back(entity);
 			}
 		}
-		printf("SizeS: %i\n", spritesToAdd.size());
-		printf("SizeT: %i\n", spritesToAdd.size());
 
 		for (int i = 0; i < spritesToAdd.size(); i++) {
 			std::vector<int> tempPoints = marchingSquares(spritesToAdd[i]);
@@ -81,13 +77,13 @@ public:
 			//Position at size()-2 is where 0 is stored. This will give us the 
 			//straight line that we want. If we add origin at end as well it messes up partition so don't do that.
 			temprdpPoints.push_back(tempPoints[tempPoints.size() - 2]);
-			rdp(0, tempPoints.size() - 1, 3, spritesToAdd[i].width, tempPoints, temprdpPoints);
+			int width = spritesToAdd[i].surfacePixels->w;
+			rdp(0, tempPoints.size() - 1, 3, width, tempPoints, temprdpPoints);
 			Entity e = gCoordinator.createEntity();
 			gCoordinator.addComponent(e, transformsToAdd[i]);
 			gCoordinator.addComponent(e, spritesToAdd[i]);
-			gCoordinator.addComponent(e, Collider(createTexturePolygon(temprdpPoints, spritesToAdd[i].width, worldId, spritesToAdd[i], transformsToAdd[i])));
+			gCoordinator.addComponent(e, Collider(createTexturePolygon(temprdpPoints, width, worldId, spritesToAdd[i], transformsToAdd[i])));
 		}
-		printf("We reached the end of this code\n");
 		spritesToAdd.clear();
 		transformsToAdd.clear();
 
@@ -104,8 +100,8 @@ public:
 				Sprite &s = gCoordinator.getComponent<Sprite>(entity);
 				Transform t = gCoordinator.getComponent<Transform>(entity);
 				Vector2 rotated = rotateAboutPoint(Vector2(in->mouseX, in->mouseY), t.position, -t.rotation, false);
-				if (rotated.x >= getOrigin(s, t).x && rotated.x < getOrigin(s,t ).x + s.width &&
-					rotated.y < getOrigin(s, t).y + s.height && rotated.y >= getOrigin(s, t).y
+				if (rotated.x >= getOrigin(s, t).x && rotated.x < getOrigin(s,t ).x + s.surfacePixels->w &&
+					rotated.y < getOrigin(s, t).y + s.surfacePixels->h && rotated.y >= getOrigin(s, t).y
 					) {
 					erasePixels(s, t, gRenderer, scale, in->mouseX, in->mouseY);
 				}

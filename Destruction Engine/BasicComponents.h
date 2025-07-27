@@ -34,11 +34,8 @@ struct Transform : public Component<Transform> {
 struct Sprite : public Component<Sprite> {
     SDL_Texture* texture = nullptr;
     SDL_Surface* surfacePixels = nullptr;
-    //Vector2 centre = Vector2(0,0);
-    int width = 0;
-    int height = 0;
-    //double angle = 0.0;
-    bool needsSplitting = false;
+    SDL_FRect* srcRect = nullptr;
+    bool needsSplitting = false; //How can we get rid of this bool to avoid wasting space
     void (*renderfunc)(Sprite& s, Transform& t, SDL_Renderer* gRenderer) = &render; //I cannot decide if this is really cool, or really cursed
 
     Sprite() = default;
@@ -46,17 +43,9 @@ struct Sprite : public Component<Sprite> {
     Sprite(
         SDL_Texture* texture,
         SDL_Surface* surfacePixels,
-        //const Vector2& centre,
-        int width,
-        int height,
-        //double angle,
         bool needsSplitting)
         : texture(texture),
         surfacePixels(surfacePixels),
-        //centre(centre),
-        width(width),
-        height(height),
-        //angle(angle),
         needsSplitting(needsSplitting)
     {}
 };
@@ -130,9 +119,6 @@ bool loadPixelsFromFile(Sprite &s, std::string path);
 
 bool loadFromFile(Sprite &s, std::string path, SDL_Renderer* gRenderer);
 
-//Basic sprite creation (usually used when loading from a file)
-Sprite createSprite(int x, int y);
-
 //Controlled sprite creation (when making an object after destruction)
 Sprite createSprite(int w, int h, Uint32* pixels, SDL_Renderer* gRenderer);
 
@@ -147,7 +133,7 @@ Uint32 mapRGBA(Sprite &s, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 void renderBasic(Sprite& s, Transform& t, SDL_Renderer* gRenderer);
 
 //When rendering the sprite from another texture
-void renderPart(Sprite& s, Transform& t, SDL_FRect* srcRect, SDL_Renderer* gRenderer);
+void renderPart(Sprite& s, Transform& t, SDL_Renderer* gRenderer);
 
 SDL_PixelFormat getPixelFormat(Sprite s);
 

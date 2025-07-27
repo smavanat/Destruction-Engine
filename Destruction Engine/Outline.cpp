@@ -12,6 +12,8 @@ void erasePixels(Sprite &s, Transform& t, SDL_Renderer* gRenderer, int scale, in
 
 	x = newOrigin.x - getOrigin(s, t).x;
 	y = newOrigin.y - getOrigin(s, t).y;
+	int width = s.surfacePixels->w;
+	int height = s.surfacePixels->h;
 
 	Uint32* pixels = getPixels32(s);
 
@@ -22,11 +24,11 @@ void erasePixels(Sprite &s, Transform& t, SDL_Renderer* gRenderer, int scale, in
 			{
 				int dx = scale - w; // horizontal offset
 				int dy = scale - h; // vertical offset
-				if ((dx * dx + dy * dy) < (scale * scale) && (x + dx < s.width) && (x + dx > -1) && (y + dy < s.height) && (y + dy > -1))
+				if ((dx * dx + dy * dy) < (scale * scale) && (x + dx < width) && (x + dx > -1) && (y + dy < height) && (y + dy > -1))
 				{
-					if (pixels[(y + dy) * s.width + (x + dx)] == NO_PIXEL_COLOUR) continue;
+					if (pixels[(y + dy) * width + (x + dx)] == NO_PIXEL_COLOUR) continue;
 					else {
-						pixels[(y + dy) * s.width + (x + dx)] = NO_PIXEL_COLOUR;
+						pixels[(y + dy) * width + (x + dx)] = NO_PIXEL_COLOUR;
 						if (!s.needsSplitting) s.needsSplitting = true;
 					}
 				}
@@ -34,7 +36,7 @@ void erasePixels(Sprite &s, Transform& t, SDL_Renderer* gRenderer, int scale, in
 		}
 	}
 	else {
-		pixels[y * s.width + x] = NO_PIXEL_COLOUR;
+		pixels[y * width + x] = NO_PIXEL_COLOUR;
 	}
 
 	loadFromPixels(s, gRenderer);
@@ -245,11 +247,13 @@ std::pair<Sprite, Transform> constructNewPixelBuffer(std::vector<int> indexes, U
 
 std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transform& t, SDL_Renderer* gRenderer) {
 	if (!s.needsSplitting) return {};
+	int width = s.surfacePixels->w;
+	int height = s.surfacePixels->h;
 
 	//Get the texture pixels
 	Uint32* pixels = getPixels32(s); //This has the correct alpha values for the pixels (checked)
 	//A placement int that gets the length of the pixel 1D array
-	int arrayLength = s.width * s.height;
+	int arrayLength = width * height;
 	//A bitmap that remembers if we visited a pixel before or not.
 	int* visitedTracker = new int[arrayLength];
 	//Initialising visitedTracker to all 0.
@@ -262,9 +266,9 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 	//For loop to get all the split texture parts.
 	for (int i = 0; i < arrayLength; i++) {
 		if (pixels[i] != NO_PIXEL_COLOUR) {
-			possibleStarts = bfs(i, s.width, arrayLength, pixels, visitedTracker);
+			possibleStarts = bfs(i, width, arrayLength, pixels, visitedTracker);
 			if (!possibleStarts.empty()) {
-				retArr.push_back(constructNewPixelBuffer(possibleStarts, pixels, s.width, s, t, gRenderer));
+				retArr.push_back(constructNewPixelBuffer(possibleStarts, pixels, width, s, t, gRenderer));
 			}
 		}
 	}
@@ -320,8 +324,8 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 
 	std::vector<int> marchingSquares(Sprite s) {
 		Uint32* pixels = getPixels32(s);
-		int width = s.width;
-		int length = s.height * width;
+		int width = s.surfacePixels->w;
+		int length = s.surfacePixels->h * width;
 		int totalPixels = width * length;
 
 		std::vector<int> contourPoints;
@@ -566,7 +570,7 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 		//printf("Result: %i, Size: %i, ", result, polyList.size
 
 		//Trying to center the polygon:
-		CenterCompundShape(polyList, { static_cast<double>(s.width / 2) * pixelsToMetres, static_cast<double>(s.height / 2) * pixelsToMetres });
+		CenterCompundShape(polyList, { static_cast<double>(s.surfacePixels->w / 2) * pixelsToMetres, static_cast<double>(s.surfacePixels->h / 2) * pixelsToMetres });
 
 		//Adding the polygons to the collider, or printing an error message if something goes wrong.
 		for (TPPLPolyList::iterator it = polyList.begin(); it != polyList.end(); ++it) {

@@ -3,8 +3,8 @@
 //Sprite-related functions:
 #pragma region SpriteFunctions
 Vector2 getOrigin(Sprite& s, Transform& t) {
-    float originX = t.position.x - (s.width / 2);
-    float originY = t.position.y - (s.height / 2);
+    float originX = t.position.x - (s.surfacePixels->w / 2);
+    float originY = t.position.y - (s.surfacePixels->h / 2);
     return Vector2(originX, originY);
 }
 
@@ -12,8 +12,8 @@ void free(Sprite &s) {
     if (s.texture != NULL) {
         SDL_DestroyTexture(s.texture);
         s.texture = NULL;
-        s.width = 0;
-        s.height = 0;
+        // s.width = 0;
+        // s.height = 0;
     }
 
     if (s.surfacePixels != NULL) {
@@ -35,8 +35,8 @@ bool loadFromPixels(Sprite &s, SDL_Renderer* gRenderer) {
         }
         else
         {
-            s.width = s.surfacePixels->w;
-            s.height = s.surfacePixels->h;
+            // s.width = s.surfacePixels->w;
+            // s.height = s.surfacePixels->h;
         }
 
     }
@@ -56,8 +56,8 @@ bool loadPixelsFromFile(Sprite &s, std::string path) {
             printf("Unable to convert loaded surface to display format! SDL Error: %s\n", SDL_GetError());
         }
         else {
-            s.width = s.surfacePixels->w;
-            s.height = s.surfacePixels->h;
+            // s.width = s.surfacePixels->w;
+            // s.height = s.surfacePixels->h;
         }
         SDL_DestroySurface(loadedSurface);
     }
@@ -79,13 +79,13 @@ bool loadFromFile(Sprite &s, std::string path, SDL_Renderer* gRenderer) {
 }
 
 //Basic sprite creation (usually used when loading from a file)
-Sprite createSprite(int x, int y) {
-    return Sprite(nullptr, nullptr, 0, 0, false);
-}
+// Sprite createSprite(int x, int y) {
+//     return Sprite(nullptr, nullptr, false);
+// }
 
 //Controlled sprite creation (when making an object after destruction)
 Sprite createSprite(int w, int h, Uint32* pixels, SDL_Renderer* gRenderer) {
-    Sprite s = Sprite(NULL, SDL_CreateSurfaceFrom(w, h, SDL_PIXELFORMAT_ARGB8888, pixels, w * 4), w, h, false);
+    Sprite s = Sprite(NULL, SDL_CreateSurfaceFrom(w, h, SDL_PIXELFORMAT_ARGB8888, pixels, w * 4), false);
     SDL_SetSurfaceBlendMode(s.surfacePixels, SDL_BLENDMODE_BLEND);
     loadFromPixels(s, gRenderer);
     return s;
@@ -143,20 +143,20 @@ Uint32 mapRGBA(Sprite &s, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 }
 
 void renderBasic(Sprite& s, Transform& t, SDL_Renderer* gRenderer) {
-    SDL_FRect renderQuad = { getOrigin(s, t).x, getOrigin(s, t).y, s.width, s.height };
+    SDL_FRect renderQuad = { getOrigin(s, t).x, getOrigin(s, t).y, s.surfacePixels->w, s.surfacePixels->h };
     SDL_RenderTexture(gRenderer, s.texture, NULL, &renderQuad);
 }
 
 //When need a rotateable texture
 void render(Sprite& s, Transform& t, SDL_Renderer* gRenderer) {
-    SDL_FRect renderQuad = { getOrigin(s, t).x, getOrigin(s, t).y, s.width, s.height };
+    SDL_FRect renderQuad = { getOrigin(s, t).x, getOrigin(s, t).y, s.surfacePixels->w, s.surfacePixels->h };
 
     SDL_RenderTextureRotated(gRenderer, s.texture, NULL, &renderQuad, t.rotation, NULL, SDL_FLIP_NONE);
 }
 
-void renderPart(Sprite& s, Transform& t, SDL_FRect *srcRect, SDL_Renderer* gRenderer) {
-    SDL_FRect renderQuad = { getOrigin(s, t).x, getOrigin(s, t).y, s.width, s.height };
-    SDL_RenderTexture(gRenderer, s.texture, srcRect, &renderQuad);
+void renderPart(Sprite& s, Transform& t, SDL_Renderer* gRenderer) {
+    SDL_FRect renderQuad = { getOrigin(s, t).x, getOrigin(s, t).y, s.surfacePixels->w, s.surfacePixels->h };
+    SDL_RenderTexture(gRenderer, s.texture, s.srcRect, &renderQuad);
 }
 
 SDL_PixelFormat getPixelFormat(Sprite s) {
@@ -167,7 +167,7 @@ SDL_PixelFormat getPixelFormat(Sprite s) {
 Sprite duplicateSprite(Sprite* original, SDL_Renderer* gRenderer, SDL_FRect* srcRect) {
     Uint32* newPixelArray = (Uint32*)malloc(srcRect->h * srcRect->w * sizeof(Uint32));
     for (int row = 0; row < srcRect->h; ++row) {
-        int srcIndex = (srcRect->y + row) * original->width + srcRect->x;
+        int srcIndex = (srcRect->y + row) * original->surfacePixels->w + srcRect->x;
         int dstIndex = row * srcRect->w;
 
         memcpy(&newPixelArray[dstIndex], &original->surfacePixels[srcIndex], srcRect->w * sizeof(Uint32));

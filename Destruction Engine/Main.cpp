@@ -27,9 +27,7 @@ GridSystemManager gGridManager;
 //ECS systems
 std::shared_ptr<RenderSystem> renderSystem;
 std::shared_ptr<DestructionSystem> destructionSystem;
-std::shared_ptr<TileSystem> tileSystem;
-//std::shared_ptr<GridSystem> gridSystem;
-//std::shared_ptr<PathFindingSystem> pathfindingSystem;
+//std::shared_ptr<TileSystem> tileSystem;
 
 //Test entities;
 Entity testTexture;
@@ -66,25 +64,12 @@ bool init()
 		destructionSystem = gCoordinator.addSystem<DestructionSystem>(sig);
 	}
 
-	{
-		Signature sig;
-		sig.addComponent<Transform>();
-		sig.addComponent<TileType>();
-		tileSystem = gCoordinator.addSystem<TileSystem>(sig);
-	}
-
-	/*{
-		Signature sig;
-		sig.addComponent<Transform>();
-		sig.addComponent<Walkable>();
-		gridSystem = gCoordinator.addSystem<GridSystem>(sig);
-	}
-
-	{
-		Signature sig;
-		sig.addComponent<Pathfinding>();
-		pathfindingSystem = gCoordinator.addSystem<PathFindingSystem>(sig);
-	}*/
+	// {
+	// 	Signature sig;
+	// 	sig.addComponent<Transform>();
+	// 	sig.addComponent<TileType>();
+	// 	tileSystem = gCoordinator.addSystem<TileSystem>(sig);
+	// }
 	gGridManager = GridSystemManager(TILE_WIDTH, TILE_HEIGHT, GRID_WIDTH, GRID_HEIGHT);
 
 	//Initialise all the systems.
@@ -143,7 +128,7 @@ bool loadMedia()
 {
 	//Loading success flag
 	bool success = true;
-	gCoordinator.addComponent(testTexture, Sprite(NULL, NULL, 0, 0, false));
+	gCoordinator.addComponent(testTexture, Sprite(NULL, NULL, false));
 	Sprite &s = gCoordinator.getComponent<Sprite>(testTexture);
 	//Load Foo' texture
 	if (!loadPixelsFromFile(s, "assets/foo.png"))
@@ -158,7 +143,7 @@ bool loadMedia()
 		}
 	}
 
-	if (!tileSystem->loadTileSet("assets/Pathfinding.map", "assets/MarchingSquares.png")) {
+	if (!initialiseDemoTileMap(gRenderer, "assets/MarchingSquares.png", "assets/Pathfinding.map")) {
 		printf("Unable to load tileset\n");
 		success = false;
 	}
@@ -169,8 +154,8 @@ bool loadMedia()
 	}
 
 	//So that there is some sort of default collider to go along with a default texture.
-	std::vector<int> points = { 0, (s.height - 1) * s.width, (s.height * s.width) - 1, s.width - 1 };
-	b2BodyId tempId = createTexturePolygon(points, s.width, worldId, s, gCoordinator.getComponent<Transform>(testTexture));
+	std::vector<int> points = { (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
+	b2BodyId tempId = createTexturePolygon(points, s.surfacePixels->w, worldId, s, gCoordinator.getComponent<Transform>(testTexture));
 	gCoordinator.addComponent(testTexture, Collider(tempId));
 
 	return success;
@@ -256,13 +241,8 @@ int main(int argc, char* args[]) {
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderClear(gRenderer);
 				destructionSystem->update(dt);
-				/*gridSystem->update(dt);
-				pathfindingSystem->update(dt);
-				*/
-				/*gGridManager.gSystem->update(dt);
-				gGridManager.pSystem->update(dt);*/
 				gGridManager.update(dt);
-				tileSystem->update(dt);
+				//tileSystem->update(dt);
 				renderSystem->update(dt);
 				gDebugManager.update(dt);
 				SDL_RenderPresent(gRenderer); //Need to put this outside the render system update since need to call it after both render and debug have drawn
