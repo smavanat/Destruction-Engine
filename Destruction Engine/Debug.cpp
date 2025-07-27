@@ -59,7 +59,7 @@ void ColliderDebugSystem::onColliderDebugEvent(const ColliderDebugEvent* event) 
 
 void ColliderDebugSystem::update(float dt) {
 	if (displayColliderOutlines) {
-		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF);//Setting the line colour to black
+		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0x00, 0x00, 0xFF);//Setting the line colour to black
 		//For drawing "normal" colliders. Assuming that all colliders are made up of triangles.
 		//Triangles I think are the way forward, need to make it so all colliders are made up of triangle 
 		//polygons. It just makes things easier.

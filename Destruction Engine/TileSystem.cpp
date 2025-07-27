@@ -219,9 +219,15 @@ SDL_Texture* loadTextureFromFile(SDL_Renderer* gRenderer, std::string path) {
 }
 
 int createNewTileClip(TileSet& t, SDL_FRect d, bool colliding) {
-	TileClip tc = (TileClip){d};
-	if(colliding) t.collidingTileClips.push_back(&tc);
-	else t.tileClips.push_back(&tc);
+	// TileClip tc = (TileClip){d};
+	// if(colliding) t.collidingTileClips.push_back(&tc);
+	// else t.tileClips.push_back(&tc);
+	// return 0;
+
+	TileClip* tc = (TileClip*)malloc(sizeof(TileClip));
+	*tc = (TileClip){d};
+	if (colliding) t.collidingTileClips.push_back(tc);
+	else t.tileClips.push_back(tc);
 	return 0;
 }
 
@@ -230,7 +236,7 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path) 
 	bool tilesLoaded = true;
 
 	//Tile offsets
-	int x = 0, y = 0;
+	int x = 0, y = TILE_HEIGHT/2;
 
 	//Open the map
 	std::ifstream map(path);
@@ -274,7 +280,7 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path) 
 			}
 			//If this is a tile that interacts with the destruction system, we need to give
 			//it its own sprite, otherwise we won't be able to modify the pixels
-			else if ((tileType >= t.tileClips.size()) && (tileType < t.collidingTileClips.size()+t.collidingTileClips.size())) {
+			else if ((tileType >= t.tileClips.size()) && (tileType < t.collidingTileClips.size()+t.tileClips.size())) {
 				//Make a new tile
 				Entity e = gCoordinator.createEntity();
 				Transform tr = Transform(Vector2(x, y), 0);
@@ -285,7 +291,7 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path) 
 				//the actual pixel data.
 				Sprite s = duplicateSprite(t.srcTex, gRenderer, &t.collidingTileClips[index]->dimensions);
 				gCoordinator.addComponent(e, s);
-
+				printf("We should be creating the collider polygon now?");
 				//Adding the collider here.
 				std::vector<int> points = { 0, (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
 				b2BodyId tempId = createTexturePolygon(points, static_cast<int>(t.tileClips[index]->dimensions.w), worldId, s, tr);
@@ -319,10 +325,10 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path) 
 	return tilesLoaded;
 }
 
-bool initialiseDemoTileMap(SDL_Renderer* gRenderer, std::string tpath, std::string mpath) {
-	Sprite srcSprite = Sprite(nullptr, nullptr, false);
-	TileSet t = (TileSet){&srcSprite, std::vector<TileClip*>(), std::vector<TileClip*>()};
-	t.srcTex->texture = loadTextureFromFile(gRenderer, tpath);
+//Need to fix this function so that we are not crating the Tilset locally on the stack, and instead passing it 
+//in from the heap.
+bool initialiseDemoTileMap(TileSet& t, SDL_Renderer* gRenderer, std::string tpath, std::string mpath) {
+	loadFromFile(*t.srcTex, tpath, gRenderer);
 	if(t.srcTex->texture == NULL){
 		std::cout << "Failed to load TileSet source Texture!\n" << SDL_GetError();
 		return false;
@@ -340,4 +346,16 @@ bool initialiseDemoTileMap(SDL_Renderer* gRenderer, std::string tpath, std::stri
 	} 
 
 	return true;
+}
+
+void freeTileSet(TileSet& t) {
+	for(TileClip* tc : t.tileClips){
+		free(tc);
+	}
+
+	for(TileClip* tc : t.collidingTileClips) {
+		free(tc);
+	}
+
+	free(t.srcTex);
 }

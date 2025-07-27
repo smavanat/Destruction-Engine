@@ -27,6 +27,7 @@ GridSystemManager gGridManager;
 //ECS systems
 std::shared_ptr<RenderSystem> renderSystem;
 std::shared_ptr<DestructionSystem> destructionSystem;
+TileSet t;
 //std::shared_ptr<TileSystem> tileSystem;
 
 //Test entities;
@@ -78,6 +79,9 @@ bool init()
 
 	testTexture = gCoordinator.createEntity();
 	testPath = gCoordinator.createEntity();
+	Sprite* srcSprite = (Sprite*)malloc(sizeof(Sprite));
+	*srcSprite = Sprite(nullptr, nullptr, false);
+	t = (TileSet){srcSprite, std::vector<TileClip*>(), std::vector<TileClip*>()};
 	//Initialization flag
 	bool success = true;
 
@@ -143,7 +147,7 @@ bool loadMedia()
 		}
 	}
 
-	if (!initialiseDemoTileMap(gRenderer, "assets/MarchingSquares.png", "assets/Pathfinding.map")) {
+	if (!initialiseDemoTileMap(t, gRenderer, "assets/MarchingSquares.png", "assets/Pathfinding.map")) {
 		printf("Unable to load tileset\n");
 		success = false;
 	}
@@ -169,6 +173,7 @@ void close()
 		gCoordinator.destroyEntity(e);
 	}
 	b2DestroyWorld(worldId);
+	freeTileSet(t);
 	//Destroy window	
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);

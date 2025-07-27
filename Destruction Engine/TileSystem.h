@@ -57,4 +57,5 @@ struct TileSet {
 SDL_Texture* loadTextureFromFile(SDL_Renderer* gRenderer, std::string path);
 int createNewTileClip(TileSet& t, SDL_FRect d, bool colliding);
 bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path);
-bool initialiseDemoTileMap(SDL_Renderer* gRenderer, std::string tpath, std::string mpath);
+bool initialiseDemoTileMap(TileSet& t, SDL_Renderer* gRenderer, std::string tpath, std::string mpath);
+void freeTileSet(TileSet& t);
