@@ -163,8 +163,8 @@ files for each different platform and system architecture, and setting up this m
 
 I have started working on adding functionality to update the pathfinding grid at runtime to reflect the destruction of tiles. 
 I have begun modifying my minimal TileSystem class to reflect this, and I have successfully completed this task somewhat, however,
-the tile system works the same as before now. But everything else is so broken, including: collider rendering (only for the start collider), 
-grid rendering (the positioning is off), and for some reason the grid destruction doesn't work even though the new tile entities 
-should have colliders. Another interesting note, every time we split a texture, our memory use doubles. But cpu use has halved (yay)
+the tile system works the same as before now. But everything else is so broken, including: grid rendering (the positioning is off), 
+and for some reason the grid destruction doesn't work even though the new tile entities should have colliders. Another interesting note, 
+every time we split a texture, our memory use doubles. But overall cpu use has halved (15 - 7%) (yay)
 
 Week 6:
