@@ -73,11 +73,6 @@ bool loadFromFile(Sprite &s, std::string path, SDL_Renderer* gRenderer) {
     return s.texture != NULL;
 }
 
-//Basic sprite creation (usually used when loading from a file)
-// Sprite createSprite(int x, int y) {
-//     return Sprite(nullptr, nullptr, false);
-// }
-
 //Controlled sprite creation (when making an object after destruction)
 Sprite createSprite(int w, int h, Uint32* pixels, SDL_Renderer* gRenderer) {
     Sprite s = Sprite(NULL, SDL_CreateSurfaceFrom(w, h, SDL_PIXELFORMAT_ARGB8888, pixels, w * 4), false);

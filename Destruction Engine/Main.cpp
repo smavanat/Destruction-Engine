@@ -105,6 +105,7 @@ bool init()
 		{
 			//Create renderer for window
 			gRenderer = SDL_CreateRenderer(gWindow, "opengl");
+			SDL_SetRenderVSync(gRenderer, SDL_RENDERER_VSYNC_ADAPTIVE);
 			SDL_SetRenderDrawBlendMode(gRenderer, SDL_BLENDMODE_BLEND);
 			if (gRenderer == NULL)
 			{
@@ -254,7 +255,7 @@ int main(int argc, char* args[]) {
 				SDL_RenderPresent(gRenderer); //Need to put this outside the render system update since need to call it after both render and debug have drawn
 
 				auto stopTime = std::chrono::high_resolution_clock::now();
-
+				//SDL_Delay(1000/60.0f);
 				dt = std::chrono::duration<float, std::chrono::seconds::period>(stopTime - startTime).count();
 			}
 		}
