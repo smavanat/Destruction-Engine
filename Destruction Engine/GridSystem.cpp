@@ -26,8 +26,8 @@ void GridSystem::createTiles() {
     for (int i = 0; i < grid->gridHeight; i++) {
         for (int j = 0; j < grid->gridWidth; j++) {
             Entity e = gCoordinator.createEntity();
-            gCoordinator.addComponent(e, Transform(Vector2((j * TILE_WIDTH) + (TILE_WIDTH / 2), ( i* TILE_HEIGHT) + (TILE_HEIGHT / 2)), 0));
-            gCoordinator.addComponent(e, Walkable(grid->tiles[toIndex(grid, Vector2(j, i))].status));
+            gCoordinator.addComponent(e, Transform((Vector2){(j * TILE_WIDTH) + (TILE_WIDTH / 2), ( i* TILE_HEIGHT) + (TILE_HEIGHT / 2)}, 0));
+            gCoordinator.addComponent(e, Walkable(grid->tiles[toIndex(grid, (Vector2){j, i})].status));
         }
 	}
 }
@@ -176,7 +176,7 @@ void PathFindingSystem::update(float dt) {
         Pathfinding &p = gCoordinator.getComponent<Pathfinding>(e);
 
         //If the component does not have a well defined start and end pos, continue
-        if (p.startPos == Vector2() || p.endPos == Vector2()) {
+        if ((p.startPos.x == -1 && p.startPos.y == -1) || (p.endPos.x == -1 && p.endPos.y == -1)) {
             continue;
         }
         else {
@@ -212,8 +212,10 @@ void PathFindingSystem::update(float dt) {
             //Set the path value in the component
             p.path = vecPath;
             //Reset the start and endpos to default values to avoid repeat computations
-            p.startPos = Vector2();
-            p.endPos = Vector2();
+            p.startPos.x = -1;
+            p.startPos.y = -1;
+            p.endPos.x = -1;
+            p.endPos.y = -1;
         }
     }
 }

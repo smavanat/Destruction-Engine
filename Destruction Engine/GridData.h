@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <cmath>
+#include <functional>
 #include <limits.h>
 #include "Maths.h"
 
@@ -33,13 +34,24 @@ struct TileData {
 };
 
 struct GridData {
-	Vector2 origin = Vector2(0, 0);
+	Vector2 origin = (Vector2){0, 0};
 	int subWidth = 4; //Holds the width of the tiles (all tiles should be squares so this is enough)
 	int tileWidth = TILE_WIDTH; //Tile width in pixels
 	int tileHeight = TILE_HEIGHT; //Tile height in pixels
 	int gridWidth = GRID_WIDTH; //Width of the grid in tiles
 	int gridHeight = GRID_HEIGHT; //Height of the grid in tiles
 	std::vector<TileData> tiles;
+};
+
+struct Vector2Hasher {
+	std::size_t operator()(const std::pair<int, int>& v) const noexcept {
+		// Use std::hash<float> for x and y, combine them:
+		std::size_t h1 = std::hash<float>{}(v.first);
+		std::size_t h2 = std::hash<float>{}(v.second);
+
+		// Combine hashes (a common way):
+		return h1 ^ (h2 << 1);
+	}
 };
 
 enum Direction8 {

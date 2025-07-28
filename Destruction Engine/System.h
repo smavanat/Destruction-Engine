@@ -16,6 +16,5 @@ public:
 
 	void unRegisterEntity(Entity const& entity);
 
-protected:
 	std::set<Entity> registeredEntities;
 };

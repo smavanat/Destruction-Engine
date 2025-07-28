@@ -5,13 +5,13 @@
 Vector2 getOrigin(Sprite& s, Transform& t) {
     float originX = t.position.x - (s.surfacePixels->w / 2);
     float originY = t.position.y - (s.surfacePixels->h / 2);
-    return Vector2(originX, originY);
+    return (Vector2){originX, originY};
 }
 
 Vector2 getOrigin(TileSprite& s, Transform& t) {
     float originX = t.position.x - (s.srcRect->w / 2);
     float originY = t.position.y - (s.srcRect->h / 2);
-    return Vector2(originX, originY);
+    return (Vector2){originX, originY};
 }
 
 void free(Sprite &s) {

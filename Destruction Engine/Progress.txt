@@ -160,3 +160,10 @@ and for some reason the grid destruction doesn't work even though the new tile e
 every time we split a texture, our memory use doubles. But overall cpu use has halved (15% - 7%) (yay)
 
 Week 6:
+Fixed all of the bugs from the tilesystem and split the sprite class in two, Sprite and TileSprite.
+TileSprite is for the tiles that only use a part of a texture to render, Sprite is for everything else (the destructible stuff)
+This is so we can reduce the size of the Sprite struct to reduce cache misses and avoid unnecessary conflation of responsiblities
+in terms of rendering.
+
+Fixed the performance problem by turning on vsync and buy using SDL_Delay (we're down to 0.6% usage, very respectable). However, I have
+turned off SDL_Delay for now, since it also makes the by-hand texture erasure very laggy. Will have to work on this in future.

@@ -63,7 +63,7 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path) 
 			if ((tileType >= 0) && (tileType < t.tileClips.size())) {
 				//Make a new tile
 				Entity e = gCoordinator.createEntity();
-				Transform tr = Transform(Vector2(x, y), 0);
+				Transform tr = Transform((Vector2){x, y}, 0);
 				gCoordinator.addComponent(e, tr);
 
 				//If the sprite is non-collidable, we can just set its texture to be the texture of the 
@@ -76,7 +76,7 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path) 
 			else if ((tileType >= t.tileClips.size()) && (tileType < t.collidingTileClips.size()+t.tileClips.size())) {
 				//Make a new tile
 				Entity e = gCoordinator.createEntity();
-				Transform tr = Transform(Vector2(x, y), 0);
+				Transform tr = Transform((Vector2){x, y}, 0);
 				gCoordinator.addComponent(e, tr);
 				
 				int index = tileType - t.tileClips.size();

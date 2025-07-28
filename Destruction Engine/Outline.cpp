@@ -8,7 +8,8 @@
 //Erases pixels in a texture in a circular radius determined by scale and marks the texture for alteration. 
 //If all the pixels in the radius have been erased, then the texture is not marked for alteration.
 void erasePixels(Sprite &s, Transform& t, SDL_Renderer* gRenderer, int scale, int x, int y) {
-	Vector2 newOrigin = rotateAboutPoint(Vector2(x, y), t.position, -t.rotation, false);
+	Vector2 temp = {x, y};
+	Vector2 newOrigin = rotateAboutPoint(&temp, &t.position, -t.rotation, false);
 
 	x = newOrigin.x - getOrigin(s, t).x;
 	y = newOrigin.y - getOrigin(s, t).y;
@@ -237,7 +238,7 @@ std::pair<Sprite, Transform> constructNewPixelBuffer(std::vector<int> indexes, U
 
 	//Set this as a pointer as otherwise this variable will be destroyed once this method finishes.
 	newSprite = createSprite(width, height, newPixelBuffer, gRenderer);
-	Transform newTransform = Transform(Vector2(centreX, centreY), t.rotation);
+	Transform newTransform = Transform((Vector2){centreX, centreY}, t.rotation);
 
 	cleanup(pixels, indexes);
 	return std::make_pair(newSprite, newTransform);

@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
-project(Tutorial LANGUAGES CXX)
+project(Tutorial LANGUAGES CXX C)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Collect all .cpp files in current directory
-file(GLOB SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+file(GLOB CPP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+file(GLOB C_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
+set(SOURCES ${CPP_SOURCES} ${C_SOURCES})
 
 # Create the executable target
 add_executable(my_app ${SOURCES})
@@ -22,7 +24,7 @@ target_include_directories(my_app
 if(WIN32) 
     if(MSVC)
         # Set .lib files on msvc
-        target_link_libraries(my_app,
+        target_link_libraries(my_app
             PRIVATE 
             "${CMAKE_SOURCE_DIR}/externals/libs/SDL3.lib"
             "${CMAKE_SOURCE_DIR}/externals/libs/SDL3_image.lib"

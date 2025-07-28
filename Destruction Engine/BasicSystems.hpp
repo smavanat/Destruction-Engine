@@ -38,8 +38,9 @@ public:
 		for (Entity entity : registeredEntities) {
 			Transform transform = gCoordinator.getComponent<Transform>(entity);
 			Collider collider = gCoordinator.getComponent<Collider>(entity);
-
-			transform.position = b2Body_GetPosition(collider.colliderId);
+			
+			b2Vec2 temp = b2Body_GetPosition(collider.colliderId);
+			transform.position = convertToVec2(&temp);
 			transform.rotation = normalizeAngle(b2Rot_GetAngle(b2Body_GetRotation(collider.colliderId)))/DEGREES_TO_RADIANS;
 		}
 	}
@@ -99,7 +100,8 @@ public:
 			for (Entity entity : registeredEntities) {
 				Sprite &s = gCoordinator.getComponent<Sprite>(entity);
 				Transform t = gCoordinator.getComponent<Transform>(entity);
-				Vector2 rotated = rotateAboutPoint(Vector2(in->mouseX, in->mouseY), t.position, -t.rotation, false);
+				Vector2 temp = {in->mouseX, in->mouseY};
+				Vector2 rotated = rotateAboutPoint(&temp, &t.position, -t.rotation, false);
 				if (rotated.x >= getOrigin(s, t).x && rotated.x < getOrigin(s,t ).x + s.surfacePixels->w &&
 					rotated.y < getOrigin(s, t).y + s.surfacePixels->h && rotated.y >= getOrigin(s, t).y
 					) {

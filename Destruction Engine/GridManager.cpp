@@ -53,6 +53,11 @@ void GridSystemManager::update(float dt) {
     pSystem->update(dt);
 }
 
+
+bool GridSystemManager::setGridTileColliders() {
+    
+}
+
 bool GridSystemManager::loadGridFromFile(std::string path) {
     //Loading the grid to make the GridData tile vector:
     std::ifstream map(path);

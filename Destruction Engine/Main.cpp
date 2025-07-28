@@ -105,7 +105,7 @@ bool init()
 		{
 			//Create renderer for window
 			gRenderer = SDL_CreateRenderer(gWindow, "opengl");
-			SDL_SetRenderVSync(gRenderer, SDL_RENDERER_VSYNC_ADAPTIVE);
+			SDL_SetRenderVSync(gRenderer, SDL_RENDERER_VSYNC_ADAPTIVE); 
 			SDL_SetRenderDrawBlendMode(gRenderer, SDL_BLENDMODE_BLEND);
 			if (gRenderer == NULL)
 			{
@@ -118,8 +118,8 @@ bool init()
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 			}
 		}
-		gCoordinator.addComponent(testTexture, Transform(Vector2(1420.0f, 440.0f), 0.0));
-		gCoordinator.addComponent(testPath, Pathfinding(Vector2(10, 10), Vector2(500, 500)));
+		gCoordinator.addComponent(testTexture, Transform((Vector2){1420.0f, 440.0f}, 0.0));
+		gCoordinator.addComponent(testPath, Pathfinding((Vector2){10, 10}, (Vector2){500, 500}));
 
 		//gridSystem->updatePathfinding(); //This line needs to exist otherwise the pathfinding will not have the initial grid
 
@@ -255,7 +255,8 @@ int main(int argc, char* args[]) {
 				SDL_RenderPresent(gRenderer); //Need to put this outside the render system update since need to call it after both render and debug have drawn
 
 				auto stopTime = std::chrono::high_resolution_clock::now();
-				//SDL_Delay(1000/60.0f);
+				//This reduces cpu usage from like 10-12% down to 0.6%
+				//SDL_Delay(1000/60.0f); //Turned this off for now since it makes manually doing the destruction quite laggy.
 				dt = std::chrono::duration<float, std::chrono::seconds::period>(stopTime - startTime).count();
 			}
 		}

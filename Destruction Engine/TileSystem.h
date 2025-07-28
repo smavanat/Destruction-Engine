@@ -22,6 +22,12 @@ struct TileSet {
 	std::vector<TileClip*> collidingTileClips = std::vector<TileClip*>();
 };
 
+//Holds a record of all of the indexes in the collider component array that belong to colliders
+//that are impassible terrain
+struct TerrainSet {
+	Uint32* indexArr;
+};
+
 int createNewTileClip(TileSet& t, SDL_FRect d, bool colliding);
 bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path);
 bool initialiseDemoTileMap(TileSet& t, SDL_Renderer* gRenderer, std::string tpath, std::string mpath);
