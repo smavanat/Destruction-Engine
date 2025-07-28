@@ -22,7 +22,7 @@ public:
 			Transform transform = gCoordinator.getComponent<Transform>(entity);
 			Sprite sprite = gCoordinator.getComponent<Sprite>(entity);
 
-			sprite.renderfunc(sprite, transform, gRenderer);
+			render(sprite, transform, gRenderer);
 		}
 	}
 };

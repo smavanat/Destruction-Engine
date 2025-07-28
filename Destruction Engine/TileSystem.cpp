@@ -32,7 +32,7 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path) 
 	bool tilesLoaded = true;
 
 	//Tile offsets
-	int x = 0, y = TILE_HEIGHT/2;
+	int x = TILE_WIDTH/2, y = TILE_HEIGHT/2;
 
 	//Open the map
 	std::ifstream map(path);
@@ -68,10 +68,7 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path) 
 
 				//If the sprite is non-collidable, we can just set its texture to be the texture of the 
 				//source sprite and actually give it a srcRect, and then change its renderfunc pointer to go to renderPart
-				Sprite s = Sprite(nullptr, nullptr, false);
-				s.texture = t.srcTex->texture;
-				s.renderfunc = &renderPart;
-				s.srcRect = &t.tileClips[tileType]->dimensions;
+				TileSprite s = TileSprite(t.srcTex->texture, &t.tileClips[tileType]->dimensions);
 				gCoordinator.addComponent(e, s);
 			}
 			//If this is a tile that interacts with the destruction system, we need to give
@@ -87,11 +84,10 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path) 
 				//the actual pixel data.
 				Sprite s = duplicateSprite(t.srcTex, gRenderer, &t.collidingTileClips[index]->dimensions);
 				gCoordinator.addComponent(e, s);
-				printf("We should be creating the collider polygon now?");
 				//Adding the collider here.
 				std::vector<int> points = { 0, (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
-				b2BodyId tempId = createTexturePolygon(points, static_cast<int>(t.tileClips[index]->dimensions.w), worldId, s, tr);
-				gCoordinator.addComponent(e, tempId);
+				b2BodyId tempId = createTexturePolygon(points, static_cast<int>(t.collidingTileClips[index]->dimensions.w), worldId, s, tr);
+				gCoordinator.addComponent(e, Collider(tempId));
 			}
 			else {
 				//Stop loading the map 
@@ -106,7 +102,7 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path) 
 			//If we have gone too far
 			if (x >= LEVEL_WIDTH) {
 				//Move back 
-				x = 0;
+				x = TILE_WIDTH/2;
 
 				//Move to the next row
 				y += TILE_HEIGHT;

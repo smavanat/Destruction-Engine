@@ -15,14 +15,6 @@ GridSystemManager::GridSystemManager() {
 }
 
 GridSystemManager::GridSystemManager(int tWidth, int tHeight, int gWidth, int gHeight) {
-    //This is a really annoying way of having to setup the signatures of Systems, need to find a better way
-    /*{
-        Signature sig;
-        sig.addComponent<Transform>();
-        sig.addComponent<TileType>();
-        tSystem = gCoordinator.addSystem<TileSystem>(sig);
-    }*/
-    //tSystem->init(); //Maybe these init calls are not necessary??
     {
         Signature sig;
         sig.addComponent<Transform>();

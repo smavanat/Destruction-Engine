@@ -10,6 +10,7 @@
 
 extern Coordinator gCoordinator;
 extern b2WorldId worldId;
+extern SDL_Renderer* gRenderer;
 
 struct TileClip {
 	SDL_FRect dimensions;
@@ -21,8 +22,22 @@ struct TileSet {
 	std::vector<TileClip*> collidingTileClips = std::vector<TileClip*>();
 };
 
-SDL_Texture* loadTextureFromFile(SDL_Renderer* gRenderer, std::string path);
 int createNewTileClip(TileSet& t, SDL_FRect d, bool colliding);
 bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path);
 bool initialiseDemoTileMap(TileSet& t, SDL_Renderer* gRenderer, std::string tpath, std::string mpath);
 void freeTileSet(TileSet& t);
+
+class TileRenderSystem : public System {
+public:
+	void init() {}
+
+	void update(float dt) {
+		//printf("Number of registered entities: %i\n", registeredEntities.size());
+		for (Entity entity : registeredEntities) {
+			Transform transform = gCoordinator.getComponent<Transform>(entity);
+			TileSprite sprite = gCoordinator.getComponent<TileSprite>(entity);
+
+			renderPart(sprite, transform, gRenderer);
+		}
+	}
+};

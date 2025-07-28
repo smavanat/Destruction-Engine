@@ -33,10 +33,8 @@ struct Transform : public Component<Transform> {
 //Holds sprite texture data
 struct Sprite : public Component<Sprite> {
     SDL_Texture* texture = nullptr;
-    SDL_Surface* surfacePixels = nullptr; //I think I could make a union of this and the srcRect pointer, since Sprites usually
-    SDL_FRect* srcRect = nullptr;         //only use one or the other. Will have to have a look later
+    SDL_Surface* surfacePixels = nullptr; 
     bool needsSplitting = false; //How can we get rid of this bool to avoid wasting space
-    void (*renderfunc)(Sprite& s, Transform& t, SDL_Renderer* gRenderer) = &render; //I cannot decide if this is really cool, or really cursed
 
     Sprite() = default;
 
@@ -47,6 +45,20 @@ struct Sprite : public Component<Sprite> {
         : texture(texture),
         surfacePixels(surfacePixels),
         needsSplitting(needsSplitting)
+    {}
+};
+
+struct TileSprite : public Component<TileSprite> {
+    SDL_Texture* srcTex = nullptr;
+    SDL_FRect* srcRect = nullptr;
+
+    TileSprite() = default;
+
+    TileSprite(
+        SDL_Texture* tex,
+        SDL_FRect* src)
+        : srcTex(tex),
+        srcRect(src)
     {}
 };
 
@@ -75,27 +87,6 @@ struct Walkable : public Component<Walkable> {
     Walkable() = default;
 
     Walkable(int w) : walkStatus(w) {};
-};
-
-//Determines the state of a partially walkable tile:
-struct PartiallyWalkable : public Component<PartiallyWalkable> {
-    int status; //0 -> walkable, 1 -> blocked 2 -> partial
-    int subcells[16];
-
-    PartiallyWalkable() = default;
-
-    PartiallyWalkable(int s, int sArr[16]) : status(s) {
-        std::copy(sArr, sArr + 16, subcells);
-    }
-};
-
-//Tile type -> represents what bit of a spritesheet to use for a tileset
-struct TileType : public Component<TileType> {
-    int type;
-
-    TileType() = default;
-
-    TileType(int t) : type(t) {}
 };
 
 //Holds the start and end positions to find a path between, and the path returned
@@ -133,7 +124,7 @@ Uint32 mapRGBA(Sprite &s, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 void renderBasic(Sprite& s, Transform& t, SDL_Renderer* gRenderer);
 
 //When rendering the sprite from another texture
-void renderPart(Sprite& s, Transform& t, SDL_Renderer* gRenderer);
+void renderPart(TileSprite& s, Transform& t, SDL_Renderer* gRenderer);
 
 SDL_PixelFormat getPixelFormat(Sprite s);
 

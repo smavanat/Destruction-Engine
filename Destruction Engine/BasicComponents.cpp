@@ -3,19 +3,15 @@
 //Sprite-related functions:
 #pragma region SpriteFunctions
 Vector2 getOrigin(Sprite& s, Transform& t) {
-    if(NULL == s.srcRect) {
-        float originX = t.position.x - (s.surfacePixels->w / 2);
-        float originY = t.position.y - (s.surfacePixels->h / 2);
-        return Vector2(originX, originY);
-    }
-    else if (NULL == s.surfacePixels) {
-        float originX = t.position.x - (s.srcRect->w / 2);
-        float originY = t.position.y - (s.srcRect->h / 2);
-        return Vector2(originX, originY);
-    }
-    else {
-        return Vector2(-1, -1);
-    }
+    float originX = t.position.x - (s.surfacePixels->w / 2);
+    float originY = t.position.y - (s.surfacePixels->h / 2);
+    return Vector2(originX, originY);
+}
+
+Vector2 getOrigin(TileSprite& s, Transform& t) {
+    float originX = t.position.x - (s.srcRect->w / 2);
+    float originY = t.position.y - (s.srcRect->h / 2);
+    return Vector2(originX, originY);
 }
 
 void free(Sprite &s) {
@@ -153,9 +149,9 @@ void render(Sprite& s, Transform& t, SDL_Renderer* gRenderer) {
     SDL_RenderTextureRotated(gRenderer, s.texture, NULL, &renderQuad, t.rotation, NULL, SDL_FLIP_NONE);
 }
 
-void renderPart(Sprite& s, Transform& t, SDL_Renderer* gRenderer) {
+void renderPart(TileSprite& s, Transform& t, SDL_Renderer* gRenderer) {
     SDL_FRect renderQuad = { getOrigin(s, t).x, getOrigin(s, t).y, s.srcRect->w, s.srcRect->h };
-    SDL_RenderTexture(gRenderer, s.texture, s.srcRect, &renderQuad);
+    SDL_RenderTexture(gRenderer, s.srcTex, s.srcRect, &renderQuad);
 }
 
 SDL_PixelFormat getPixelFormat(Sprite s) {

@@ -14,12 +14,6 @@ ECS System: Basic component and entity template setup.
 			
 
 Things to look into in future for optimisation and fixes:
-Need to figure out memory management and garbage collection. (stretch goal)
-Currently I am just passing the raw structs around when dealing with data in the ECS system.
-This is not such a big deal for entities, but some of the components (especially Sprite), have the potential to 
-become quite large. It might be better to deal with pointers to improve performance. Look into this in future.
-Need to find a way of packaging (or at least allowing multiples of) the tile-grid-pathfinding linkage. Currently
-it works fine since I only need one, but in future I may want to use several and then it will be a pain
 The pathfinding needs to have Steering Behaviours added. It currently does not have the actual start
 and end positions added to the returned path. Maybe steering behaviours could be used to fix that, or could use 
 rdp to simplify the a* path.
@@ -30,11 +24,9 @@ add a system using the coordinator. Need to have a way of each system just holdi
 just use that with the coordinator
 Need to add a way to check if a system has already been initialised -> maybe just add an "initialised" bool, 
 to prevent repeat initialisations. Or figure out a better way of initialising systems, because currently, if a system
-is added after gCoordinator init is called, its fucked, and have to do it manually, but at the same time, can just
+is added after gCoordinator init is called, its fucked, and have to do it manually, but at the same time, can't just
 add manual init() calls all the time, since this will mean double initialisations. I think the bool is the best option
-for now
-Could use tags to have multiple tile/grid systems and use this with archetypes to allow many grids and pathfinding layouts
-Need to get rid of use of magic numbers when dealing with TileData subcells. 
+for now. NOOO BOOLS BAD. Need to think of a better way, probably just by storing all initialised systems in an array or something.
 
 Week 1 Notes:
 Implemented an Event Bus
@@ -165,6 +157,6 @@ I have started working on adding functionality to update the pathfinding grid at
 I have begun modifying my minimal TileSystem class to reflect this, and I have successfully completed this task somewhat, however,
 the tile system works the same as before now. But everything else is so broken, including: grid rendering (the positioning is off), 
 and for some reason the grid destruction doesn't work even though the new tile entities should have colliders. Another interesting note, 
-every time we split a texture, our memory use doubles. But overall cpu use has halved (15 - 7%) (yay)
+every time we split a texture, our memory use doubles. But overall cpu use has halved (15% - 7%) (yay)
 
 Week 6:

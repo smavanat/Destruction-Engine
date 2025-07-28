@@ -27,6 +27,7 @@ GridSystemManager gGridManager;
 //ECS systems
 std::shared_ptr<RenderSystem> renderSystem;
 std::shared_ptr<DestructionSystem> destructionSystem;
+std::shared_ptr<TileRenderSystem> tileSystem;
 TileSet t;
 //std::shared_ptr<TileSystem> tileSystem;
 
@@ -65,12 +66,12 @@ bool init()
 		destructionSystem = gCoordinator.addSystem<DestructionSystem>(sig);
 	}
 
-	// {
-	// 	Signature sig;
-	// 	sig.addComponent<Transform>();
-	// 	sig.addComponent<TileType>();
-	// 	tileSystem = gCoordinator.addSystem<TileSystem>(sig);
-	// }
+	{
+		Signature sig;
+		sig.addComponent<Transform>();
+		sig.addComponent<TileSprite>();
+		tileSystem = gCoordinator.addSystem<TileRenderSystem>(sig);
+	}
 	gGridManager = GridSystemManager(TILE_WIDTH, TILE_HEIGHT, GRID_WIDTH, GRID_HEIGHT);
 
 	//Initialise all the systems.
@@ -247,7 +248,7 @@ int main(int argc, char* args[]) {
 				SDL_RenderClear(gRenderer);
 				destructionSystem->update(dt);
 				gGridManager.update(dt);
-				//tileSystem->update(dt);
+				tileSystem->update(dt);
 				renderSystem->update(dt);
 				gDebugManager.update(dt);
 				SDL_RenderPresent(gRenderer); //Need to put this outside the render system update since need to call it after both render and debug have drawn
