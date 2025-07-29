@@ -87,9 +87,7 @@ bool init()
 	t = (TileSet){srcSprite, std::vector<TileClip*>(), std::vector<TileClip*>()};
 
 	//Creating the array that holds all of the terrain colliders
-	tSet.cArr = (Collider**)malloc(25* sizeof(Collider*));
-	tSet.size = 0;
-	tSet.maxsize = 25;
+	tSet = (TerrainSet){(Collider**)calloc(25, sizeof(Collider*)), 0, 25};
 	//Initialization flag
 	bool success = true;
 
@@ -166,16 +164,18 @@ bool loadMedia()
 		success = false;
 	}
 
-	if(!gGridManager.setGridTileColliders(&tSet)) {
-		printf("Unable to set grid colliders\n");
-		success = false;
-	}
+	// if(!gGridManager.setGridTileColliders(&tSet)) {
+	// 	printf("Unable to set grid colliders\n");
+	// 	success = false;
+	// }
 
 	//So that there is some sort of default collider to go along with a default texture.
 	std::vector<int> points = {0, (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
 	b2BodyId tempId = createTexturePolygon(points, s.surfacePixels->w, worldId, s, gCoordinator.getComponent<Transform>(testTexture));
 	gCoordinator.addComponent(testTexture, Collider(tempId));
-
+	SDL_FRect testRect = (SDL_FRect){1420.0f, 440.0f, 100.0f, 100.0f};
+	//isOverlapping2D(nullptr, &gCoordinator.getComponent<Collider>(testTexture));
+	std::cout << isOverlapping(&testRect, &gCoordinator.getComponent<Collider>(testTexture)) << "\n";
 	return success;
 }
 
@@ -188,6 +188,7 @@ void close()
 	}
 	b2DestroyWorld(worldId);
 	freeTileSet(t);
+	free(tSet.cArr);
 	//Destroy window	
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);

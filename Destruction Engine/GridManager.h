@@ -17,3 +17,5 @@ private:
 	std::shared_ptr<GridData> grid;
 };
 
+bool isOverlapping2D(SDL_FRect* t, Collider* c);
+bool isOverlapping(SDL_FRect* t, Collider* c);
