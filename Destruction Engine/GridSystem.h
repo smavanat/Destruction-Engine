@@ -19,8 +19,6 @@ public:
 	void createTiles();
 	void setGrid(std::shared_ptr<GridData> g);
 	bool tileStatusChanged(Entity e);
-	std::vector<std::vector<int>> convertTilesToGrid();
-private:
 	std::shared_ptr<GridData> grid;
 };
 
@@ -30,6 +28,5 @@ public:
 	void init();
 	void update(float dt);
 	void setGrid(std::shared_ptr<GridData> g);
-private:
 	std::shared_ptr<GridData> grid;
 };

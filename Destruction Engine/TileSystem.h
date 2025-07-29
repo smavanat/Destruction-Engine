@@ -25,12 +25,14 @@ struct TileSet {
 //Holds a record of all of the indexes in the collider component array that belong to colliders
 //that are impassible terrain
 struct TerrainSet {
-	Uint32* indexArr;
+	Collider** cArr;
+	Uint32 size; //Holds the number of entities currently in this set
+	Uint32 maxsize; //Holds the max number of entities in this set
 };
 
 int createNewTileClip(TileSet& t, SDL_FRect d, bool colliding);
-bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path);
-bool initialiseDemoTileMap(TileSet& t, SDL_Renderer* gRenderer, std::string tpath, std::string mpath);
+bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path, TerrainSet* tSet);
+bool initialiseDemoTileMap(TileSet& t, SDL_Renderer* gRenderer, std::string tpath, std::string mpath, TerrainSet* tSet);
 void freeTileSet(TileSet& t);
 
 class TileRenderSystem : public System {

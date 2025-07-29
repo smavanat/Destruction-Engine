@@ -17,7 +17,7 @@ void GridSystem::update(float dt) {
 	}
 
 	if (gridChanged) {
-		//gCoordinator.getEventBus()->publish(new GridChangedEvent(convertTilesToGrid()));
+
 	}
 }
 
@@ -39,129 +39,6 @@ void GridSystem::setGrid(std::shared_ptr<GridData> g) {
 //This only needs to be filled once the actual destruction pathfinding system has been implemented
 bool GridSystem::tileStatusChanged(Entity e) {
 	return false;
-}
-
-//Converts the tiles into their marching squares representation as a 2D vector so we can do pathfinding on them
-std::vector<std::vector<int>> GridSystem::convertTilesToGrid() {
-    //std::vector<std::vector<int>> tempGrid( static_cast<size_t>(gridWidthInTiles * 2), std::vector<int>(static_cast<size_t>(gridHeightInTiles * 2), -1) );
-    std::vector<std::vector<int>> tempGrid(static_cast<size_t>(grid->gridWidth * 2), std::vector<int>(static_cast<size_t>(grid->gridHeight * 2), -1));
-    for (Entity e : registeredEntities) {
-        Transform t = gCoordinator.getComponent<Transform>(e);
-        Walkable w = gCoordinator.getComponent<Walkable>(e);
-
-        //Origin of each set of four is in the top left
-        int topX = static_cast<int>(floor(t.position.x / TILE_WIDTH))*2;
-        int topY = static_cast<int>(floor(t.position.y / TILE_HEIGHT))*2;
-
-        //Manual conversion of the a* tiles to marching squares representation in the grid for proper pathfinding
-        switch (w.walkStatus) {
-            case 0:
-                tempGrid[topX][topY] = 0;
-                tempGrid[topX+1][topY] = 0;
-                tempGrid[topX][topY+1] = 0;
-                tempGrid[topX+1][topY+1] = 0;
-            break;
-            case 1:
-                tempGrid[topX][topY] = 0;
-                tempGrid[topX + 1][topY] = 0;
-                tempGrid[topX][topY + 1] = 1;
-                tempGrid[topX + 1][topY + 1] = 0;
-            break;
-            case 2:
-                tempGrid[topX][topY] = 0;
-                tempGrid[topX + 1][topY] = 0;
-                tempGrid[topX][topY + 1] = 0;
-                tempGrid[topX + 1][topY + 1] = 1;
-            break;
-            case 3:
-                tempGrid[topX][topY] = 0;
-                tempGrid[topX + 1][topY] = 0;
-                tempGrid[topX][topY + 1] = 1;
-                tempGrid[topX + 1][topY + 1] = 1;
-            break;
-            case 4:
-                tempGrid[topX][topY] = 0;
-                tempGrid[topX + 1][topY] = 1;
-                tempGrid[topX][topY + 1] = 0;
-                tempGrid[topX + 1][topY + 1] = 0;
-            break;
-            case 5:
-                tempGrid[topX][topY] = 1;
-                tempGrid[topX + 1][topY] = 0;
-                tempGrid[topX][topY + 1] = 0;
-                tempGrid[topX + 1][topY + 1] = 1;
-            break;
-            case 6:
-                tempGrid[topX][topY] = 0;
-                tempGrid[topX + 1][topY] = 1;
-                tempGrid[topX][topY + 1] = 0;
-                tempGrid[topX + 1][topY + 1] = 1;
-            break;
-            case 7:
-                tempGrid[topX][topY] = 0;
-                tempGrid[topX + 1][topY] = 1;
-                tempGrid[topX][topY + 1] = 1;
-                tempGrid[topX + 1][topY + 1] = 1;
-            break;
-            case 8:
-                tempGrid[topX][topY] = 1;
-                tempGrid[topX + 1][topY] = 0;
-                tempGrid[topX][topY + 1] = 0;
-                tempGrid[topX + 1][topY + 1] = 0;
-            break;
-            case 9:
-                tempGrid[topX][topY] = 1;
-                tempGrid[topX + 1][topY] = 1;
-                tempGrid[topX][topY + 1] = 0;
-                tempGrid[topX + 1][topY + 1] = 0;
-            break;
-            case 10:
-                tempGrid[topX][topY] = 0;
-                tempGrid[topX + 1][topY] = 1;
-                tempGrid[topX][topY + 1] = 1;
-                tempGrid[topX + 1][topY + 1] = 0;
-            break;
-            case 11:
-                tempGrid[topX][topY] = 1;
-                tempGrid[topX + 1][topY] = 0;
-                tempGrid[topX][topY + 1] = 1;
-                tempGrid[topX + 1][topY + 1] = 1;
-            break;
-            case 12:
-                tempGrid[topX][topY] = 1;
-                tempGrid[topX + 1][topY] = 0;
-                tempGrid[topX][topY + 1] = 1;
-                tempGrid[topX + 1][topY + 1] = 0;
-            break;
-            case 13:
-                tempGrid[topX][topY] = 1;
-                tempGrid[topX + 1][topY] = 1;
-                tempGrid[topX][topY + 1] = 1;
-                tempGrid[topX + 1][topY + 1] = 0;
-            break;
-            case 14:
-                tempGrid[topX][topY] = 1;
-                tempGrid[topX + 1][topY] = 1;
-                tempGrid[topX][topY + 1] = 0;
-                tempGrid[topX + 1][topY + 1] = 1;
-            break;
-            case 15:
-                tempGrid[topX][topY] = 1;
-                tempGrid[topX + 1][topY] = 1;
-                tempGrid[topX][topY + 1] = 1;
-                tempGrid[topX + 1][topY + 1] = 1;
-            break;
-        }
-    }
-
-    /*for (int j = 0; j < tempGrid.size(); j++) {
-        for (int i = 0; i < tempGrid[j].size(); i++) {
-            printf("%i ", tempGrid[j][i]);
-        }
-        printf("\n");
-    }*/
-
-    return tempGrid;
 }
 
 //Pathfinding system initialisation. Incomplete

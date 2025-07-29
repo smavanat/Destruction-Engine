@@ -1,5 +1,5 @@
 #pragma once
-//#include "TileSystem.h"
+#include "TileSystem.h"
 #include "GridSystem.h"
 #include <fstream>
 #include <memory>
@@ -10,7 +10,7 @@ public:
 	GridSystemManager(int tWidth, int tHeight, int gWidth, int gHeight, std::string path);
 	void update(float dt);
 	bool loadGridFromFile(std::string path);
-	bool setGridTileColliders();
+	bool setGridTileColliders(TerrainSet* tSet);
 private:
 	std::shared_ptr<GridSystem> gSystem;
 	std::shared_ptr<PathFindingSystem> pSystem;

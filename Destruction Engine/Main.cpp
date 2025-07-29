@@ -29,6 +29,7 @@ std::shared_ptr<RenderSystem> renderSystem;
 std::shared_ptr<DestructionSystem> destructionSystem;
 std::shared_ptr<TileRenderSystem> tileSystem;
 TileSet t;
+TerrainSet tSet;
 //std::shared_ptr<TileSystem> tileSystem;
 
 //Test entities;
@@ -80,9 +81,15 @@ bool init()
 
 	testTexture = gCoordinator.createEntity();
 	testPath = gCoordinator.createEntity();
+	//Creating the tileset
 	Sprite* srcSprite = (Sprite*)malloc(sizeof(Sprite));
 	*srcSprite = Sprite(nullptr, nullptr, false);
 	t = (TileSet){srcSprite, std::vector<TileClip*>(), std::vector<TileClip*>()};
+
+	//Creating the array that holds all of the terrain colliders
+	tSet.cArr = (Collider**)malloc(25* sizeof(Collider*));
+	tSet.size = 0;
+	tSet.maxsize = 25;
 	//Initialization flag
 	bool success = true;
 
@@ -149,13 +156,18 @@ bool loadMedia()
 		}
 	}
 
-	if (!initialiseDemoTileMap(t, gRenderer, "assets/MarchingSquares.png", "assets/Pathfinding.map")) {
+	if (!initialiseDemoTileMap(t, gRenderer, "assets/MarchingSquares.png", "assets/Pathfinding.map", &tSet)) {
 		printf("Unable to load tileset\n");
 		success = false;
 	}
 
 	if (!gGridManager.loadGridFromFile("assets/Pathfinding.map")) {
 		printf("Unable to load grid\n");
+		success = false;
+	}
+
+	if(!gGridManager.setGridTileColliders(&tSet)) {
+		printf("Unable to set grid colliders\n");
 		success = false;
 	}
 

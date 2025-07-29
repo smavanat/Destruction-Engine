@@ -47,11 +47,3 @@ double normalizeAngle(double angle) {
 Vector2 convertToVec2(b2Vec2* v) {
 	return (Vector2){v->x, v->y};
 }
-
-// //Creates a new Vector2
-// Vector2 newVector2(float x, float y) {
-// 	Vector2 ret = {};
-// 	ret.x = x;
-// 	ret.y = y;
-// 	return ret;
-// }

@@ -54,7 +54,7 @@ void GridSystemManager::update(float dt) {
 }
 
 
-bool GridSystemManager::setGridTileColliders() {
+bool GridSystemManager::setGridTileColliders(TerrainSet* tSet) {
     
 }
 

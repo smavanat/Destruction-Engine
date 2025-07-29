@@ -27,7 +27,20 @@ int createNewTileClip(TileSet& t, SDL_FRect d, bool colliding) {
 	return 0;
 }
 
-bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path) {
+int addElementToTerrainSet(TerrainSet* tSet, Collider* c) {
+	if(tSet->size >= tSet->maxsize) {
+		Collider** temp = (Collider**)malloc(tSet->maxsize*2);
+		memcpy(temp, tSet->cArr, tSet->maxsize*2);
+		tSet->cArr = temp;
+		tSet->maxsize*=2;
+	}
+
+	tSet->cArr[tSet->size] = c;
+	tSet->size++;
+	return 0;
+}
+
+bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path, TerrainSet* tSet) {
 	//Success flag
 	bool tilesLoaded = true;
 
@@ -88,6 +101,7 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path) 
 				std::vector<int> points = { 0, (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
 				b2BodyId tempId = createTexturePolygon(points, static_cast<int>(t.collidingTileClips[index]->dimensions.w), worldId, s, tr);
 				gCoordinator.addComponent(e, Collider(tempId));
+				addElementToTerrainSet(tSet, &gCoordinator.getComponent<Collider>(e));
 			}
 			else {
 				//Stop loading the map 
@@ -119,7 +133,7 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path) 
 
 //Need to fix this function so that we are not crating the Tilset locally on the stack, and instead passing it 
 //in from the heap.
-bool initialiseDemoTileMap(TileSet& t, SDL_Renderer* gRenderer, std::string tpath, std::string mpath) {
+bool initialiseDemoTileMap(TileSet& t, SDL_Renderer* gRenderer, std::string tpath, std::string mpath, TerrainSet* tSet) {
 	loadFromFile(*t.srcTex, tpath, gRenderer);
 	if(t.srcTex->texture == NULL){
 		std::cout << "Failed to load TileSet source Texture!\n" << SDL_GetError();
@@ -132,7 +146,7 @@ bool initialiseDemoTileMap(TileSet& t, SDL_Renderer* gRenderer, std::string tpat
 	createNewTileClip(t, blankTile, false);
 	createNewTileClip(t, filledTile, true);
 
-	if(!loadTileMapFromFile(t, gRenderer, mpath)) {
+	if(!loadTileMapFromFile(t, gRenderer, mpath, tSet)) {
 		std::cout << "Failed to load TileSet map data!\n" << SDL_GetError();
 		return false;
 	} 

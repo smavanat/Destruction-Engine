@@ -26,9 +26,6 @@ b2Vec2 rotateAboutPoint2(Vector2* point, Vector2* centre, double angle, bool inR
 
 double normalizeAngle(double angle);
 
-//Creates a new Vector2
-// Vector2 newVector2(float x, float y);
-
 Vector2 convertToVec2(b2Vec2* v);
 
 #ifdef __cplusplus
