@@ -107,27 +107,32 @@ bool GridSystemManager::loadGridFromFile(std::string path) {
 }
 
 #pragma region SAT
-b2Vec2* getSeperatingAxes(b2ShapeId id) {
+b2Vec2* getSeperatingAxes(b2ShapeId id, b2Vec2* pos) {
     b2Vec2* axes = (b2Vec2*)calloc(3, sizeof(b2Vec2));
     b2Vec2* colliderVertices = b2Shape_GetPolygon(id).vertices;
     for(int i = 0; i < 3; i++) {
         //Get the current vertex
-        b2Vec2 start = colliderVertices[i];
+        b2Vec2 start = (b2Vec2){(colliderVertices[i].x+pos->x)*metresToPixels,(colliderVertices[i].y+pos->y)*metresToPixels};
+        printf("SX: %f, SY: %f\n", start.x, start.y);
         //Get the next vertex
-        b2Vec2 end = colliderVertices[(i + 1) % 3];
+        b2Vec2 end = (b2Vec2){(colliderVertices[(i + 1) % 3].x+pos->x)*metresToPixels,(colliderVertices[(i + 1) % 3].y+pos->y)*metresToPixels};
+        printf("EX: %f, EY: %f\n", end.x, end.y);
         //Subtract the two to get the edge vector
         b2Vec2 edge = (b2Vec2){(end.x - start.x), (end.y - start.y)};
         //Get the normal of the edge
         b2Vec2 normal = (b2Vec2){-edge.y, edge.x};
         //Since the coordinates of collider vertices are in box2D's own internal measurements
         //rather than pixels since that would break box2D
-        // normal.x *= metresToPixels;
-        // normal.y *= metresToPixels;
+        printf("NormalX: %f, NormalY: %f\n", normal.x, normal.y);
+        normal.x *= metresToPixels;
+        normal.y *= metresToPixels;
+        printf("NormalX: %f, NormalY: %f\n", normal.x, normal.y);
         float length = sqrt(normal.x * normal.x + normal.y * normal.y);
         if (length > 0) {
             normal.x /= length;
             normal.y /= length;
         }
+        printf("NormalX: %f, NormalY: %f\n", normal.x, normal.y);
         axes[i] = normal;
     }
     return axes;
@@ -156,18 +161,18 @@ b2Vec2* getSeperatingAxes(SDL_FRect* rect) {
     return axes;
 }
 
-b2Vec2 projectShape(b2ShapeId id, b2Vec2* axis) {
+b2Vec2 projectShape(b2ShapeId id, b2Vec2* axis, b2Vec2* pos) {
     b2Vec2* colliderVertices = b2Shape_GetPolygon(id).vertices;
-    double min = (axis->x * colliderVertices[0].x*metresToPixels) + (axis->y * colliderVertices[0].y*metresToPixels);
+    double min = (axis->x * (colliderVertices[0].x + pos->x)*metresToPixels) + (axis->y * (colliderVertices[0].y + pos->y)*metresToPixels);
     double max = min;
 
     for(int i = 1; i < 3; i++) {
-        double c = (axis->x * colliderVertices[i].x*metresToPixels) + (axis->y * colliderVertices[i].y*metresToPixels);
+        double c = (axis->x * (colliderVertices[i].x + pos->x)*metresToPixels) + (axis->y * (colliderVertices[i].y + pos->y)*metresToPixels);
         if(c < min) min = c;
         else if(c > max) max = c;
     }
     
-    return (b2Vec2){min, max}; //No clue why multiplying this by metresToPixels fixes things
+    return (b2Vec2){min, max}; 
 }
 
 b2Vec2 projectShape(SDL_FRect* rect, b2Vec2* axis) {
@@ -196,24 +201,24 @@ bool isOverlapping(SDL_FRect* t, Collider* c) {
     b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount*sizeof(b2ShapeId));
     b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
 
-    printf("Angle: %f\n", b2Rot_GetAngle(b2Body_GetRotation(c->colliderId)));
+    printf("Collider Position: (%f, %f)\n", colliderPosition.x, colliderPosition.y);
 
     printf("Collider Vertices:\n");
     for(int i = 0; i < shapeCount; i++) {
         b2Vec2* verts = b2Shape_GetPolygon(colliderShapes[i]).vertices;
         for(int j = 0; j < 3; j++) {
-            printf("(%f, %f)\n", (verts[j].x + colliderPosition.x)*metresToPixels, (verts[j].y + colliderPosition.x)*metresToPixels);
+            printf("(%f, %f)\n", (verts[j].x), (verts[j].y));
         }
     }
 
     for(int i = 0; i < shapeCount; i++) {
-        b2Vec2* axes2 = getSeperatingAxes(colliderShapes[i]);
+        b2Vec2* axes2 = getSeperatingAxes(colliderShapes[i], &colliderPosition);
         bool doesShapeOverlap = true;
 
         for(int j = 0; j < 4; j++) {
             b2Vec2 p1 = projectShape(t, &axes1[j]);
             printf("rprojX: %f, rprojY: %f\n", p1.x, p1.y);
-            b2Vec2 p2 = projectShape(colliderShapes[i], &axes1[j]);
+            b2Vec2 p2 = projectShape(colliderShapes[i], &axes1[j], &colliderPosition);
             printf("cprojX: %f, cprojY: %f\n", p2.x, p2.y);
             //If projection does not overlap then shape does not overlap
             if(!overlap(&p1, &p2)){
@@ -226,7 +231,7 @@ bool isOverlapping(SDL_FRect* t, Collider* c) {
         for(int j = 0; j < 3; j++) {
             b2Vec2 p1 = projectShape(t, &axes2[j]);
             printf("rprojX: %f, rprojY: %f\n", p1.x, p1.y);
-            b2Vec2 p2 = projectShape(colliderShapes[i], &axes2[j]);
+            b2Vec2 p2 = projectShape(colliderShapes[i], &axes2[j], &colliderPosition);
             printf("cprojX: %f, cprojY: %f\n", p2.x, p2.y);
 
             //If projection does not overlap then shape does not overlap
@@ -244,43 +249,6 @@ bool isOverlapping(SDL_FRect* t, Collider* c) {
     }
     free(colliderShapes);
     free(axes1);
-    return false;
-}
-
-bool isOverlapping1D(float min1, float max1, float min2, float max2){
-    return max1 >=min2 && max2 >= min1;
-}
-
-bool isOverlapping2D(SDL_FRect* t, Collider* c){
-    int shapeCount = b2Body_GetShapeCount(c->colliderId);
-    b2Vec2 colliderPosition = b2Body_GetPosition(c->colliderId);
-    b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount);
-    b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
-    std::vector<b2Vec2> vertices = std::vector<b2Vec2>();
-
-    for(int i = 0; i < shapeCount; i++) {      
-		b2Vec2* colliderVertices = b2Shape_GetPolygon(colliderShapes[i]).vertices;
-        if(i == shapeCount-1) {
-            vertices.push_back(colliderVertices[0]);
-        }
-        vertices.push_back(colliderVertices[1]);
-        if(i == 0) {
-            vertices.push_back(colliderVertices[2]);
-        }
-    }
-    free(colliderShapes);
-
-    float minX = t->x;
-    float maxX = t->x + t->w;
-    float minY = t->y;
-    float maxY = t->y + t->h;
-
-    for (const auto& vert : vertices) {
-        if (vert.x >= minX && vert.x <= maxX &&
-            vert.y >= minY && vert.y <= maxY) {
-            return true;
-        }
-    }
     return false;
 }
 #pragma endregion
