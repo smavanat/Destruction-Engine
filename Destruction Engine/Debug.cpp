@@ -79,13 +79,16 @@ void ColliderDebugSystem::update(float dt) {
 			//we don't need to use any convoluted process to figure out how many vertices are in a shape
 			for (int j = 0; j < shapeCount; j++) {
 				b2Vec2* colliderVertices = b2Shape_GetPolygon(colliderShapes[j]).vertices;
+				b2Vec2* rotatedVertices = (b2Vec2*)malloc(3*sizeof(b2Vec2));
 				for (int k = 0; k < 3; k++) {
-					rotateTranslate(colliderVertices[k], b2Rot_GetAngle(b2Body_GetRotation(c.colliderId)));
+					b2Vec2 temp = rotateTranslate(colliderVertices[k], b2Rot_GetAngle(b2Body_GetRotation(c.colliderId)));
+					rotatedVertices[k] = temp;
 				}
 				for (int k = 0; k < 3; k++) {
-					SDL_RenderLine(gRenderer, ((colliderVertices[k].x + colliderPosition.x) * metresToPixels), ((colliderVertices[k].y + colliderPosition.y) * metresToPixels),
-						((colliderVertices[(k + 1) > 2 ? 0 : (k + 1)].x + colliderPosition.x) * metresToPixels), ((colliderVertices[(k + 1) > 2 ? 0 : (k + 1)].y + colliderPosition.y) * metresToPixels));
+					SDL_RenderLine(gRenderer, ((rotatedVertices[k].x + colliderPosition.x) * metresToPixels), ((rotatedVertices[k].y + colliderPosition.y) * metresToPixels),
+						((rotatedVertices[(k + 1) > 2 ? 0 : (k + 1)].x + colliderPosition.x) * metresToPixels), ((rotatedVertices[(k + 1) > 2 ? 0 : (k + 1)].y + colliderPosition.y) * metresToPixels));
 				}
+				free(rotatedVertices);
 			}
 			delete[] colliderShapes;
 		}

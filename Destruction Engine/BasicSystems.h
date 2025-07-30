@@ -2,7 +2,7 @@
 #include "BasicComponents.h"
 #include "Coordinator.h"
 #include "Entity.h"
-#include "Outline.hpp"
+#include "Outline.h"
 
 extern Coordinator gCoordinator;
 extern SDL_Renderer* gRenderer;

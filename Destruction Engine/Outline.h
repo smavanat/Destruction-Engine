@@ -52,6 +52,6 @@ b2Vec2* getVec2Array(std::vector<int> rdpPoints, int arrayWidth);
 
 b2Vec2* convertToVec2(TPPLPoint* polyPoints, int numPoints);
 
-void rotateTranslate(b2Vec2& vector, float angle);
+b2Vec2 rotateTranslate(b2Vec2& vector, float angle);
 
 b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Sprite& s, Transform& t);

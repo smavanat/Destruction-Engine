@@ -1,7 +1,7 @@
 #include<SDL3_image/SDL_image.h>
 #include <chrono>
-#include "Outline.hpp"
-#include "BasicSystems.hpp"
+#include "Outline.h"
+#include "BasicSystems.h"
 #include "TileSystem.h"
 #include "Debug.h"
 #include "GridData.h"
@@ -125,8 +125,6 @@ bool init()
 		}
 		gCoordinator.addComponent(testTexture, Transform((Vector2){1420.0f, 440.0f}, 0.0));
 		gCoordinator.addComponent(testPath, Pathfinding((Vector2){10, 10}, (Vector2){500, 500}));
-
-		//gridSystem->updatePathfinding(); //This line needs to exist otherwise the pathfinding will not have the initial grid
 
 		worldDef = b2DefaultWorldDef();
 		worldDef.gravity = { 0.0f, 0.0f };

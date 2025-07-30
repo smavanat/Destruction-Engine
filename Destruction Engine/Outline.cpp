@@ -1,6 +1,6 @@
 #include<queue>
 #include<algorithm>
-#include "Outline.hpp"
+#include "Outline.h"
 #include "Maths.h"
 #include<PolyPartition/polypartition.h>
 
@@ -160,8 +160,6 @@ std::pair<Sprite, Transform> constructNewPixelBuffer(std::vector<int> indexes, U
 	int width = 0;
 	int height = (int)(indexes.back() / arrayWidth) - (int)(indexes.front() / arrayWidth) + 1; //Why is the height including the pixel buffer??? Surely that shouldn't come up
 
-	printf("tHeight: %i, bHeight: %i\n", indexes.back(), indexes.front());
-
 	int startLinePos = indexes[0] % arrayWidth;
 	int endLinePos = indexes[0] % arrayWidth;
 
@@ -194,8 +192,6 @@ std::pair<Sprite, Transform> constructNewPixelBuffer(std::vector<int> indexes, U
 	width += 2;
 	height += 2;
 
-	printf("Height: %i\n", height);
-	printf("Width: %i\n", width);
 	//Creating the pixel buffer for the new texture
 	newPixelBuffer = new Uint32[(width) * (height)];
 	//The memset here is actually making all the pixels have an alpha of 255 for some reason, even though noPixelColour has an alpha of 0.
@@ -228,13 +224,9 @@ std::pair<Sprite, Transform> constructNewPixelBuffer(std::vector<int> indexes, U
 	float originX = ceilf(getOrigin(s, t).x + (startLinePos)) - 1.0f; //Assume original textures also have transparent border
 	float originY = ceilf(getOrigin(s, t).y + ((int)floor(indexes[0] / arrayWidth))) - 1.0f;
 
-	printf("ORIGINAL OriginX: %f ORIGINAL OriginY: %f\n", originX, originY);
-
 	//Have to manually calculate the center from the origin here.
 	float centreX = originX + floorf((width) / 2.0f); //floor instead of ceil because 0-indexed
 	float centreY = originY + floorf((height) / 2.0f);
-
-	printf("ORIGINAL CentreX: %f ORIGINAL CentreY: %f\n", centreX, centreY);
 
 	//Set this as a pointer as otherwise this variable will be destroyed once this method finishes.
 	newSprite = createSprite(width, height, newPixelBuffer, gRenderer);
@@ -331,7 +323,6 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 
 		std::vector<int> contourPoints;
 		int startPoint = getStartingPixel(pixels, totalPixels);
-		//printf("MS Starting Point: %d\n", startPoint);
 		if (startPoint == -1) return contourPoints;
 		//If the texture is filled on the LHS, we will end up with 15 as our first currentSquare. 
 		//To avoid this, we simply offset startPoint one to the left, to get 12 as our currentSquare, 
@@ -340,8 +331,6 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 			startPoint -= 1;
 		}
 
-		//printf("MS Starting Point: %d\n", startPoint);
-
 		int stepX = 0, stepY = 0;
 		int prevX = 0, prevY = 0;
 		int currentPoint = startPoint;
@@ -349,7 +338,6 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 
 		while (!closedLoop) {
 			int currentSquare = getCurrentSquare(currentPoint, width, length, pixels);
-			//printf("Current Square: %d\n", currentSquare);
 
 			// Movement lookup based on currentSquare value
 			switch (currentSquare) {
@@ -382,7 +370,6 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 			}
 
 			currentPoint += stepY * width + stepX;
-			//printf("Current Point: %i\n", currentPoint);
 
 			// Boundary checks. Should not happen but here just in case.
 			if (currentPoint < 0 || currentPoint >= totalPixels) {
@@ -440,7 +427,6 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 	void rdp(int startIndex, int endIndex, int epsilon, int arrayWidth, std::vector<int> allPoints, std::vector<int>& rdpPoints) {
 		int nextIndex = findFurthest(allPoints, startIndex, endIndex, epsilon, arrayWidth);
 		if (nextIndex > 0) {
-			//printf("Next Index: %i\n", nextIndex);
 			if (startIndex != nextIndex) {
 				rdp(startIndex, nextIndex, epsilon, arrayWidth, allPoints, rdpPoints);
 			}
@@ -471,11 +457,11 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 		return points;
 	}
 
-	void rotateTranslate(b2Vec2& vector, float angle) {
+	b2Vec2 rotateTranslate(b2Vec2& vector, float angle) {
 		b2Vec2 tmp;
 		tmp.x = vector.x * cos(angle) - vector.y * sin(angle);
 		tmp.y = vector.x * sin(angle) + vector.y * cos(angle);
-		vector = tmp;
+		return tmp;
 	}
 
 	//Finds the center of a shape assuming that it has been partitioned into triangles
@@ -510,9 +496,7 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 	}
 
 	void CenterCompundShape(TPPLPolyList &shapes, TPPLPoint centre) {
-		//printf("Rotating shape\n");
 		TPPLPoint compoundCentroid = ComputeCompoundCentroid(shapes);
-		//printf("Centroid: (%f, %f)\n", compoundCentroid.x, compoundCentroid.y);
 
 		for (TPPLPolyList::iterator it = shapes.begin(); it != shapes.end(); ++it) {
 			for (int i = 0; i < it->GetNumPoints(); i++) {
@@ -527,14 +511,10 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 	b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Sprite& s, Transform& t) {
 		//Getting points
 		b2Vec2* points = getVec2Array(rdpPoints, arrayWidth);
-		//printf("CentreX: %f, CentreY, %f\n", texture->getCentre().x, texture->getCentre().y);
-		//printf("OriginX: %f, OriginY: %f\n", texture->getOrigin().x, texture->getOrigin().y);
 		//Creating the b2Body
 		b2BodyDef testbodyDef = b2DefaultBodyDef();
 		testbodyDef.type = b2_dynamicBody;
 		testbodyDef.position = { t.position.x * pixelsToMetres, t.position.y * pixelsToMetres };
-		//testbodyDef.position = { static_cast<float>(centre.x) * pixelsToMetres, static_cast<float>(centre.y) * pixelsToMetres };
-		//printf("ColliderPositionX: %f, ColliderPositionY: %f\n", testbodyDef.position.x * metresToPixels, testbodyDef.position.y * metresToPixels);
 		testbodyDef.rotation = { (float)cos(t.rotation * DEGREES_TO_RADIANS), (float)sin(t.rotation * DEGREES_TO_RADIANS) };
 		b2BodyId testId = b2CreateBody(worldId, &testbodyDef);
 
@@ -555,43 +535,29 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 			(*poly)[i].y = points[i].y;
 		}
 
-		//The problem, which can be checked by simply looking at the points outputted here, is that (0,0) comes up twice in the
-		//list of points, so I think this confuses the partitioning algorithm. This may be a problem in how I am doing my rdp.
-		//printf("Printing Poly points\n");
-		for (int i = 0; i < rdpPoints.size(); i++) {
-			//printf("X: %f, Y: %f\n", (*poly)[i].x, (*poly)[i].y);
-		}
-
 		//Need to set it to be oriented Counter-Clockwise otherwise the triangulation algorithm fails.
 		poly->SetOrientation(TPPL_ORIENTATION_CCW); //This method does not actually check the order of each vertex. Need to change it so it sorts the points properly.
 		TPPLPartition test = TPPLPartition();
 		//int result = test.ConvexPartition_HM(poly, &polyList);	
 		//int result = test.ConvexPartition_OPT(poly, &polyList);
 		int result = test.Triangulate_OPT(poly, &polyList);
-		//printf("Result: %i, Size: %i, ", result, polyList.size
 
 		//Trying to center the polygon:
 		CenterCompundShape(polyList, { static_cast<double>(s.surfacePixels->w / 2) * pixelsToMetres, static_cast<double>(s.surfacePixels->h / 2) * pixelsToMetres });
 
 		//Adding the polygons to the collider, or printing an error message if something goes wrong.
 		for (TPPLPolyList::iterator it = polyList.begin(); it != polyList.end(); ++it) {
-			//printf("Shape Coords\n");
-			for (int i = 0; i < it->GetNumPoints(); i++) {
-				//printf("%f, %f\n",it->GetPoint(i).x, it->GetPoint(i).y);
-			}
 			b2Hull hull = b2ComputeHull(convertToVec2(it->GetPoints(), it->GetNumPoints()), it->GetNumPoints());
 			if (hull.count == 0) {
-				//printf("Something odd has occured when generating a hull from a polyList\n");
+				printf("Something odd has occured when generating a hull from a polyList\n");
 			}
 			else {
 				b2Polygon testagon = b2MakePolygon(&hull, 0.0f);
 				b2ShapeDef testshapeDef = b2DefaultShapeDef();
-				//testshapeDef.friction = 0.3f;
 				b2ShapeId testShapeId = b2CreatePolygonShape(testId, &testshapeDef, &testagon);
 				b2Shape_SetFriction(testShapeId, 0.3);
 			}
 		}
-		//printf("Number of shapes on the body: %i\n", b2Body_GetShapeCount(testId));
 		return testId;
 	}
 #pragma endregion

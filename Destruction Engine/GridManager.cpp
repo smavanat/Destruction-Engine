@@ -167,7 +167,7 @@ b2Vec2 projectShape(b2ShapeId id, b2Vec2* axis) {
         else if(c > max) max = c;
     }
     
-    return (b2Vec2){min*metresToPixels, max*metresToPixels}; //No clue why multiplying this by metresToPixels fixes things
+    return (b2Vec2){min, max}; //No clue why multiplying this by metresToPixels fixes things
 }
 
 b2Vec2 projectShape(SDL_FRect* rect, b2Vec2* axis) {
@@ -196,14 +196,25 @@ bool isOverlapping(SDL_FRect* t, Collider* c) {
     b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount*sizeof(b2ShapeId));
     b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
 
+    printf("Angle: %f\n", b2Rot_GetAngle(b2Body_GetRotation(c->colliderId)));
+
+    printf("Collider Vertices:\n");
+    for(int i = 0; i < shapeCount; i++) {
+        b2Vec2* verts = b2Shape_GetPolygon(colliderShapes[i]).vertices;
+        for(int j = 0; j < 3; j++) {
+            printf("(%f, %f)\n", (verts[j].x + colliderPosition.x)*metresToPixels, (verts[j].y + colliderPosition.x)*metresToPixels);
+        }
+    }
+
     for(int i = 0; i < shapeCount; i++) {
         b2Vec2* axes2 = getSeperatingAxes(colliderShapes[i]);
         bool doesShapeOverlap = true;
 
         for(int j = 0; j < 4; j++) {
             b2Vec2 p1 = projectShape(t, &axes1[j]);
+            printf("rprojX: %f, rprojY: %f\n", p1.x, p1.y);
             b2Vec2 p2 = projectShape(colliderShapes[i], &axes1[j]);
-
+            printf("cprojX: %f, cprojY: %f\n", p2.x, p2.y);
             //If projection does not overlap then shape does not overlap
             if(!overlap(&p1, &p2)){
                 doesShapeOverlap = false;
@@ -214,7 +225,9 @@ bool isOverlapping(SDL_FRect* t, Collider* c) {
 
         for(int j = 0; j < 3; j++) {
             b2Vec2 p1 = projectShape(t, &axes2[j]);
+            printf("rprojX: %f, rprojY: %f\n", p1.x, p1.y);
             b2Vec2 p2 = projectShape(colliderShapes[i], &axes2[j]);
+            printf("cprojX: %f, cprojY: %f\n", p2.x, p2.y);
 
             //If projection does not overlap then shape does not overlap
             if(!overlap(&p1, &p2)){

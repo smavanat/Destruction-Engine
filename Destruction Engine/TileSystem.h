@@ -6,7 +6,7 @@
 #include "Coordinator.h"
 #include "BasicComponents.h"
 #include "GridData.h"
-#include "Outline.hpp"
+#include "Outline.h"
 
 extern Coordinator gCoordinator;
 extern b2WorldId worldId;
