@@ -73,7 +73,7 @@ bool init()
 		sig.addComponent<TileSprite>();
 		tileSystem = gCoordinator.addSystem<TileRenderSystem>(sig);
 	}
-	gGridManager = GridSystemManager(TILE_WIDTH, TILE_HEIGHT, GRID_WIDTH, GRID_HEIGHT);
+	gGridManager = GridSystemManager(TILE_WIDTH, GRID_WIDTH, GRID_HEIGHT);
 
 	//Initialise all the systems.
 	gCoordinator.init();
@@ -172,7 +172,6 @@ bool loadMedia()
 	b2BodyId tempId = createTexturePolygon(points, s.surfacePixels->w, worldId, s, gCoordinator.getComponent<Transform>(testTexture));
 	gCoordinator.addComponent(testTexture, Collider(tempId));
 	SDL_FRect testRect = (SDL_FRect){1420.0f, 440.0f, 100.0f, 100.0f};
-	//isOverlapping2D(nullptr, &gCoordinator.getComponent<Collider>(testTexture));
 	std::cout << isOverlapping(&testRect, &gCoordinator.getComponent<Collider>(testTexture)) << "\n";
 	return success;
 }

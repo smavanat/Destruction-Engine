@@ -8,13 +8,13 @@ GridSystemManager::GridSystemManager() {
     //Initialising the grid height
     grid->subWidth = 0;
     grid->tileWidth = 0;
-    grid->tileHeight = 0;
+    //grid->tileHeight = 0;
     grid->gridWidth = 0;
     grid->gridHeight = 0;
     grid->tiles = std::vector<TileData>( static_cast<size_t>(grid->gridWidth * grid->gridHeight) );
 }
 
-GridSystemManager::GridSystemManager(int tWidth, int tHeight, int gWidth, int gHeight) {
+GridSystemManager::GridSystemManager(int tWidth, int gWidth, int gHeight) {
     {
         Signature sig;
         sig.addComponent<Transform>();
@@ -34,7 +34,7 @@ GridSystemManager::GridSystemManager(int tWidth, int tHeight, int gWidth, int gH
     //Initialising the grid height
     grid->subWidth = 4;
     grid->tileWidth = tWidth;
-    grid->tileHeight = tHeight;
+    //grid->tileHeight = tHeight;
     grid->gridWidth = gWidth;
     grid->gridHeight = gHeight;
     grid->tiles = std::vector<TileData>( static_cast<size_t>(gWidth * gHeight) );
@@ -44,7 +44,7 @@ GridSystemManager::GridSystemManager(int tWidth, int tHeight, int gWidth, int gH
     pSystem->setGrid(grid);
 }
 
-GridSystemManager::GridSystemManager(int tWidth, int tHeight, int gWidth, int gHeight, std::string path) : GridSystemManager(tWidth, tHeight, gWidth, gHeight) {
+GridSystemManager::GridSystemManager(int tWidth, int gWidth, int gHeight, std::string path) : GridSystemManager(tWidth, gWidth, gHeight) {
     loadGridFromFile(path);
 }
 
@@ -106,6 +106,35 @@ bool GridSystemManager::loadGridFromFile(std::string path) {
     return true;
 }
 
+//Essentially, this goes over every subcell in a grid tile, and then checks if a given tile overlaps with that specific 
+//grid cell, (and how much? -> Could use Greiner–Hormann algorithm to essentially get the intersection area, calc area of 
+//the polygon, and then use that to determine whether the tile is filled or not)
+#pragma region SubOverlaps
+//Need to make main "insertion" function that takes a TileData struct and a Collider reference, then loops over every subcell
+//to determine whether they are intersecting or not (can just use SAT algorithm)
+void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c) {
+    //Loop over the subcells
+    for(int i = 0; i < g->tileWidth * g->tileWidth; i++) {
+        //Get current subcell world position
+        Vector2 subPos = gridToWorldPos(g, index);
+        int sWidth = g->tileWidth/g->subWidth;
+        subPos.x += sWidth*(i % g->subWidth);
+        subPos.y += sWidth*(i / g->subWidth);
+        //Generate the rect to be used to represent the subcell
+        SDL_FRect subRect = (SDL_FRect){subPos.x, subPos.y, sWidth, sWidth};
+        //Check if that rect overlaps with the collider
+        if(isOverlapping(&subRect, c)) {
+            //If it does, check by how much using Greiner-Hormann algorithm: https://www.inf.usi.ch/hormann/papers/Greiner.1998.ECO.pdf
+            
+
+            //If >=20% (arbitrary value, should be adjusted or made adjustable as needed), set the subcell to be unwalkable
+        }
+    }
+}
+#pragma endregion
+
+//This region contains the code to determine whether a given colliders overlaps with a tile in a grid
+//(represented by a rect) using the Seperating Axis Theorem. Based on this code: https://dyn4j.org/2010/01/sat/
 #pragma region SAT
 b2Vec2* getSeperatingAxes(b2ShapeId id, b2Vec2* pos) {
     b2Vec2* axes = (b2Vec2*)calloc(3, sizeof(b2Vec2));
@@ -113,26 +142,17 @@ b2Vec2* getSeperatingAxes(b2ShapeId id, b2Vec2* pos) {
     for(int i = 0; i < 3; i++) {
         //Get the current vertex
         b2Vec2 start = (b2Vec2){(colliderVertices[i].x+pos->x)*metresToPixels,(colliderVertices[i].y+pos->y)*metresToPixels};
-        printf("SX: %f, SY: %f\n", start.x, start.y);
         //Get the next vertex
         b2Vec2 end = (b2Vec2){(colliderVertices[(i + 1) % 3].x+pos->x)*metresToPixels,(colliderVertices[(i + 1) % 3].y+pos->y)*metresToPixels};
-        printf("EX: %f, EY: %f\n", end.x, end.y);
         //Subtract the two to get the edge vector
         b2Vec2 edge = (b2Vec2){(end.x - start.x), (end.y - start.y)};
         //Get the normal of the edge
         b2Vec2 normal = (b2Vec2){-edge.y, edge.x};
-        //Since the coordinates of collider vertices are in box2D's own internal measurements
-        //rather than pixels since that would break box2D
-        printf("NormalX: %f, NormalY: %f\n", normal.x, normal.y);
-        normal.x *= metresToPixels;
-        normal.y *= metresToPixels;
-        printf("NormalX: %f, NormalY: %f\n", normal.x, normal.y);
         float length = sqrt(normal.x * normal.x + normal.y * normal.y);
         if (length > 0) {
             normal.x /= length;
             normal.y /= length;
         }
-        printf("NormalX: %f, NormalY: %f\n", normal.x, normal.y);
         axes[i] = normal;
     }
     return axes;
@@ -189,11 +209,15 @@ b2Vec2 projectShape(SDL_FRect* rect, b2Vec2* axis) {
     return (b2Vec2){min, max};
 }
 
+//Checks if two 1D vectors overlap
 bool overlap(b2Vec2* a, b2Vec2* b) {
     return a->x <= b->y && b->x <= a->y;
 }
 
+//Checks if a Tile(here represented by an SDL_FRect that represents its four vertices)
+//and a collider overlap using the separating axes theorem
 bool isOverlapping(SDL_FRect* t, Collider* c) {
+    //Axes of the rect always the same, can generate them outside the loop
     b2Vec2* axes1 = getSeperatingAxes(t);
 
     int shapeCount = b2Body_GetShapeCount(c->colliderId);
@@ -201,38 +225,30 @@ bool isOverlapping(SDL_FRect* t, Collider* c) {
     b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount*sizeof(b2ShapeId));
     b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
 
-    printf("Collider Position: (%f, %f)\n", colliderPosition.x, colliderPosition.y);
-
-    printf("Collider Vertices:\n");
+    //Check for overlaps for each of the triangle shapes that make up the collider.
+    //Cannot just check collider vertices, as this would not account for convex colliders
+    //that are going to be generated by destruction 
     for(int i = 0; i < shapeCount; i++) {
-        b2Vec2* verts = b2Shape_GetPolygon(colliderShapes[i]).vertices;
-        for(int j = 0; j < 3; j++) {
-            printf("(%f, %f)\n", (verts[j].x), (verts[j].y));
-        }
-    }
-
-    for(int i = 0; i < shapeCount; i++) {
+        //Axes of the current shape we are testing
         b2Vec2* axes2 = getSeperatingAxes(colliderShapes[i], &colliderPosition);
-        bool doesShapeOverlap = true;
+        bool doesShapeOverlap = true; //Overlap flag set to to true by default 
 
+        //Check that shape axes projection overlaps with rect
         for(int j = 0; j < 4; j++) {
             b2Vec2 p1 = projectShape(t, &axes1[j]);
-            printf("rprojX: %f, rprojY: %f\n", p1.x, p1.y);
             b2Vec2 p2 = projectShape(colliderShapes[i], &axes1[j], &colliderPosition);
-            printf("cprojX: %f, cprojY: %f\n", p2.x, p2.y);
             //If projection does not overlap then shape does not overlap
             if(!overlap(&p1, &p2)){
                 doesShapeOverlap = false;
                 break;
             }
         }
-        if(!doesShapeOverlap) continue;
+        if(!doesShapeOverlap) continue; //If shape does not overlap, then we can skip the next check
 
+        //Check that rect axes projection overlaps with shape
         for(int j = 0; j < 3; j++) {
             b2Vec2 p1 = projectShape(t, &axes2[j]);
-            printf("rprojX: %f, rprojY: %f\n", p1.x, p1.y);
             b2Vec2 p2 = projectShape(colliderShapes[i], &axes2[j], &colliderPosition);
-            printf("cprojX: %f, cprojY: %f\n", p2.x, p2.y);
 
             //If projection does not overlap then shape does not overlap
             if(!overlap(&p1, &p2)){

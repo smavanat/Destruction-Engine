@@ -6,8 +6,8 @@
 class GridSystemManager {
 public:
 	GridSystemManager();
-	GridSystemManager(int tWidth, int tHeight, int gWidth, int gHeight);
-	GridSystemManager(int tWidth, int tHeight, int gWidth, int gHeight, std::string path);
+	GridSystemManager(int tWidth, int gWidth, int gHeight);
+	GridSystemManager(int tWidth, int gWidth, int gHeight, std::string path);
 	void update(float dt);
 	bool loadGridFromFile(std::string path);
 	bool setGridTileColliders(TerrainSet* tSet);
@@ -17,5 +17,4 @@ private:
 	std::shared_ptr<GridData> grid;
 };
 
-bool isOverlapping2D(SDL_FRect* t, Collider* c);
 bool isOverlapping(SDL_FRect* t, Collider* c);

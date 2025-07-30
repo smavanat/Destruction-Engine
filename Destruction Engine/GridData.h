@@ -26,21 +26,21 @@ const int TOTAL_TILES = 192;
 const int TOTAL_TILE_SPRITES = 16;
 
 struct TileData {
+	std::vector<int> subcells; //Holds the subcell representation of the grid
+	std::array<bool, 4> exitable; //Holds which sides can be exited from in this tile
 	uint8_t status; //0 -> walkable, 1 -> blocked 2 -> partial
 	uint8_t type; //Represents the type of tile, could be used for weighted pathfinding
 	
-	std::vector<int> subcells; //Holds the subcell representation of the grid
-	std::array<bool, 4> exitable; //Holds which sides can be exited from in this tile
 };
 
 struct GridData {
+	std::vector<TileData> tiles;
 	Vector2 origin = (Vector2){0, 0};
-	int subWidth = 4; //Holds the width of the tiles (all tiles should be squares so this is enough)
-	int tileWidth = TILE_WIDTH; //Tile width in pixels
-	int tileHeight = TILE_HEIGHT; //Tile height in pixels
+	int subWidth = 4; //Holds the width of tiles in subcells (all tiles should be squares so this is enough)
+	int tileWidth = TILE_WIDTH; //Tile width in pixels. Only need to store this since all tiles are square
+	//int tileHeight = TILE_HEIGHT; //Tile height in pixels
 	int gridWidth = GRID_WIDTH; //Width of the grid in tiles
 	int gridHeight = GRID_HEIGHT; //Height of the grid in tiles
-	std::vector<TileData> tiles;
 };
 
 struct Vector2Hasher {
@@ -95,9 +95,10 @@ struct NodeHasher {
 
 //Global methods that need to be used by both Path and Grid systems
 
-//Gets the grid position from a world position
-Vector2 gridToWorldPos(std::shared_ptr<GridData> g, Vector2 gridPos);
 //Gets the world position from a grid position
+Vector2 gridToWorldPos(std::shared_ptr<GridData> g, Vector2 gridPos);
+Vector2 gridToWorldPos(std::shared_ptr<GridData> g, int index);
+//Gets the grid position from a world position
 Vector2 worldToGridPos(std::shared_ptr<GridData> g, Vector2 worldPos);
 //Converts a grid position to a 1D array index
 int toIndex(std::shared_ptr<GridData> g, Vector2 gridPos);

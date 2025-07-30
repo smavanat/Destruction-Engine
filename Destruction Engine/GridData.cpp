@@ -3,22 +3,30 @@
 #include <iostream>
 
 Vector2 gridToWorldPos(std::shared_ptr<GridData> g, Vector2 gridPos) {
-    return Vector2 {
+    return (Vector2) {
         gridPos.x * g->tileWidth + (g->tileWidth / 2.0f),
-        gridPos.y * g->tileHeight + (g->tileHeight / 2.0f)
+        gridPos.y * g->tileWidth + (g->tileWidth / 2.0f)
+    };
+}
+
+Vector2 gridToWorldPos(std::shared_ptr<GridData> g, int index) {
+    return (Vector2) {
+        (index % g->gridWidth) * g->tileWidth + (g->tileWidth / 2.0f),
+        (index / g -> gridWidth) * g->tileWidth + (g->tileWidth / 2.0f)
     };
 }
 
 Vector2 worldToGridPos(std::shared_ptr<GridData> g, Vector2 worldPos) {
     return (Vector2) {
         worldPos.x / g->tileWidth,
-        worldPos.y / g->tileHeight
+        worldPos.y / g->tileWidth
     };
 }
 
 int toIndex(std::shared_ptr<GridData> g, Vector2 gridPos) {
     return gridPos.x + gridPos.y * g->gridWidth;
 }
+
 bool inBounds(std::shared_ptr<GridData> g, Vector2 gridPos) {
     return gridPos.x >= 0 && gridPos.y >= 0 && gridPos.x < g->gridWidth && gridPos.y < g->gridHeight;
 }
@@ -416,8 +424,8 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
     std::vector<int> gScore(rows * cols, INT_MAX);//Holds the gScore of every node 
 
     // Initialize start node
-    Node startNode = nodeFromWorldPos(start, grid->tileWidth, grid->tileHeight);
-    Node goalNode = nodeFromWorldPos(goal, grid->tileWidth, grid->tileHeight);
+    Node startNode = nodeFromWorldPos(start, grid->tileWidth, grid->tileWidth);
+    Node goalNode = nodeFromWorldPos(goal, grid->tileWidth, grid->tileWidth);
     startNode.g = 0;
     startNode.h = getDistance(startNode, goalNode);
     startNode.f = startNode.g + startNode.h;
@@ -546,8 +554,8 @@ std::vector<Node> FindPathAStar(Vector2 start, Vector2 goal, std::shared_ptr<Gri
     std::vector<int> gScore(rows * cols, INT_MAX);//Holds the gScore of every node 
 
     // Initialize start node
-    Node startNode = nodeFromWorldPos(start, grid->tileWidth, grid->tileHeight);
-    Node goalNode = nodeFromWorldPos(goal, grid->tileWidth, grid->tileHeight);
+    Node startNode = nodeFromWorldPos(start, grid->tileWidth, grid->tileWidth);
+    Node goalNode = nodeFromWorldPos(goal, grid->tileWidth, grid->tileWidth);
     startNode.g = 0;
     startNode.h = getDistance(startNode, goalNode);
     startNode.f = startNode.g + startNode.h;
