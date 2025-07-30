@@ -17,4 +17,14 @@ private:
 	std::shared_ptr<GridData> grid;
 };
 
+struct GHVertex {
+	GHVertex* next, *prev, *neighbour;
+	b2Vec2 p;
+	float alpha;
+	bool intersect;
+	bool entry;
+	bool visited;
+
+};
+
 bool isOverlapping(SDL_FRect* t, Collider* c);

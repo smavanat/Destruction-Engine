@@ -6,6 +6,7 @@
 
 const double DEGREES_TO_RADIANS = ((2 * acos(0.0)) / 180);
 
+//Could we not just make this a typdef of b2Vec2?
 typedef struct {
 	float x;
 	float y;
