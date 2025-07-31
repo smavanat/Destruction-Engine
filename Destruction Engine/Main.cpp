@@ -6,6 +6,9 @@
 #include "Debug.h"
 #include "GridData.h"
 #include "GridManager.h"
+#include "point.h"
+#include "polygon.h"
+#include "martinez.h"
 
 //TODO: Figure out how do deal with small shapes. Colliders are not generated for them, but they are still there.
 //		Maybe just erase them? Or put a default small collider around them.
@@ -171,8 +174,16 @@ bool loadMedia()
 	std::vector<int> points = {0, (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
 	b2BodyId tempId = createTexturePolygon(points, s.surfacePixels->w, worldId, s, gCoordinator.getComponent<Transform>(testTexture));
 	gCoordinator.addComponent(testTexture, Collider(tempId));
-	SDL_FRect testRect = (SDL_FRect){1420.0f, 440.0f, 100.0f, 100.0f};
-	std::cout << isOverlapping(&testRect, &gCoordinator.getComponent<Collider>(testTexture)) << "\n";
+	b2Vec2 subjVerts[] = {(b2Vec2){1420.0f, 440.0f}, (b2Vec2){1520.0f, 440.0f}, (b2Vec2){1520.0f, 540.0f}, (b2Vec2){1420.0f, 540.0f}};
+	b2Vec2 clipVerts[] = {(b2Vec2){1450.0f, 440.0f}, (b2Vec2){1480.0f, 440.0f}, (b2Vec2){1480.0f, 470.0f}, (b2Vec2){1450.0f, 470.0f}};
+	std::vector<Point> testsubj = std::vector<Point>{Point(1420.0f, 440.0f), Point(1520.0f, 440.0f), Point(1520.0f, 540.0f), Point(1420.0f, 540.0f)};
+	std::vector<Point> testclip = std::vector<Point>{Point(1450.0f, 440.0f), Point(1480.0f, 440.0f), Point(1480.0f, 470.0f), Point(1450.0f, 470.0f)};
+	Polygon subj = Polygon(testsubj);
+	Polygon clip = Polygon(testclip);
+	Martinez test = Martinez(subj, clip);
+	Polygon res = Polygon();
+	test.compute(test.INTERSECTION, res);
+
 	return success;
 }
 

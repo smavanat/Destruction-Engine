@@ -1,4 +1,5 @@
 #include "GridManager.h"
+#include "martinez.h"
 GridSystemManager::GridSystemManager() {
     gSystem = nullptr;
     pSystem = nullptr;
@@ -110,122 +111,6 @@ bool GridSystemManager::loadGridFromFile(std::string path) {
 //grid cell, (and how much? -> Could use Greiner–Hormann algorithm to essentially get the intersection area, calc area of 
 //the polygon, and then use that to determine whether the tile is filled or not)
 #pragma region SubOverlaps
-//This is going to be the spot for my implementation of the Griener-Hormann clipping alogorithm. Unfortunately necessary:
-bool pointInPolygon(b2Vec2* p, GHVertex* head) {
-    bool inside = false;
-    GHVertex* v = head;
-    do {
-        b2Vec2 a = v->p;
-        b2Vec2 b = v->next->p;
-        if(((a.y > v->p.y) != (b.y > v->p.y)) && (v->p.x < (b.x - a.x) * (v->p.y - a.y) / (b.y - a.y)+a.x)) 
-            inside = !inside;
-        v = v->next;
-    } while (v != head);
-    return inside;
-}
-
-b2Vec2 intersectSeg(b2Vec2* A, b2Vec2* B, b2Vec2* C, b2Vec2* D, double* t) {
-    // compute intersection AB∩CD, return at A + t*(B−A)
-    double a1 = B->y - A->y;
-    double b1 = A->x - B->x;
-    double c1 = a1 * A->x + b1 * A->y;
-    double a2 = D->y - C->y;
-    double b2 = C->x - D->x;
-    double c2 = a2 * C->x + b2 * C->y;
-    double det = a1 * b2 - a2 * b1;
-    assert(std::fabs(det) > 1e-9);
-    double ix = (b2 * c1 - b1 * c2) / det;
-    double iy = (a1 * c2 - a2 * c1) / det;
-    *t = (std::fabs(B->x-A->x) > std::fabs(B->y-A->y)) ? (ix - A->x)/(B->x - A->x) : (iy - A->y)/(B->y - A->y);
-    return {ix, iy};
-}
-
-GHVertex* makeVertexList(b2Vec2* polygonVertices, int size) {
-    if(size < 3) return NULL;
-
-    GHVertex* head = nullptr;
-    GHVertex* prev = nullptr;
-
-    for(int i = 0; i < size; i++) {
-        GHVertex v = (GHVertex){nullptr, nullptr, nullptr, polygonVertices[i], 0.0f, false, false, false};
-        if(!head) head = &v;
-        if(prev) {
-            prev->next = &v;
-            v.prev = prev;
-        }
-        prev = &v;
-    }
-
-    head->prev = prev;
-    prev->next = head;
-    return head;
-}
-
-//No clue if this works. Need to test urgently
-std::vector<std::vector<b2Vec2>> grienerHormannClip(b2Vec2* subjVerts, int svSize, b2Vec2* clipVerts, int cvsize) {
-    GHVertex* subjHead = makeVertexList(subjVerts, svSize);
-    GHVertex* clipHead = makeVertexList(clipVerts, cvsize);
-
-    for(GHVertex* sp = subjHead;; sp = sp->next) {
-        GHVertex* sN = sp->next;
-        for (GHVertex* cp = clipHead; ; cp = cp->next) {
-            GHVertex* cN = cp->next;
-            double tS, tC;
-            // segment-segment intersection test with proper ranges
-            // (omitting full check for brevity)
-            b2Vec2 ip = intersectSeg(&sp->p, &sN->p, &cp->p, &cN->p, &tS);
-            if (tS > 0 && tS < 1 /* and similarly tC in (0,1) */) {
-                // insert intersection into both lists
-                GHVertex vS = (GHVertex){nullptr, nullptr, nullptr, ip, 0.0f, true, false, false};
-                GHVertex vC = (GHVertex){nullptr, nullptr, nullptr, ip, 0.0f, true, false, false};
-                vS.alpha = tS;
-                vC.alpha = tC;
-                vS.neighbour = &vC;
-                vC.neighbour = &vS;
-                // insert into s-list at correct position by alpha (omitted)
-                // insert into c-list similarly
-            }
-            if (cp->next == clipHead) break;
-        }
-        if (sp->next == subjHead) break;
-    }
-
-    // Phase 2: mark entry/exit
-    bool subjFirstInside = pointInPolygon(&subjHead->p, clipHead);
-    bool clipFirstInside = pointInPolygon(&clipHead->p, subjHead);
-    // walk sHead's intersections in order and toggle entry flags
-    bool flag = !subjFirstInside;
-    for (GHVertex* v = subjHead; ; v = v->next) {
-        if (v->intersect) {
-            v->entry = flag;
-            flag = !flag;
-        }
-        if (v->next == subjHead) break;
-    }
-    // similarly for clip polygon intersections
-
-    // Phase 3: construct result polygons
-    std::vector<std::vector<b2Vec2>> result;
-    for (GHVertex* v = subjHead; ; v = v->next) {
-        if (v->intersect && !v->visited && v->entry) {
-            std::vector<b2Vec2> out;
-            GHVertex* curr = v;
-            bool forward = true;
-            do {
-                curr->visited = true;
-                out.push_back(curr->p);
-                curr = (forward ? curr->next : curr->prev);
-                if (!curr->visited && curr->intersect) {
-                    forward = curr->entry;
-                    curr = curr->neighbour;
-                }
-            } while (curr != v);
-            result.push_back(out);
-        }
-        if (v->next == subjHead) break;
-    }
-    return result;
-}
 
 //Need to make main "insertion" function that takes a TileData struct and a Collider reference, then loops over every subcell
 //to determine whether they are intersecting or not (can just use SAT algorithm)
@@ -241,8 +126,12 @@ void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c) {
         SDL_FRect subRect = (SDL_FRect){subPos.x, subPos.y, sWidth, sWidth};
         //Check if that rect overlaps with the collider
         if(isOverlapping(&subRect, c)) {
-            //If it does, check by how much using Greiner-Hormann algorithm: https://www.inf.usi.ch/hormann/papers/Greiner.1998.ECO.pdf
-
+            //If it does, check by how much using Martinez-Rueda-Fiedo algorithm: https://www.sciencedirect.com/science/article/abs/pii/S0098300408002793
+            Polygon testRectPoly = Polygon();
+            Polygon testColliderPoly = Polygon();
+            Polygon testResult = Polygon();
+            Martinez compute = Martinez(testRectPoly, testColliderPoly);
+            compute.compute(compute.INTERSECTION, testResult);
 
             //If >=20% (arbitrary value, should be adjusted or made adjustable as needed), set the subcell to be unwalkable
         }
