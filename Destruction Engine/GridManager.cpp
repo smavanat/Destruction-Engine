@@ -18,8 +18,9 @@ GridSystemManager::GridSystemManager() {
 GridSystemManager::GridSystemManager(int tWidth, int gWidth, int gHeight) {
     {
         Signature sig;
-        sig.addComponent<Transform>();
-        sig.addComponent<Walkable>();
+        //sig.addComponent<Transform>();
+        //sig.addComponent<Walkable>();
+        sig.addComponent<TileRect>();
         gSystem = gCoordinator.addSystem<GridSystem>(sig);
     }
     //gSystem->init();
@@ -54,8 +55,20 @@ void GridSystemManager::update(float dt) {
     pSystem->update(dt);
 }
 
-bool GridSystemManager::setGridTileColliders(TerrainSet* tSet) {
-    return true;
+//This is incredibly ugly. Need to add quadtree-based partitioning to make it more efficient, because right now we are
+//just comparing every single tile to every single terrain collider
+void GridSystemManager::setGridTileColliders(TerrainSet* tSet) {
+	printf("Number of colliders we are testing: %i\n", tSet->size);
+	//Sometimes I think the pointers in tSet come up null. Need to find 
+	//out why and fix!!!!
+    for(int i = 0; i < tSet->size; i++) {
+        for(Entity e : gSystem->registeredEntities) {
+            TileRect temp = gCoordinator.getComponent<TileRect>(e);
+            if(isOverlapping(temp.dimensions, tSet->cArr[i])){
+                intersectingSubcells(grid, temp.associateTile, tSet->cArr[i]);
+            }
+        }
+    }
 }
 
 bool GridSystemManager::loadGridFromFile(std::string path) {
@@ -111,12 +124,54 @@ bool GridSystemManager::loadGridFromFile(std::string path) {
 //grid cell, (and how much? -> Could use Greiner–Hormann algorithm to essentially get the intersection area, calc area of 
 //the polygon, and then use that to determine whether the tile is filled or not)
 #pragma region SubOverlaps
+//function to get all unique collider vertices:
+std::vector<Point> getColliderVertices(Collider* c) {
+    //Getting the collider data
+    int shapeCount = b2Body_GetShapeCount(c->colliderId);
+    b2Vec2 colliderPosition = b2Body_GetPosition(c->colliderId);
+    b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount*sizeof(b2ShapeId));
+    b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
+    std::vector<Point> ret = std::vector<Point>();
+
+    //Getting all of the unique collider points
+    //Need to figure this part out in a smart way
+    for(int i = 0; i < shapeCount; i++) {
+        b2Vec2* points = b2Shape_GetPolygon(colliderShapes[i]).vertices;
+        for(int j = 0; j < 3; j++) {
+            Point curr = Point(points[j].x, points[j].y);
+            if(std::find(ret.begin(), ret.end(), curr) == ret.end())
+                ret.push_back(curr);
+        }
+    }
+    return ret;
+}
+
+//Transforms an SDL_FRect into an array of points that represent its four corners
+std::vector<Point> getRectVertices(SDL_FRect* rect) {
+    return std::vector<Point>{Point(rect->x, rect->y), Point(rect->x + rect->w, rect->y), Point(rect->x+rect->w, rect->y+rect->h), 
+                                Point(rect->x, rect->y + rect->h)};
+}
+
+//My implementation of the shoelace formula to get the area of a polygon
+float getPolygonArea(Polygon& p) {
+    float sum1 = 0.0f;
+    float sum2 = 0.0f;
+
+    for(int i = 0; i < p.ncontours(); i++) {
+		for(int j = 0; j < p[i].nvertices()-1; j++) {
+            sum1 += p[i].vertex(j).x * p[i].vertex(j == p[i].nvertices() ? 0 : j + 1).y;
+            sum2 += p[i].vertex(j).y * p[i].vertex(j == p[i].nvertices() ? 0 : j + 1).x;
+		}
+	}
+
+    return b2AbsFloat(sum1 - sum2) / 2.0f;
+}
 
 //Need to make main "insertion" function that takes a TileData struct and a Collider reference, then loops over every subcell
 //to determine whether they are intersecting or not (can just use SAT algorithm)
 void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c) {
     //Loop over the subcells
-    for(int i = 0; i < g->tileWidth * g->tileWidth; i++) {
+    for(int i = 0; i < g->subWidth * g->subWidth; i++) {
         //Get current subcell world position
         Vector2 subPos = gridToWorldPos(g, index);
         int sWidth = g->tileWidth/g->subWidth;
@@ -127,15 +182,31 @@ void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c) {
         //Check if that rect overlaps with the collider
         if(isOverlapping(&subRect, c)) {
             //If it does, check by how much using Martinez-Rueda-Fiedo algorithm: https://www.sciencedirect.com/science/article/abs/pii/S0098300408002793
-            Polygon testRectPoly = Polygon();
-            Polygon testColliderPoly = Polygon();
+	        std::vector<Point> rectPoints = getRectVertices(&subRect);
+            Polygon testRectPoly = Polygon(rectPoints);
+            //printf("=====Printing Rect Vertices=====\n");
+            //for(int i = 0; i < rectPoints.size(); i++) {
+            //    printf("(%f, %f)\n", rectPoints[i].x, rectPoints[i].y);
+            //}
+            std::vector<Point> colliderPoints = getColliderVertices(c);
+            Polygon testColliderPoly = Polygon(colliderPoints);
+            //printf("=====Printing Collider Vertices=====\n");
+            //for(int i = 0; i < colliderPoints.size(); i++) {
+            //    printf("(%f, %f)\n", colliderPoints[i].x, colliderPoints[i].y);
+            //}
             Polygon testResult = Polygon();
             Martinez compute = Martinez(testRectPoly, testColliderPoly);
             compute.compute(compute.INTERSECTION, testResult);
 
             //If >=20% (arbitrary value, should be adjusted or made adjustable as needed), set the subcell to be unwalkable
+            if(getPolygonArea(testResult) / getPolygonArea(testRectPoly) >= 0.2) 
+                g->tiles[index].subcells[i] = 1;
+            else 
+                g->tiles[index].subcells[i] = 0;
+
+            //Need to add code here that makes all other subcells unfilled.
         }
-    }
+   }
 }
 #pragma endregion
 
@@ -223,6 +294,7 @@ bool overlap(b2Vec2* a, b2Vec2* b) {
 //Checks if a Tile(here represented by an SDL_FRect that represents its four vertices)
 //and a collider overlap using the separating axes theorem
 bool isOverlapping(SDL_FRect* t, Collider* c) {
+    //Add bounding box checks before doing SAT
     //Axes of the rect always the same, can generate them outside the loop
     b2Vec2* axes1 = getSeperatingAxes(t);
 
@@ -262,6 +334,7 @@ bool isOverlapping(SDL_FRect* t, Collider* c) {
                 break;
             }
         }
+        //Need to use arenas to make memory management better
         free(axes2);
         if(doesShapeOverlap) {
             free(colliderShapes);

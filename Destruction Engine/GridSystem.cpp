@@ -26,8 +26,8 @@ void GridSystem::createTiles() {
     for (int i = 0; i < grid->gridHeight; i++) {
         for (int j = 0; j < grid->gridWidth; j++) {
             Entity e = gCoordinator.createEntity();
-            gCoordinator.addComponent(e, Transform((Vector2){(j * TILE_WIDTH) + (TILE_WIDTH / 2), ( i* TILE_HEIGHT) + (TILE_HEIGHT / 2)}, 0));
-            gCoordinator.addComponent(e, Walkable(grid->tiles[toIndex(grid, (Vector2){j, i})].status));
+            SDL_FRect* temp = new (SDL_FRect){(j*grid->tileWidth), (i*grid->tileWidth), grid->tileWidth, grid->tileWidth};
+            gCoordinator.addComponent(e, (TileRect){temp, (i*grid->gridWidth)+j});
         }
 	}
 }

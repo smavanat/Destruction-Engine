@@ -11,7 +11,20 @@ ECS System: Basic component and entity template setup.
 			Basic Grid, pathfinding and tile systems
 			Debug manager and several debug systems to help with debugging and visualisations
 			GridManager to couple Grid and Pathfinding together.
-			
+			Basic Desutructible Pathfinding
+			A good TileSet struct
+TODO (for urss):
+			Finish assigning colliders to tiles at init and updating at runtime
+			Add agents that can use the basic pathfinding system
+			Add agents that can use the destruction system to find faster paths 
+			Optimise.
+			Re-write in C (most of the code is C anyway)
+TODO (general):
+			Add proper file reading and writing for all systems
+			Add a ui for editing
+			Figure out world chunking
+			Make a basic level
+			Make pathfinding work cross-chunk (heirarchical pathfinding)
 
 Things to look into in future for optimisation and fixes:
 The pathfinding needs to have Steering Behaviours added. It currently does not have the actual start
@@ -27,6 +40,9 @@ to prevent repeat initialisations. Or figure out a better way of initialising sy
 is added after gCoordinator init is called, its fucked, and have to do it manually, but at the same time, can't just
 add manual init() calls all the time, since this will mean double initialisations. I think the bool is the best option
 for now. NOOO BOOLS BAD. Need to think of a better way, probably just by storing all initialised systems in an array or something.
+Need to add memory arenas to make allocation less painful
+Need to re-write a lot of the iteration code, especially in the collider-tile assignment part to be more batch-based to take
+advantage of SIMD.
 
 Week 1 Notes:
 Implemented an Event Bus
@@ -167,3 +183,20 @@ in terms of rendering.
 
 Fixed the performance problem by turning on vsync and buy using SDL_Delay (we're down to 0.6% usage, very respectable). However, I have
 turned off SDL_Delay for now, since it also makes the by-hand texture erasure very laggy. Will have to work on this in future.
+
+Attempted an implemetation of Griener-Hormann for polygon clipping, but it could not handle the degenerate case of edge overlap which 
+is definitely going to occur in this program. Frustrated, and wanting to save time, I downloaded an implementation of the Martinez-
+Rueda-Feito algorithim (the actual source code they used in their paper, found here: https://www4.ujaen.es/~fmartin/bool_op.html), but 
+I think it is really poorly written and bloated. I think it works in my program for now, but I am definitely going to re-write it in my
+own style and remove a lot of the bloat.
+
+I have almost finished implementing my algorithm for assigning colliders to specific grid cells. Currently it is very inefficient, as I 
+need to implement a quadtree for proper spatial partitioning. The current algorithm is as follows:
+Store all colliders that are for entites that are considered "terrain" (i.e. tiles) in their own array. Loop over this array, and also
+the entirety of the entities in the gridsystem. Find if an entity in the grid system or a collider overlap using the seperating axis theorem
+If they do overlap, then find which of the subcells of that tile overlap using SAT. 
+Run MRF tileclipping on all the overlapping subcells to get the intersection point. If this intersection area (calculated using the 
+shoelace formula) amounts to more than 20% (an arbitrary number) of the subcell's area, consider it filled. 
+Should add code to make all other subcells unfilled
+Currently there is a bug where sometimes the collider pointers in the array of terrain colliders come up null. Need to figure out 
+why and fix it. It may be something to do with the memory leak errors I am getting in gdb from the loadTileSet function.

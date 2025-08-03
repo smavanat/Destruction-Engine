@@ -89,6 +89,15 @@ struct Walkable : public Component<Walkable> {
     Walkable(int w) : walkStatus(w) {};
 };
 
+struct TileRect : public Component<TileRect> {
+    SDL_FRect* dimensions;
+    int associateTile;
+
+    TileRect() = default;
+
+    TileRect(SDL_FRect* s, int a) : dimensions(s), associateTile(a) {};
+};
+
 //Holds the start and end positions to find a path between, and the path returned
 struct Pathfinding : public Component<Pathfinding> {
     Vector2 startPos;

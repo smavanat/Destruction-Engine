@@ -10,7 +10,7 @@ public:
 	GridSystemManager(int tWidth, int gWidth, int gHeight, std::string path);
 	void update(float dt);
 	bool loadGridFromFile(std::string path);
-	bool setGridTileColliders(TerrainSet* tSet);
+	void setGridTileColliders(TerrainSet* tSet);
 private:
 	std::shared_ptr<GridSystem> gSystem;
 	std::shared_ptr<PathFindingSystem> pSystem;
@@ -35,4 +35,4 @@ struct SegmentIntersection {
 };
 
 bool isOverlapping(SDL_FRect* t, Collider* c);
-std::vector<std::vector<b2Vec2>> grienerHormannClip(b2Vec2* subjVerts, int svSize, b2Vec2* clipVerts, int cvsize);
+void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c);

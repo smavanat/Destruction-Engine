@@ -165,24 +165,12 @@ bool loadMedia()
 		success = false;
 	}
 
-	// if(!gGridManager.setGridTileColliders(&tSet)) {
-	// 	printf("Unable to set grid colliders\n");
-	// 	success = false;
-	// }
+	gGridManager.setGridTileColliders(&tSet);
 
 	//So that there is some sort of default collider to go along with a default texture.
 	std::vector<int> points = {0, (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
 	b2BodyId tempId = createTexturePolygon(points, s.surfacePixels->w, worldId, s, gCoordinator.getComponent<Transform>(testTexture));
 	gCoordinator.addComponent(testTexture, Collider(tempId));
-	b2Vec2 subjVerts[] = {(b2Vec2){1420.0f, 440.0f}, (b2Vec2){1520.0f, 440.0f}, (b2Vec2){1520.0f, 540.0f}, (b2Vec2){1420.0f, 540.0f}};
-	b2Vec2 clipVerts[] = {(b2Vec2){1450.0f, 440.0f}, (b2Vec2){1480.0f, 440.0f}, (b2Vec2){1480.0f, 470.0f}, (b2Vec2){1450.0f, 470.0f}};
-	std::vector<Point> testsubj = std::vector<Point>{Point(1420.0f, 440.0f), Point(1520.0f, 440.0f), Point(1520.0f, 540.0f), Point(1420.0f, 540.0f)};
-	std::vector<Point> testclip = std::vector<Point>{Point(1450.0f, 440.0f), Point(1480.0f, 440.0f), Point(1480.0f, 470.0f), Point(1450.0f, 470.0f)};
-	Polygon subj = Polygon(testsubj);
-	Polygon clip = Polygon(testclip);
-	Martinez test = Martinez(subj, clip);
-	Polygon res = Polygon();
-	test.compute(test.INTERSECTION, res);
 
 	return success;
 }
