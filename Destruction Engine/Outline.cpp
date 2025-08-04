@@ -439,8 +439,8 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 #pragma endregion
 
 #pragma region ColliderGeneration
-	b2Vec2* getVec2Array(std::vector<int> rdpPoints, int arrayWidth) {
-		b2Vec2* points = new b2Vec2[rdpPoints.size()];
+	Vector2* getVec2Array(std::vector<int> rdpPoints, int arrayWidth) {
+		Vector2* points = new Vector2[rdpPoints.size()];
 		for (int i = 0; i < rdpPoints.size(); i++) {
 			int* temp = convertIndexToCoords(rdpPoints[i], arrayWidth);
 			points[i] = { (temp[0]) * pixelsToMetres, (temp[1]) * pixelsToMetres };
@@ -448,8 +448,8 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 		return points;
 	}
 
-	b2Vec2* convertToVec2(TPPLPoint* polyPoints, int numPoints) {
-		b2Vec2* points = new b2Vec2[numPoints];
+	Vector2* convertToVec2(TPPLPoint* polyPoints, int numPoints) {
+		Vector2* points = new Vector2[numPoints];
 		for (int i = 0; i < numPoints; i++) {
 			points[i].x = polyPoints[i].x;
 			points[i].y = polyPoints[i].y;
@@ -457,8 +457,8 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 		return points;
 	}
 
-	b2Vec2 rotateTranslate(b2Vec2& vector, float angle) {
-		b2Vec2 tmp;
+	Vector2 rotateTranslate(Vector2& vector, float angle) {
+		Vector2 tmp;
 		tmp.x = vector.x * cos(angle) - vector.y * sin(angle);
 		tmp.y = vector.x * sin(angle) + vector.y * cos(angle);
 		return tmp;
@@ -510,7 +510,7 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 	//shape rather than at the top-left corner.
 	b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Sprite& s, Transform& t) {
 		//Getting points
-		b2Vec2* points = getVec2Array(rdpPoints, arrayWidth);
+		Vector2* points = getVec2Array(rdpPoints, arrayWidth);
 		//Creating the b2Body
 		b2BodyDef testbodyDef = b2DefaultBodyDef();
 		testbodyDef.type = b2_dynamicBody;
@@ -537,10 +537,8 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 
 		//Need to set it to be oriented Counter-Clockwise otherwise the triangulation algorithm fails.
 		poly->SetOrientation(TPPL_ORIENTATION_CCW); //This method does not actually check the order of each vertex. Need to change it so it sorts the points properly.
-		TPPLPartition test = TPPLPartition();
-		//int result = test.ConvexPartition_HM(poly, &polyList);	
-		//int result = test.ConvexPartition_OPT(poly, &polyList);
-		int result = test.Triangulate_OPT(poly, &polyList);
+		TPPLPartition test = TPPLPartition(); 
+		int result = test.Triangulate_OPT(poly, &polyList); //Traingulate the polygon shape
 
 		//Trying to center the polygon:
 		CenterCompundShape(polyList, { static_cast<double>(s.surfacePixels->w / 2) * pixelsToMetres, static_cast<double>(s.surfacePixels->h / 2) * pixelsToMetres });

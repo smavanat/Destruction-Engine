@@ -69,7 +69,7 @@ void ColliderDebugSystem::update(float dt) {
 			//This is the unfortunately very convoluted process of getting the shapes that make up a 
 			//box2D body
 			int shapeCount = b2Body_GetShapeCount(c.colliderId);
-			b2Vec2 colliderPosition = b2Body_GetPosition(c.colliderId);
+			Vector2 colliderPosition = b2Body_GetPosition(c.colliderId);
 			b2ShapeId* colliderShapes = new b2ShapeId[shapeCount];
 			b2Body_GetShapes(c.colliderId, colliderShapes, shapeCount);
 
@@ -78,10 +78,10 @@ void ColliderDebugSystem::update(float dt) {
 			//This is another reason for using only triangles, it standardises everything so that
 			//we don't need to use any convoluted process to figure out how many vertices are in a shape
 			for (int j = 0; j < shapeCount; j++) {
-				b2Vec2* colliderVertices = b2Shape_GetPolygon(colliderShapes[j]).vertices;
-				b2Vec2* rotatedVertices = (b2Vec2*)malloc(3*sizeof(b2Vec2));
+				Vector2* colliderVertices = b2Shape_GetPolygon(colliderShapes[j]).vertices;
+				Vector2* rotatedVertices = (Vector2*)malloc(3*sizeof(Vector2));
 				for (int k = 0; k < 3; k++) {
-					b2Vec2 temp = rotateTranslate(colliderVertices[k], b2Rot_GetAngle(b2Body_GetRotation(c.colliderId)));
+					Vector2 temp = rotateTranslate(colliderVertices[k], b2Rot_GetAngle(b2Body_GetRotation(c.colliderId)));
 					rotatedVertices[k] = temp;
 				}
 				for (int k = 0; k < 3; k++) {

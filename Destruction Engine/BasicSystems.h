@@ -41,8 +41,7 @@ public:
 			Transform transform = gCoordinator.getComponent<Transform>(entity);
 			Collider collider = gCoordinator.getComponent<Collider>(entity);
 			
-			b2Vec2 temp = b2Body_GetPosition(collider.colliderId);
-			transform.position = convertToVec2(&temp);
+			Vector2 temp = b2Body_GetPosition(collider.colliderId);
 			transform.rotation = normalizeAngle(b2Rot_GetAngle(b2Body_GetRotation(collider.colliderId)))/DEGREES_TO_RADIANS;
 		}
 	}

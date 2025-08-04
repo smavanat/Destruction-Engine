@@ -26,8 +26,8 @@ Vector2 rotateAboutPoint(Vector2* point, Vector2* centre, double angle, bool inR
 	return ret;
 }
 
-b2Vec2 rotateAboutPoint2(Vector2* point, Vector2* centre, double angle, bool inRadians) {
-	b2Vec2 ret = {};
+Vector2 rotateAboutPoint2(Vector2* point, Vector2* centre, double angle, bool inRadians) {
+	Vector2 ret = {};
 	angle = fmod(angle, 360);
 	if (!inRadians) {
 		angle *= DEGREES_TO_RADIANS;
@@ -42,8 +42,4 @@ double normalizeAngle(double angle) {
 		return angle + 2 * (2 * acos(0.0));  // Shift negative angles into [0, 2pi]
 	}
 	return angle;
-}
-
-Vector2 convertToVec2(b2Vec2* v) {
-	return (Vector2){v->x, v->y};
 }

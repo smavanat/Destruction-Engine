@@ -48,10 +48,10 @@ int findFurthest(std::vector<int> allPoints, int a, int b, int epsilon, int arra
 
 void rdp(int startIndex, int endIndex, int epsilon, int arrayWidth, std::vector<int> allPoints, std::vector<int>& rdpPoints);
 
-b2Vec2* getVec2Array(std::vector<int> rdpPoints, int arrayWidth);
+Vector2* getVec2Array(std::vector<int> rdpPoints, int arrayWidth);
 
-b2Vec2* convertToVec2(TPPLPoint* polyPoints, int numPoints);
+Vector2* convertToVec2(TPPLPoint* polyPoints, int numPoints);
 
-b2Vec2 rotateTranslate(b2Vec2& vector, float angle);
+Vector2 rotateTranslate(Vector2& vector, float angle);
 
 b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Sprite& s, Transform& t);

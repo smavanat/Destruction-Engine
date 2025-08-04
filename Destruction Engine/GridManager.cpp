@@ -125,7 +125,7 @@ bool GridSystemManager::loadGridFromFile(std::string path) {
 std::vector<Point> getColliderVertices(Collider* c) {
     //Getting the collider data
     int shapeCount = b2Body_GetShapeCount(c->colliderId);
-    b2Vec2 colliderPosition = b2Body_GetPosition(c->colliderId);
+    Vector2 colliderPosition = b2Body_GetPosition(c->colliderId);
     b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount*sizeof(b2ShapeId));
     b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
     std::vector<Point> ret = std::vector<Point>();
@@ -133,7 +133,7 @@ std::vector<Point> getColliderVertices(Collider* c) {
     //Getting all of the unique collider points
     //Need to figure this part out in a smart way
     for(int i = 0; i < shapeCount; i++) {
-        b2Vec2* points = b2Shape_GetPolygon(colliderShapes[i]).vertices;
+        Vector2* points = b2Shape_GetPolygon(colliderShapes[i]).vertices;
         for(int j = 0; j < 3; j++) {
             Point curr = Point(points[j].x, points[j].y);
             if(std::find(ret.begin(), ret.end(), curr) == ret.end())
@@ -210,18 +210,18 @@ void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c, b
 //This region contains the code to determine whether a given colliders overlaps with a tile in a grid
 //(represented by a rect) using the Seperating Axis Theorem. Based on this code: https://dyn4j.org/2010/01/sat/
 #pragma region SAT
-b2Vec2* getSeperatingAxes(b2ShapeId id, b2Vec2* pos) {
-    b2Vec2* axes = (b2Vec2*)calloc(3, sizeof(b2Vec2));
-    b2Vec2* colliderVertices = b2Shape_GetPolygon(id).vertices;
+Vector2* getSeperatingAxes(b2ShapeId id, Vector2* pos) {
+    Vector2* axes = (Vector2*)calloc(3, sizeof(Vector2));
+    Vector2* colliderVertices = b2Shape_GetPolygon(id).vertices;
     for(int i = 0; i < 3; i++) {
         //Get the current vertex
-        b2Vec2 start = (b2Vec2){(colliderVertices[i].x+pos->x)*metresToPixels,(colliderVertices[i].y+pos->y)*metresToPixels};
+        Vector2 start = (Vector2){(colliderVertices[i].x+pos->x)*metresToPixels,(colliderVertices[i].y+pos->y)*metresToPixels};
         //Get the next vertex
-        b2Vec2 end = (b2Vec2){(colliderVertices[(i + 1) % 3].x+pos->x)*metresToPixels,(colliderVertices[(i + 1) % 3].y+pos->y)*metresToPixels};
+        Vector2 end = (Vector2){(colliderVertices[(i + 1) % 3].x+pos->x)*metresToPixels,(colliderVertices[(i + 1) % 3].y+pos->y)*metresToPixels};
         //Subtract the two to get the edge vector
-        b2Vec2 edge = (b2Vec2){(end.x - start.x), (end.y - start.y)};
+        Vector2 edge = (Vector2){(end.x - start.x), (end.y - start.y)};
         //Get the normal of the edge
-        b2Vec2 normal = (b2Vec2){-edge.y, edge.x};
+        Vector2 normal = (Vector2){-edge.y, edge.x};
         float length = sqrt(normal.x * normal.x + normal.y * normal.y);
         if (length > 0) {
             normal.x /= length;
@@ -232,19 +232,19 @@ b2Vec2* getSeperatingAxes(b2ShapeId id, b2Vec2* pos) {
     return axes;
 }
 
-b2Vec2* getSeperatingAxes(SDL_FRect* rect) {
-    b2Vec2* axes = (b2Vec2*)calloc(4, sizeof(b2Vec2));
-    b2Vec2 colliderVertices[] = {(b2Vec2){rect->x, rect->y}, (b2Vec2){rect->x+rect->w, rect->y}, (b2Vec2){rect->x+rect->w, rect->y+rect->h}, (b2Vec2){rect->x, rect->y+rect->h}};
+Vector2* getSeperatingAxes(SDL_FRect* rect) {
+    Vector2* axes = (Vector2*)calloc(4, sizeof(Vector2));
+    Vector2 colliderVertices[] = {(Vector2){rect->x, rect->y}, (Vector2){rect->x+rect->w, rect->y}, (Vector2){rect->x+rect->w, rect->y+rect->h}, (Vector2){rect->x, rect->y+rect->h}};
 
     for(int i = 0; i < 4; i++) {
         //Get the current vertex
-        b2Vec2 start = colliderVertices[i];
+        Vector2 start = colliderVertices[i];
         //Get the next vertex
-        b2Vec2 end = colliderVertices[(i + 1) % 4];
+        Vector2 end = colliderVertices[(i + 1) % 4];
         //Subtract the two to get the edge vector
-        b2Vec2 edge = (b2Vec2){end.x - start.x, end.y - start.y};
+        Vector2 edge = (Vector2){end.x - start.x, end.y - start.y};
         //Get the normal of the edge
-        b2Vec2 normal = (b2Vec2){-edge.y, edge.x};
+        Vector2 normal = (Vector2){-edge.y, edge.x};
         float length = sqrt(normal.x * normal.x + normal.y * normal.y);
         if (length > 0) {
             normal.x /= length;
@@ -255,8 +255,8 @@ b2Vec2* getSeperatingAxes(SDL_FRect* rect) {
     return axes;
 }
 
-b2Vec2 projectShape(b2ShapeId id, b2Vec2* axis, b2Vec2* pos) {
-    b2Vec2* colliderVertices = b2Shape_GetPolygon(id).vertices;
+Vector2 projectShape(b2ShapeId id, Vector2* axis, Vector2* pos) {
+    Vector2* colliderVertices = b2Shape_GetPolygon(id).vertices;
     double min = (axis->x * (colliderVertices[0].x + pos->x)*metresToPixels) + (axis->y * (colliderVertices[0].y + pos->y)*metresToPixels);
     double max = min;
 
@@ -266,11 +266,11 @@ b2Vec2 projectShape(b2ShapeId id, b2Vec2* axis, b2Vec2* pos) {
         else if(c > max) max = c;
     }
     
-    return (b2Vec2){min, max}; 
+    return (Vector2){min, max}; 
 }
 
-b2Vec2 projectShape(SDL_FRect* rect, b2Vec2* axis) {
-    b2Vec2 colliderVertices[] = {(b2Vec2){rect->x, rect->y}, (b2Vec2){rect->x+rect->w, rect->y}, (b2Vec2){rect->x+rect->w, rect->y+rect->h}, (b2Vec2){rect->x, rect->y+rect->h}};
+Vector2 projectShape(SDL_FRect* rect, Vector2* axis) {
+    Vector2 colliderVertices[] = {(Vector2){rect->x, rect->y}, (Vector2){rect->x+rect->w, rect->y}, (Vector2){rect->x+rect->w, rect->y+rect->h}, (Vector2){rect->x, rect->y+rect->h}};
     double min = (axis->x * colliderVertices[0].x) + (axis->y * colliderVertices[0].y);
     double max = min;
 
@@ -280,11 +280,11 @@ b2Vec2 projectShape(SDL_FRect* rect, b2Vec2* axis) {
         else if(c > max) max = c;
     }
     
-    return (b2Vec2){min, max};
+    return (Vector2){min, max};
 }
 
 //Checks if two 1D vectors overlap
-bool overlap(b2Vec2* a, b2Vec2* b) {
+bool overlap(Vector2* a, Vector2* b) {
     return a->x <= b->y && b->x <= a->y;
 }
 
@@ -293,10 +293,10 @@ bool overlap(b2Vec2* a, b2Vec2* b) {
 bool isOverlapping(SDL_FRect* t, Collider* c) {
     //Add bounding box checks before doing SAT
     //Axes of the rect always the same, can generate them outside the loop
-    b2Vec2* axes1 = getSeperatingAxes(t);
+    Vector2* axes1 = getSeperatingAxes(t);
 
     int shapeCount = b2Body_GetShapeCount(c->colliderId);
-    b2Vec2 colliderPosition = b2Body_GetPosition(c->colliderId);
+    Vector2 colliderPosition = b2Body_GetPosition(c->colliderId);
     b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount*sizeof(b2ShapeId));
     b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
 
@@ -305,13 +305,13 @@ bool isOverlapping(SDL_FRect* t, Collider* c) {
     //that are going to be generated by destruction 
     for(int i = 0; i < shapeCount; i++) {
         //Axes of the current shape we are testing
-        b2Vec2* axes2 = getSeperatingAxes(colliderShapes[i], &colliderPosition);
+        Vector2* axes2 = getSeperatingAxes(colliderShapes[i], &colliderPosition);
         bool doesShapeOverlap = true; //Overlap flag set to to true by default 
 
         //Check that shape axes projection overlaps with rect
         for(int j = 0; j < 4; j++) {
-            b2Vec2 p1 = projectShape(t, &axes1[j]);
-            b2Vec2 p2 = projectShape(colliderShapes[i], &axes1[j], &colliderPosition);
+            Vector2 p1 = projectShape(t, &axes1[j]);
+            Vector2 p2 = projectShape(colliderShapes[i], &axes1[j], &colliderPosition);
             //If projection does not overlap then shape does not overlap
             if(!overlap(&p1, &p2)){
                 doesShapeOverlap = false;
@@ -322,8 +322,8 @@ bool isOverlapping(SDL_FRect* t, Collider* c) {
 
         //Check that rect axes projection overlaps with shape
         for(int j = 0; j < 3; j++) {
-            b2Vec2 p1 = projectShape(t, &axes2[j]);
-            b2Vec2 p2 = projectShape(colliderShapes[i], &axes2[j], &colliderPosition);
+            Vector2 p1 = projectShape(t, &axes2[j]);
+            Vector2 p2 = projectShape(colliderShapes[i], &axes2[j], &colliderPosition);
 
             //If projection does not overlap then shape does not overlap
             if(!overlap(&p1, &p2)){

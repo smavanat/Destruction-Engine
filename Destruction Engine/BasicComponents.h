@@ -62,13 +62,22 @@ struct TileSprite : public Component<TileSprite> {
     {}
 };
 
+enum ColliderType {
+	BOX,
+	CIRCLE,
+	CAPSULE,
+	POLYGON,
+	NONE
+};
+
 //Holds a box2D b2BodyId
 struct Collider : public Component<Collider> {
 	b2BodyId colliderId;
+	ColliderType type;	
 
     Collider() = default;
 
-    Collider(b2BodyId colliderId) : colliderId(colliderId) {}
+    Collider(b2BodyId colliderId) : colliderId(colliderId), type(NONE) {}
 };
 
 //Tag component to seperate identities that would otherwise be identical into groups
@@ -138,3 +147,8 @@ void renderPart(TileSprite& s, Transform& t, SDL_Renderer* gRenderer);
 SDL_PixelFormat getPixelFormat(Sprite s);
 
 Sprite duplicateSprite(Sprite* original, SDL_Renderer* gRenderer, SDL_FRect* srcRect);
+
+b2BodyId createCircleCollider(Vector2 center, float radius, b2WorldId worldId);
+b2BodyId createBoxCollider(Vector2 center, int width, int height, b2WorldId worldId);
+b2BodyId createCapsuleCollider(Vector2 center1, Vector2 center2, float radius);
+b2BodyId createPolygonCollider(Vector2* points, b2WorldId worldId);

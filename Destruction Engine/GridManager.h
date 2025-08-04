@@ -18,7 +18,7 @@ public:
 
 struct GHVertex {
 	GHVertex* next, *prev, *neighbour;
-	b2Vec2 p;
+	Vector2 p;
 	float alpha; //This represents the distance the intersection is along a polygon edge in the range [0, 1]
 	bool intersect; //Whether this point represents an edge intersection
 	bool entry; //entry or exit flag (whether travelling along the subject polygon in a given order enters or leaves it at this vertex)
@@ -27,7 +27,7 @@ struct GHVertex {
 };
 
 struct SegmentIntersection {
-	b2Vec2 point;
+	Vector2 point;
 	double tS; //This represents the distance the intersection is along the subject polygon edge in the range [0, 1]
 	double tC; //This represents the distance the intersection is along the clip polygon edge in the range [0, 1]
 	bool valid;

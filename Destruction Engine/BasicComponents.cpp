@@ -171,3 +171,42 @@ Sprite duplicateSprite(Sprite* original, SDL_Renderer* gRenderer, SDL_FRect* src
     return createSprite(width, height, newPixelArray, gRenderer);
 }
 #pragma endregion
+
+//Collider related functions
+#pragma region Collider
+b2BodyId createCircleCollider(Vector2 center, float radius, b2WorldId worldId) {
+	b2BodyDef retBodyDef = b2DefaultBodyDef();
+	retBodyDef.type = b2_dynamicBody;
+
+    b2BodyId retId = b2CreateBody(worldId, &retBodyDef);
+	
+    return retId;
+}
+
+b2BodyId createBoxCollider(Vector2 center, int width, int height, b2WorldId worldId) {
+    b2BodyDef retBodyDef = b2DefaultBodyDef();
+	retBodyDef.type = b2_dynamicBody;
+
+    b2BodyId retId = b2CreateBody(worldId, &retBodyDef);
+	
+    return retId;
+}
+
+b2BodyId createCapsuleCollider(Vector2 center1, Vector2 center2, float radius, b2WorldId worldId) {
+    b2BodyDef retBodyDef = b2DefaultBodyDef();
+	retBodyDef.type = b2_dynamicBody;
+
+    b2BodyId retId = b2CreateBody(worldId, &retBodyDef);
+	
+    return retId;
+}
+
+b2BodyId createPolygonCollider(Vector2* points, b2WorldId worldId) {
+    b2BodyDef retBodyDef = b2DefaultBodyDef();
+	retBodyDef.type = b2_dynamicBody;
+
+    b2BodyId retId = b2CreateBody(worldId, &retBodyDef);
+	
+    return retId;
+}
+#pragma endregion
