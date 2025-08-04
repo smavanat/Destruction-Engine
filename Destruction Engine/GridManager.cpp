@@ -56,6 +56,7 @@ void GridSystemManager::update(float dt) {
 //This is incredibly ugly. Need to add quadtree-based partitioning to make it more efficient, because right now we are
 //just comparing every single tile to every single terrain collider
 void GridSystemManager::setGridTileColliders(TerrainSet* tSet) {
+    //This is too complicated. Can literally just get the tile from the collider's position by using worldToGridIndex()
     for(int i = 0; i < tSet->size; i++) {
         for(Entity e : gSystem->registeredEntities) {
             TileRect temp = gCoordinator.getComponent<TileRect>(e);
@@ -207,6 +208,8 @@ void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c, b
 
 //This region contains the code to determine whether a given colliders overlaps with a tile in a grid
 //(represented by a rect) using the Seperating Axis Theorem. Based on this code: https://dyn4j.org/2010/01/sat/
+//Why use SAT to get overlap initially when we know both things will be bounding boxes with 0 rotation. Why not just
+//use bounding box collisions and use SAT at more complex times?
 #pragma region SAT
 Vector2* getSeperatingAxes(b2ShapeId id, Vector2* pos) {
     Vector2* axes = (Vector2*)calloc(3, sizeof(Vector2));
@@ -288,6 +291,7 @@ bool overlap(Vector2* a, Vector2* b) {
 
 //Checks if a Tile(here represented by an SDL_FRect that represents its four vertices)
 //and a collider overlap using the separating axes theorem
+//Need to rework this to work with all types of colliders
 bool isOverlapping(SDL_FRect* t, Collider* c) {
     //Add bounding box checks before doing SAT
     //Axes of the rect always the same, can generate them outside the loop

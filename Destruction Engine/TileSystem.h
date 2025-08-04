@@ -24,7 +24,7 @@ struct TileSet {
 //Holds a record of all of the indexes in the collider component array that belong to colliders
 //that are impassible terrain
 struct TerrainSet {
-	Collider** cArr;
+	Collider** cArr; //This should be re-worked to be an array of entities rather than an array of colliders
 	Uint32 size; //Holds the number of entities currently in this set
 	Uint32 maxsize; //Holds the max number of entities in this set
 };

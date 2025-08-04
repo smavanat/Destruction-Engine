@@ -14,8 +14,9 @@ ECS System: Basic component and entity template setup.
 			GridManager to couple Grid and Pathfinding together.
 			Basic Desutructible Pathfinding
 			A good TileSet struct
+			Support for Box, Circle, Capsule and Polygon colliders
+			Assigment of colliders to tiles at init and updating of subcell grid at runtime (needs optimisation)
 TODO (for urss):
-			Finish assigning colliders to tiles at init and updating at runtime
 			Add agents that can use the basic pathfinding system
 			Add agents that can use the destruction system to find faster paths 
 			Optimise.
@@ -201,3 +202,11 @@ shoelace formula) amounts to more than 20% (an arbitrary number) of the subcell'
 Should add code to make all other subcells unfilled
 Currently there is a bug where sometimes the collider pointers in the array of terrain colliders come up null. Need to figure out 
 why and fix it. It may be something to do with the memory leak errors I am getting in gdb from the loadTileSet function.
+
+Week 7:
+I have fixed the null pointer bug. It was because I forgot to account for the size of pointers when mallocing, leading to out of 
+bounds errors. This means I have finished a very simple and stupid implementation of tilemap initialsation and init and runtime updating,
+but I have figured out a way to significantly optimise it and will go about implementing the fixes in future.
+
+I have added support for Box, Circle, Capsule and Polygon colliders, meaning it is much easier now to setup tiles and simple agents
+This was done by adding an enum containing all of the collider types, and just switching on them whenever needed (e.g. for visualisation)
