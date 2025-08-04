@@ -1,4 +1,5 @@
 #include "Debug.h"
+#include "utils.h"
 #pragma region DebugManager
 
 DebugManager::DebugManager() {
@@ -17,8 +18,7 @@ DebugManager::DebugManager() {
 	}
 	{
 		Signature sig;
-		sig.addComponent<Transform>();
-		sig.addComponent<Walkable>();
+		sig.addComponent<TileRect>();
 		gPtr = gCoordinator.addSystem<GridDebugSystem>(sig);
 	}
 	{
@@ -65,30 +65,62 @@ void ColliderDebugSystem::update(float dt) {
 		//polygons. It just makes things easier.
 		for (Entity entity : registeredEntities) {
 			Collider c = gCoordinator.getComponent<Collider>(entity);
-
-			//This is the unfortunately very convoluted process of getting the shapes that make up a 
-			//box2D body
+			//This is the unfortunately very convoluted process of getting the shapes that make up a box2D body
 			int shapeCount = b2Body_GetShapeCount(c.colliderId);
 			Vector2 colliderPosition = b2Body_GetPosition(c.colliderId);
 			b2ShapeId* colliderShapes = new b2ShapeId[shapeCount];
 			b2Body_GetShapes(c.colliderId, colliderShapes, shapeCount);
 
-			//There is unfortunately no way to get the number of vertices a shape has, 
-			//since the arrays are always of size 8 (max number of vertices that a shape has)
-			//This is another reason for using only triangles, it standardises everything so that
-			//we don't need to use any convoluted process to figure out how many vertices are in a shape
-			for (int j = 0; j < shapeCount; j++) {
-				Vector2* colliderVertices = b2Shape_GetPolygon(colliderShapes[j]).vertices;
-				Vector2* rotatedVertices = (Vector2*)malloc(3*sizeof(Vector2));
-				for (int k = 0; k < 3; k++) {
-					Vector2 temp = rotateTranslate(colliderVertices[k], b2Rot_GetAngle(b2Body_GetRotation(c.colliderId)));
-					rotatedVertices[k] = temp;
-				}
-				for (int k = 0; k < 3; k++) {
-					SDL_RenderLine(gRenderer, ((rotatedVertices[k].x + colliderPosition.x) * metresToPixels), ((rotatedVertices[k].y + colliderPosition.y) * metresToPixels),
-						((rotatedVertices[(k + 1) > 2 ? 0 : (k + 1)].x + colliderPosition.x) * metresToPixels), ((rotatedVertices[(k + 1) > 2 ? 0 : (k + 1)].y + colliderPosition.y) * metresToPixels));
-				}
-				free(rotatedVertices);
+			//Need to draw the different collider types differently
+			switch(c.type) {
+				case BOX:
+					for (int j = 0; j < shapeCount; j++) {
+						Vector2* colliderVertices = b2Shape_GetPolygon(colliderShapes[j]).vertices;
+						Vector2* rotatedVertices = (Vector2*)malloc(4*sizeof(Vector2));
+						for (int k = 0; k < 4; k++) {
+							Vector2 temp = rotateTranslate(colliderVertices[k], b2Rot_GetAngle(b2Body_GetRotation(c.colliderId)));
+							rotatedVertices[k] = temp;
+						}
+						for (int k = 0; k < 4; k++) {
+							SDL_RenderLine(gRenderer, ((rotatedVertices[k].x + colliderPosition.x) * metresToPixels), ((rotatedVertices[k].y + colliderPosition.y) * metresToPixels),
+								((rotatedVertices[(k + 1) > 3 ? 0 : (k + 1)].x + colliderPosition.x) * metresToPixels), ((rotatedVertices[(k + 1) > 3 ? 0 : (k + 1)].y + colliderPosition.y) * metresToPixels));
+						}
+						free(rotatedVertices);
+					}
+					break;
+				case CIRCLE:
+					for(int j = 0; j < shapeCount; j++) {
+						b2Circle circle = b2Shape_GetCircle(colliderShapes[j]);
+						
+						drawCircle(gRenderer, {circle.center.x*metresToPixels, circle.center.y * metresToPixels}, circle.radius*metresToPixels);
+					}
+					break;
+				case CAPSULE:
+					for(int j = 0; j < shapeCount; j++) {
+						b2Capsule capsule = b2Shape_GetCapsule(colliderShapes[j]);
+						
+						drawCircle(gRenderer, {capsule.center1.x*metresToPixels, capsule.center1.y * metresToPixels}, capsule.radius*metresToPixels);
+						drawCircle(gRenderer, {capsule.center2.x*metresToPixels, capsule.center2.y * metresToPixels}, capsule.radius*metresToPixels);
+					}
+					break;
+				case POLYGON:
+					//Iterate over all of the subshapes, then just draw lines between the vertices
+					for (int j = 0; j < shapeCount; j++) {
+						Vector2* colliderVertices = b2Shape_GetPolygon(colliderShapes[j]).vertices;
+						Vector2* rotatedVertices = (Vector2*)malloc(3*sizeof(Vector2));
+						for (int k = 0; k < 3; k++) {
+							Vector2 temp = rotateTranslate(colliderVertices[k], b2Rot_GetAngle(b2Body_GetRotation(c.colliderId)));
+							rotatedVertices[k] = temp;
+						}
+						for (int k = 0; k < 3; k++) {
+							SDL_RenderLine(gRenderer, ((rotatedVertices[k].x + colliderPosition.x) * metresToPixels), ((rotatedVertices[k].y + colliderPosition.y) * metresToPixels),
+								((rotatedVertices[(k + 1) > 2 ? 0 : (k + 1)].x + colliderPosition.x) * metresToPixels), ((rotatedVertices[(k + 1) > 2 ? 0 : (k + 1)].y + colliderPosition.y) * metresToPixels));
+						}
+						free(rotatedVertices);
+					}
+					break;
+				default:
+					break;
 			}
 			delete[] colliderShapes;
 		}

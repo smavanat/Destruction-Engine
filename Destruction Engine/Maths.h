@@ -4,7 +4,7 @@
 #include <SDL3/SDL.h>
 #include<box2d/box2d.h>
 
-const double DEGREES_TO_RADIANS = ((2 * acos(0.0)) / 180);
+static const double DEGREES_TO_RADIANS = ((2 * acos(0.0)) / 180);
 
 //Could we not just make this a typdef of b2Vec2?
 typedef b2Vec2 Vector2;

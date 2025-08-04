@@ -439,123 +439,14 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 #pragma endregion
 
 #pragma region ColliderGeneration
-	Vector2* getVec2Array(std::vector<int> rdpPoints, int arrayWidth) {
+	b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Transform& t) {
+		//Getting points
 		Vector2* points = new Vector2[rdpPoints.size()];
 		for (int i = 0; i < rdpPoints.size(); i++) {
 			int* temp = convertIndexToCoords(rdpPoints[i], arrayWidth);
 			points[i] = { (temp[0]) * pixelsToMetres, (temp[1]) * pixelsToMetres };
 		}
-		return points;
-	}
 
-	Vector2* convertToVec2(TPPLPoint* polyPoints, int numPoints) {
-		Vector2* points = new Vector2[numPoints];
-		for (int i = 0; i < numPoints; i++) {
-			points[i].x = polyPoints[i].x;
-			points[i].y = polyPoints[i].y;
-		}
-		return points;
-	}
-
-	Vector2 rotateTranslate(Vector2& vector, float angle) {
-		Vector2 tmp;
-		tmp.x = vector.x * cos(angle) - vector.y * sin(angle);
-		tmp.y = vector.x * sin(angle) + vector.y * cos(angle);
-		return tmp;
-	}
-
-	//Finds the center of a shape assuming that it has been partitioned into triangles
-	TPPLPoint ComputeCompoundCentroid(TPPLPolyList &shapes) {
-		TPPLPoint weightedCentroid = {0.0f, 0.0f};
-		float totalArea = 0.0f;
-
-		for (TPPLPolyList::iterator it = shapes.begin(); it != shapes.end(); ++it) {
-			//Getting the vertices
-			TPPLPoint A = it->GetPoint(0);
-			TPPLPoint B = it->GetPoint(1);
-			TPPLPoint C = it->GetPoint(2);
-
-			//Getting the centroid
-			TPPLPoint centroid = (A + B + C) / 3.0f;
-
-			//Getting the area
-			float area = 0.5f * fabs(A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y));
-
-			//Accumulate weighted centroid sum:
-			weightedCentroid.x += centroid.x * area;
-			weightedCentroid.y += centroid.y * area;
-			totalArea += area;
-		}
-
-		if (totalArea != 0) {
-			weightedCentroid.x /= totalArea;
-			weightedCentroid.y /= totalArea;
-		}
-
-		return weightedCentroid;
-	}
-
-	void CenterCompundShape(TPPLPolyList &shapes, TPPLPoint centre) {
-		TPPLPoint compoundCentroid = ComputeCompoundCentroid(shapes);
-
-		for (TPPLPolyList::iterator it = shapes.begin(); it != shapes.end(); ++it) {
-			for (int i = 0; i < it->GetNumPoints(); i++) {
-				it->GetPoint(i).x -= centre.x;
-				it->GetPoint(i).y -= centre.y;
-			}
-		}
-	}
-
-	//Creates a texture polygon by using pure triangulation, and then moves the origin so that it is in the centre of the 
-	//shape rather than at the top-left corner.
-	b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Sprite& s, Transform& t) {
-		//Getting points
-		Vector2* points = getVec2Array(rdpPoints, arrayWidth);
-		//Creating the b2Body
-		b2BodyDef testbodyDef = b2DefaultBodyDef();
-		testbodyDef.type = b2_dynamicBody;
-		testbodyDef.position = { t.position.x * pixelsToMetres, t.position.y * pixelsToMetres };
-		testbodyDef.rotation = { (float)cos(t.rotation * DEGREES_TO_RADIANS), (float)sin(t.rotation * DEGREES_TO_RADIANS) };
-		b2BodyId testId = b2CreateBody(worldId, &testbodyDef);
-
-		//I am going to partition the polygon regardless of whether or not the number of vertices is less than 8, because
-		//Box2D does some very aggressive oversimplification of the shape outline which I'm not a fan of.
-		//It is better to just put in triangles so it can't mess things up. I am going to use triangulation instead of 
-		//partitioning to make sure Box2D keeps all of the details, as in higher-vertex convex shapes there is a change
-		//simplification could occur, which I want to avoid.
-
-
-		//Creating the polypartition polygon and copying all of the points over.
-		TPPLPoly* poly = new TPPLPoly();
-		poly->Init(rdpPoints.size());
-		TPPLPolyList polyList;
-
-		for (int i = 0; i < rdpPoints.size(); i++) {
-			(*poly)[i].x = points[i].x;
-			(*poly)[i].y = points[i].y;
-		}
-
-		//Need to set it to be oriented Counter-Clockwise otherwise the triangulation algorithm fails.
-		poly->SetOrientation(TPPL_ORIENTATION_CCW); //This method does not actually check the order of each vertex. Need to change it so it sorts the points properly.
-		TPPLPartition test = TPPLPartition(); 
-		int result = test.Triangulate_OPT(poly, &polyList); //Traingulate the polygon shape
-
-		//Trying to center the polygon:
-		CenterCompundShape(polyList, { static_cast<double>(s.surfacePixels->w / 2) * pixelsToMetres, static_cast<double>(s.surfacePixels->h / 2) * pixelsToMetres });
-
-		//Adding the polygons to the collider, or printing an error message if something goes wrong.
-		for (TPPLPolyList::iterator it = polyList.begin(); it != polyList.end(); ++it) {
-			b2Hull hull = b2ComputeHull(convertToVec2(it->GetPoints(), it->GetNumPoints()), it->GetNumPoints());
-			if (hull.count == 0) {
-				printf("Something odd has occured when generating a hull from a polyList\n");
-			}
-			else {
-				b2Polygon testagon = b2MakePolygon(&hull, 0.0f);
-				b2ShapeDef testshapeDef = b2DefaultShapeDef();
-				b2ShapeId testShapeId = b2CreatePolygonShape(testId, &testshapeDef, &testagon);
-				b2Shape_SetFriction(testShapeId, 0.3);
-			}
-		}
-		return testId;
+		return createPolygonCollider(points, rdpPoints.size(), t.position, t.rotation, worldId);
 	}
 #pragma endregion

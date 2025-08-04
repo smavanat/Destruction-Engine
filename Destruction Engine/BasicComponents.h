@@ -3,17 +3,13 @@
 #include<SDL3_image/SDL_image.h>
 #include<SDL3/SDL.h>
 #include<iostream>
+#include<PolyPartition/polypartition.h>
 #include "box2d/base.h"
 #include "Maths.h"
+//#include "Outline.h"
 #include <vector>
-
-//Need to forward declare these above the other functions/structs so that the default value for the Sprite constructor is held
-struct Sprite;
-struct Transform;
-//When need a rotateable texture. 
-void render(Sprite& s, Transform& t, SDL_Renderer* gRenderer);
-
-
+const float metresToPixels = 50.0f;
+const float pixelsToMetres = 1.0f / metresToPixels;
 //Holds the position and rotation of an entity
 struct Transform : public Component<Transform> {
 	Vector2 position;
@@ -77,7 +73,7 @@ struct Collider : public Component<Collider> {
 
     Collider() = default;
 
-    Collider(b2BodyId colliderId) : colliderId(colliderId), type(NONE) {}
+    Collider(b2BodyId colliderId, ColliderType type) : colliderId(colliderId), type(type) {}
 };
 
 //Tag component to seperate identities that would otherwise be identical into groups
@@ -87,15 +83,6 @@ struct Tag : public Component<Tag> {
     Tag() = default;
 
     Tag(int tagId) : tagId(tagId) {}
-};
-
-//Whether a tile is walkable or not
-struct Walkable : public Component<Walkable> {
-    int walkStatus;
-
-    Walkable() = default;
-
-    Walkable(int w) : walkStatus(w) {};
 };
 
 struct TileRect : public Component<TileRect> {
@@ -118,37 +105,30 @@ struct Pathfinding : public Component<Pathfinding> {
     Pathfinding(Vector2 s, Vector2 e) : startPos(s), endPos(e), path(std::vector<Vector2>()) {};
 };
 
+//(Tile)Sprite functions
+
 Vector2 getOrigin(Sprite& s, Transform& t);
-
 void free(Sprite &s);
-
 bool loadFromPixels(Sprite &s, SDL_Renderer* gRenderer);
-
 bool loadPixelsFromFile(Sprite &s, std::string path);
-
 bool loadFromFile(Sprite &s, std::string path, SDL_Renderer* gRenderer);
-
 //Controlled sprite creation (when making an object after destruction)
 Sprite createSprite(int w, int h, Uint32* pixels, SDL_Renderer* gRenderer);
-
 bool clickedOnTransparent(Sprite& s, Transform& t, int x, int y);
-
 Uint32* getPixels32(Sprite& s);
-
 Uint32 getPitch32(Sprite& s);
-
 Uint32 mapRGBA(Sprite &s, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-
 void renderBasic(Sprite& s, Transform& t, SDL_Renderer* gRenderer);
-
+void render(Sprite& s, Transform& t, SDL_Renderer* gRenderer);
 //When rendering the sprite from another texture
 void renderPart(TileSprite& s, Transform& t, SDL_Renderer* gRenderer);
-
 SDL_PixelFormat getPixelFormat(Sprite s);
-
 Sprite duplicateSprite(Sprite* original, SDL_Renderer* gRenderer, SDL_FRect* srcRect);
 
+//Collider functions
+
 b2BodyId createCircleCollider(Vector2 center, float radius, b2WorldId worldId);
-b2BodyId createBoxCollider(Vector2 center, int width, int height, b2WorldId worldId);
-b2BodyId createCapsuleCollider(Vector2 center1, Vector2 center2, float radius);
-b2BodyId createPolygonCollider(Vector2* points, b2WorldId worldId);
+b2BodyId createBoxCollider(Vector2 center, int width, int height, float rotation, b2WorldId worldId);
+b2BodyId createCapsuleCollider(Vector2 center1, Vector2 center2, float rotation, float radius, b2WorldId worldId);
+b2BodyId createPolygonCollider(Vector2* points, int pointsSize, Vector2 center, float rotation, b2WorldId worldId);
+Vector2 rotateTranslate(Vector2& vector, float angle);

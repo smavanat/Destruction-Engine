@@ -168,9 +168,10 @@ bool loadMedia()
 	gGridManager.setGridTileColliders(&tSet);
 
 	//So that there is some sort of default collider to go along with a default texture.
-	std::vector<int> points = {0, (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
-	b2BodyId tempId = createTexturePolygon(points, s.surfacePixels->w, worldId, s, gCoordinator.getComponent<Transform>(testTexture));
-	gCoordinator.addComponent(testTexture, Collider(tempId));
+	//std::vector<int> points = {0, (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
+	b2BodyId tempId = createBoxCollider(gCoordinator.getComponent<Transform>(testTexture).position, s.surfacePixels->w, s.surfacePixels->h, gCoordinator.getComponent<Transform>(testTexture).rotation, worldId);
+	//createTexturePolygon(points, s.surfacePixels->w, worldId, s, gCoordinator.getComponent<Transform>(testTexture));
+	gCoordinator.addComponent(testTexture, Collider(tempId, BOX));
 
 	return success;
 }

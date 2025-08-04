@@ -91,7 +91,7 @@ public:
 			Entity e = gCoordinator.createEntity();
 			gCoordinator.addComponent(e, transformsToAdd[i]);
 			gCoordinator.addComponent(e, spritesToAdd[i]);
-			Collider* c = new Collider(createTexturePolygon(temprdpPoints, width, worldId, spritesToAdd[i], transformsToAdd[i]));
+			Collider* c = new Collider(createTexturePolygon(temprdpPoints, width, worldId, transformsToAdd[i]), POLYGON);
 			intersectingSubcells(gGridManager.grid, worldToGridIndex(gGridManager.grid, transformsToAdd[i].position), c, true);
 			gCoordinator.addComponent(e, *c);
 		}

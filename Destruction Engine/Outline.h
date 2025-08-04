@@ -6,8 +6,8 @@
 #include<box2d/box2d.h>
 #include<PolyPartition/polypartition.h>
 #include "BasicComponents.h"
-const float metresToPixels = 50.0f;
-const float pixelsToMetres = 1.0f / metresToPixels;
+// const float metresToPixels = 50.0f;
+// const float pixelsToMetres = 1.0f / metresToPixels;
 const Uint32 NO_PIXEL_COLOUR = SDL_MapRGBA(SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_ARGB8888), NULL, 0xff, 0xff, 0xff, 0x00);
 
 void erasePixels(Sprite &s, Transform& t, SDL_Renderer* gRenderer, int scale, int x, int y);
@@ -22,11 +22,7 @@ bool isAtRightEdge(int pixelPosition, int arrayWidth);
 
 int* getNeighbours(int pixelPosition, int arrayWidth, int arrayLength);
 
-//bool findColoursOfNeighbours(int pixelPosition, int arrayWidth, int arrayLength, Uint32* bufferArray);
-
 void cleanup(Uint32* pixels, std::vector<int> indexes);
-
-//std::vector<int> contourFinder(Uint32* pixels, Uint32 noPixelColour)
 
 std::vector<int> bfs(int index, int arrayWidth, int arrayLength, Uint32* pixels, int* visitedTracker);
 
@@ -48,10 +44,4 @@ int findFurthest(std::vector<int> allPoints, int a, int b, int epsilon, int arra
 
 void rdp(int startIndex, int endIndex, int epsilon, int arrayWidth, std::vector<int> allPoints, std::vector<int>& rdpPoints);
 
-Vector2* getVec2Array(std::vector<int> rdpPoints, int arrayWidth);
-
-Vector2* convertToVec2(TPPLPoint* polyPoints, int numPoints);
-
-Vector2 rotateTranslate(Vector2& vector, float angle);
-
-b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Sprite& s, Transform& t);
+b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Transform& t);

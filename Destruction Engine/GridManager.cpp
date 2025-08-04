@@ -18,8 +18,6 @@ GridSystemManager::GridSystemManager() {
 GridSystemManager::GridSystemManager(int tWidth, int gWidth, int gHeight) {
     {
         Signature sig;
-        //sig.addComponent<Transform>();
-        //sig.addComponent<Walkable>();
         sig.addComponent<TileRect>();
         gSystem = gCoordinator.addSystem<GridSystem>(sig);
     }
