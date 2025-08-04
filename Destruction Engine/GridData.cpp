@@ -23,6 +23,10 @@ Vector2 worldToGridPos(std::shared_ptr<GridData> g, Vector2 worldPos) {
     };
 }
 
+int worldToGridIndex(std::shared_ptr<GridData> g, Vector2 worldPos) {
+    return toIndex(g, (Vector2){worldPos.x / g->tileWidth, worldPos.y / g->tileWidth});
+}
+
 int toIndex(std::shared_ptr<GridData> g, Vector2 gridPos) {
     return gridPos.x + gridPos.y * g->gridWidth;
 }

@@ -58,18 +58,11 @@ void GridSystemManager::update(float dt) {
 //This is incredibly ugly. Need to add quadtree-based partitioning to make it more efficient, because right now we are
 //just comparing every single tile to every single terrain collider
 void GridSystemManager::setGridTileColliders(TerrainSet* tSet) {
-	printf("Number of colliders we are testing: %i\n", tSet->size);
-	//Sometimes I think the pointers in tSet come up null. Need to find 
-	//out why and fix!!!!
-    printf("Printing Collider Pointers!\n");
-    for(int i = 0; i < tSet->size; i++) {
-	printf("%i\n", tSet->cArr[i]);
-    }
     for(int i = 0; i < tSet->size; i++) {
         for(Entity e : gSystem->registeredEntities) {
             TileRect temp = gCoordinator.getComponent<TileRect>(e);
             if(isOverlapping(temp.dimensions, tSet->cArr[i])){
-                intersectingSubcells(grid, temp.associateTile, tSet->cArr[i]);
+                intersectingSubcells(grid, temp.associateTile, tSet->cArr[i], true);
             }
         }
     }
@@ -173,7 +166,8 @@ float getPolygonArea(Polygon& p) {
 
 //Need to make main "insertion" function that takes a TileData struct and a Collider reference, then loops over every subcell
 //to determine whether they are intersecting or not (can just use SAT algorithm)
-void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c) {
+//Need to rework this so it batches computations to make it work better with SIMD
+void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c, bool setUnwalkable) {
     //Loop over the subcells
     for(int i = 0; i < g->subWidth * g->subWidth; i++) {
         //Get current subcell world position
@@ -188,25 +182,24 @@ void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c) {
             //If it does, check by how much using Martinez-Rueda-Fiedo algorithm: https://www.sciencedirect.com/science/article/abs/pii/S0098300408002793
 	        std::vector<Point> rectPoints = getRectVertices(&subRect);
             Polygon testRectPoly = Polygon(rectPoints);
-            //printf("=====Printing Rect Vertices=====\n");
-            //for(int i = 0; i < rectPoints.size(); i++) {
-            //    printf("(%f, %f)\n", rectPoints[i].x, rectPoints[i].y);
-            //}
             std::vector<Point> colliderPoints = getColliderVertices(c);
             Polygon testColliderPoly = Polygon(colliderPoints);
-            //printf("=====Printing Collider Vertices=====\n");
-            //for(int i = 0; i < colliderPoints.size(); i++) {
-            //    printf("(%f, %f)\n", colliderPoints[i].x, colliderPoints[i].y);
-            //}
             Polygon testResult = Polygon();
             Martinez compute = Martinez(testRectPoly, testColliderPoly);
             compute.compute(compute.INTERSECTION, testResult);
 
-            //If >=20% (arbitrary value, should be adjusted or made adjustable as needed), set the subcell to be unwalkable
-            if(getPolygonArea(testResult) / getPolygonArea(testRectPoly) >= 0.2) 
-                g->tiles[index].subcells[i] = 1;
-            else 
+            //If we are checking for collider overlaps to set unwalkable/walkable tiles (on world instantiation or collider creation)
+            if(setUnwalkable) {
+                //If >=20% (arbitrary value, should be adjusted or made adjustable as needed), set the subcell to be unwalkable
+                if(getPolygonArea(testResult) / getPolygonArea(testRectPoly) >= 0.2) 
+                    g->tiles[index].subcells[i] = 1;
+                else 
+                    g->tiles[index].subcells[i] = 0;
+            }
+            //If a collider is destroyed, then we can safely assume that all tiles that it overlaps are walkable (right?)
+            else {
                 g->tiles[index].subcells[i] = 0;
+            }
 
             //Need to add code here that makes all other subcells unfilled.
         }

@@ -28,7 +28,6 @@ int createNewTileClip(TileSet& t, SDL_FRect d, bool colliding) {
 }
 
 int addElementToTerrainSet(TerrainSet* tSet, Collider* c) {
-	printf("Collider Pointer before adding: %i\n", c);
 	if(tSet->size >= tSet->maxsize) {
 		Collider** temp = (Collider**)malloc(tSet->maxsize*2*sizeof(Collider*));
 		memcpy(temp, tSet->cArr, tSet->maxsize*sizeof(Collider*));
@@ -107,7 +106,7 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path, 
 			}
 			else {
 				//Stop loading the map 
-				printf("Error loading map: Invalid tile type\n");
+				("Error loading map: Invalid tile type\n");
 				tilesLoaded = false;
 				break;
 			}
@@ -123,10 +122,6 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path, 
 				//Move to the next row
 				y += TILE_HEIGHT;
 			}
-		}
-		printf("Printing Collider Pointers in function\n");
-		for(int i = 0; i < tSet->size; i++) {
-			printf("%i\n", tSet->cArr[i]);
 		}
 	}
 

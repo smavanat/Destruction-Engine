@@ -100,6 +100,7 @@ Vector2 gridToWorldPos(std::shared_ptr<GridData> g, Vector2 gridPos);
 Vector2 gridToWorldPos(std::shared_ptr<GridData> g, int index);
 //Gets the grid position from a world position
 Vector2 worldToGridPos(std::shared_ptr<GridData> g, Vector2 worldPos);
+int worldToGridIndex(std::shared_ptr<GridData> g, Vector2 worldPos);
 //Converts a grid position to a 1D array index
 int toIndex(std::shared_ptr<GridData> g, Vector2 gridPos);
 //Checks if a grid position is in bounds

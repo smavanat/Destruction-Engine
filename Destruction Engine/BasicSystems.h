@@ -3,11 +3,13 @@
 #include "Coordinator.h"
 #include "Entity.h"
 #include "Outline.h"
+#include "GridManager.h"
 
 extern Coordinator gCoordinator;
 extern SDL_Renderer* gRenderer;
 extern int scale;
 extern b2WorldId worldId;
+extern GridSystemManager gGridManager;
 
 //Renders Sprites
 class RenderSystem : public System {
@@ -72,6 +74,13 @@ public:
 			}
 		}
 
+		for (Entity e : entitiesToRemove) {
+			Transform t = gCoordinator.getComponent<Transform>(e);
+			Collider c = gCoordinator.getComponent<Collider>(e);
+			intersectingSubcells(gGridManager.grid, worldToGridIndex(gGridManager.grid, t.position), &c, false);
+			gCoordinator.destroyEntity(e);
+		}
+
 		for (int i = 0; i < spritesToAdd.size(); i++) {
 			std::vector<int> tempPoints = marchingSquares(spritesToAdd[i]);
 			std::vector<int> temprdpPoints;
@@ -83,14 +92,13 @@ public:
 			Entity e = gCoordinator.createEntity();
 			gCoordinator.addComponent(e, transformsToAdd[i]);
 			gCoordinator.addComponent(e, spritesToAdd[i]);
-			gCoordinator.addComponent(e, Collider(createTexturePolygon(temprdpPoints, width, worldId, spritesToAdd[i], transformsToAdd[i])));
+			Collider* c = new Collider(createTexturePolygon(temprdpPoints, width, worldId, spritesToAdd[i], transformsToAdd[i]));
+			intersectingSubcells(gGridManager.grid, worldToGridIndex(gGridManager.grid, transformsToAdd[i].position), c, true);
+			gCoordinator.addComponent(e, *c);
 		}
 		spritesToAdd.clear();
 		transformsToAdd.clear();
 
-		for (Entity e : entitiesToRemove) {
-			gCoordinator.destroyEntity(e);
-		}
 		entitiesToRemove.clear();
 	}
 

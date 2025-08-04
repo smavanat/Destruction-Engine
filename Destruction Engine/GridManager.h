@@ -11,7 +11,6 @@ public:
 	void update(float dt);
 	bool loadGridFromFile(std::string path);
 	void setGridTileColliders(TerrainSet* tSet);
-private:
 	std::shared_ptr<GridSystem> gSystem;
 	std::shared_ptr<PathFindingSystem> pSystem;
 	std::shared_ptr<GridData> grid;
@@ -35,4 +34,4 @@ struct SegmentIntersection {
 };
 
 bool isOverlapping(SDL_FRect* t, Collider* c);
-void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c);
+void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c, bool setUnWalkable);
