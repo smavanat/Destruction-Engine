@@ -28,9 +28,10 @@ int createNewTileClip(TileSet& t, SDL_FRect d, bool colliding) {
 }
 
 int addElementToTerrainSet(TerrainSet* tSet, Collider* c) {
+	printf("Collider Pointer before adding: %i\n", c);
 	if(tSet->size >= tSet->maxsize) {
-		Collider** temp = (Collider**)malloc(tSet->maxsize*2);
-		memcpy(temp, tSet->cArr, tSet->maxsize*2);
+		Collider** temp = (Collider**)malloc(tSet->maxsize*2*sizeof(Collider*));
+		memcpy(temp, tSet->cArr, tSet->maxsize*sizeof(Collider*));
 		tSet->cArr = temp;
 		tSet->maxsize*=2;
 	}
@@ -100,8 +101,9 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path, 
 				//Adding the collider here.
 				std::vector<int> points = { 0, (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
 				b2BodyId tempId = createTexturePolygon(points, static_cast<int>(t.collidingTileClips[index]->dimensions.w), worldId, s, tr);
-				gCoordinator.addComponent(e, Collider(tempId));
-				addElementToTerrainSet(tSet, &gCoordinator.getComponent<Collider>(e));
+				Collider* c = new Collider(tempId);
+				gCoordinator.addComponent(e, *c);
+				addElementToTerrainSet(tSet, c);
 			}
 			else {
 				//Stop loading the map 
@@ -121,6 +123,10 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path, 
 				//Move to the next row
 				y += TILE_HEIGHT;
 			}
+		}
+		printf("Printing Collider Pointers in function\n");
+		for(int i = 0; i < tSet->size; i++) {
+			printf("%i\n", tSet->cArr[i]);
 		}
 	}
 

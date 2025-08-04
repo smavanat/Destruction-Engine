@@ -61,6 +61,10 @@ void GridSystemManager::setGridTileColliders(TerrainSet* tSet) {
 	printf("Number of colliders we are testing: %i\n", tSet->size);
 	//Sometimes I think the pointers in tSet come up null. Need to find 
 	//out why and fix!!!!
+    printf("Printing Collider Pointers!\n");
+    for(int i = 0; i < tSet->size; i++) {
+	printf("%i\n", tSet->cArr[i]);
+    }
     for(int i = 0; i < tSet->size; i++) {
         for(Entity e : gSystem->registeredEntities) {
             TileRect temp = gCoordinator.getComponent<TileRect>(e);

@@ -6,6 +6,7 @@ ECS System: Basic component and entity template setup.
 			Basic general system
 			Basic Coordinator class that handles all the managers in one spot
 			Basic Event Bus 
+			
 			Re-Written Texture class as a c struct
 			Basic main class based off of Texture clicker.cpp to actually have a proper insertion point
 			Basic Grid, pathfinding and tile systems
