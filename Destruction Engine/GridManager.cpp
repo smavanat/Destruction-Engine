@@ -1,7 +1,7 @@
 #include "GridManager.h"
 #include "martinez.h"
 GridSystemManager::GridSystemManager() {
-    gSystem = nullptr;
+    //gSystem = nullptr;
     pSystem = nullptr;
     //tSystem = nullptr;
     grid = std::make_shared<GridData>();
@@ -16,11 +16,11 @@ GridSystemManager::GridSystemManager() {
 }
 
 GridSystemManager::GridSystemManager(int tWidth, int gWidth, int gHeight) {
-    {
-        Signature sig;
-        sig.addComponent<TileRect>();
-        gSystem = gCoordinator.addSystem<GridSystem>(sig);
-    }
+    // {
+    //     Signature sig;
+    //     sig.addComponent<TileRect>();
+    //     gSystem = gCoordinator.addSystem<GridSystem>(sig);
+    // }
     //gSystem->init();
     {
         Signature sig;
@@ -40,7 +40,7 @@ GridSystemManager::GridSystemManager(int tWidth, int gWidth, int gHeight) {
     grid->tiles = std::vector<TileData>( static_cast<size_t>(gWidth * gHeight) );
 
     //Making sure the child systems all have the same pointer
-    gSystem->setGrid(grid);
+    //gSystem->setGrid(grid);
     pSystem->setGrid(grid);
 }
 
@@ -49,20 +49,21 @@ GridSystemManager::GridSystemManager(int tWidth, int gWidth, int gHeight, std::s
 }
 
 void GridSystemManager::update(float dt) {
-    gSystem->update(dt);
+    //gSystem->update(dt);
     pSystem->update(dt);
 }
 
-//This is incredibly ugly. Need to add quadtree-based partitioning to make it more efficient, because right now we are
-//just comparing every single tile to every single terrain collider
 void GridSystemManager::setGridTileColliders(TerrainSet* tSet) {
-    //This is too complicated. Can literally just get the tile from the collider's position by using worldToGridIndex()
+    //Can literally just get the tile from the collider's position by using worldToGridIndex()
     for(int i = 0; i < tSet->size; i++) {
-        for(Entity e : gSystem->registeredEntities) {
-            TileRect temp = gCoordinator.getComponent<TileRect>(e);
-            if(isOverlapping(temp.dimensions, tSet->cArr[i])){
-                intersectingSubcells(grid, temp.associateTile, tSet->cArr[i], true);
-            }
+        Entity e = (Entity){tSet->eArr[i]};
+        Collider c = gCoordinator.getComponent<Collider>(e);
+        Transform t = gCoordinator.getComponent<Transform>(e);
+        Vector2 gridPosition = worldToGridPos(grid, t.position);
+
+        SDL_FRect dimensions = {gridPosition.x*grid->tileWidth, gridPosition.x*grid->tileWidth, grid->tileWidth, grid->tileWidth};
+        if(isOverlapping(&dimensions, &c)){
+            intersectingSubcells(grid, worldToGridIndex(grid, (Vector2){dimensions.x, dimensions.y}), &c, true);
         }
     }
 }

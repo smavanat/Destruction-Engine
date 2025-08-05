@@ -39,7 +39,7 @@ TerrainSet tSet;
 Entity testTexture;
 Entity testPath;
 
-int scale = 5;
+int scale = 20;
 
 bool init();
 bool loadMedia();
@@ -90,7 +90,7 @@ bool init()
 	t = (TileSet){srcSprite, std::vector<TileClip*>(), std::vector<TileClip*>()};
 
 	//Creating the array that holds all of the terrain colliders
-	tSet = (TerrainSet){(Collider**)calloc(25, sizeof(Collider*)), 0, 25};
+	tSet = (TerrainSet){(uint32_t*)calloc(25, sizeof(uint32_t)), 0, 25};
 	//Initialization flag
 	bool success = true;
 
@@ -127,7 +127,7 @@ bool init()
 			}
 		}
 		gCoordinator.addComponent(testTexture, Transform((Vector2){1420.0f, 440.0f}, 0.0));
-		gCoordinator.addComponent(testPath, Pathfinding((Vector2){10, 10}, (Vector2){500, 500}));
+		gCoordinator.addComponent(testPath, Pathfinding((Vector2){10, 10}, (Vector2){500, 500}, 2));
 
 		worldDef = b2DefaultWorldDef();
 		worldDef.gravity = { 0.0f, 0.0f };
@@ -168,9 +168,8 @@ bool loadMedia()
 	gGridManager.setGridTileColliders(&tSet);
 
 	//So that there is some sort of default collider to go along with a default texture.
-	//std::vector<int> points = {0, (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
-	b2BodyId tempId = createBoxCollider(gCoordinator.getComponent<Transform>(testTexture).position, s.surfacePixels->w, s.surfacePixels->h, gCoordinator.getComponent<Transform>(testTexture).rotation, worldId);
-	//createTexturePolygon(points, s.surfacePixels->w, worldId, s, gCoordinator.getComponent<Transform>(testTexture));
+	Transform t = gCoordinator.getComponent<Transform>(testTexture);
+	b2BodyId tempId = createBoxCollider(t.position, s.surfacePixels->w, s.surfacePixels->h, t.rotation, worldId);
 	gCoordinator.addComponent(testTexture, Collider(tempId, BOX));
 
 	return success;
@@ -185,7 +184,7 @@ void close()
 	}
 	b2DestroyWorld(worldId);
 	freeTileSet(t);
-	free(tSet.cArr);
+	free(tSet.eArr);
 	//Destroy window	
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);
@@ -222,6 +221,9 @@ int main(int argc, char* args[]) {
 						case SDL_EVENT_MOUSE_BUTTON_UP:
 							if (e.button.button == SDL_BUTTON_LEFT) {
 								gCoordinator.getInput()->leftMouseButtonDown = false;
+								Pathfinding &p = gCoordinator.getComponent<Pathfinding>(testPath);
+								p.startPos = (Vector2){10, 10};
+								p.endPos = (Vector2){500, 500};
 								gCoordinator.getEventBus()->publish(new ErasureEvent());
 								break;
 							}

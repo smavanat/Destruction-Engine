@@ -87,22 +87,22 @@ struct Tag : public Component<Tag> {
 
 struct TileRect : public Component<TileRect> {
     SDL_FRect* dimensions;
-    int associateTile;
 
     TileRect() = default;
 
-    TileRect(SDL_FRect* s, int a) : dimensions(s), associateTile(a) {};
+    TileRect(SDL_FRect* s) : dimensions(s) {};
 };
 
 //Holds the start and end positions to find a path between, and the path returned
 struct Pathfinding : public Component<Pathfinding> {
+    std::vector<Vector2> path; //Change this to a C-style array (Vector2*)
     Vector2 startPos;
     Vector2 endPos;
-    std::vector<Vector2> path;
+    int size;
 
     Pathfinding() = default;
 
-    Pathfinding(Vector2 s, Vector2 e) : startPos(s), endPos(e), path(std::vector<Vector2>()) {};
+    Pathfinding(Vector2 st, Vector2 e, int s) : startPos(st), endPos(e), path(std::vector<Vector2>()), size(s) {};
 };
 
 //(Tile)Sprite functions

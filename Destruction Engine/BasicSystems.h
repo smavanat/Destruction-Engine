@@ -76,6 +76,9 @@ public:
 		for (Entity e : entitiesToRemove) {
 			Transform t = gCoordinator.getComponent<Transform>(e);
 			Collider c = gCoordinator.getComponent<Collider>(e);
+			Sprite s = gCoordinator.getComponent<Sprite>(e);
+			//b2DestroyBody(c.colliderId);
+			free(s.surfacePixels);
 			intersectingSubcells(gGridManager.grid, worldToGridIndex(gGridManager.grid, t.position), &c, false);
 			gCoordinator.destroyEntity(e);
 		}

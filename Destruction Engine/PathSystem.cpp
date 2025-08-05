@@ -1,46 +1,5 @@
-#include "GridSystem.h"
+#include "PathSystem.h"
 #include <algorithm>
-//Initialises the signature for the grid system and creates the tiles for the grid
-void GridSystem::init() {
-    //Create the tiles
-	createTiles();
-}
-
-//Checks if the grid has changed in a meaningful way (walkable status of tiles), and if it has, publishes an
-//event so the pathfinding system can be updated too
-void GridSystem::update(float dt) {
-	bool gridChanged = false;
-	for (Entity e : registeredEntities) {
-		if (tileStatusChanged(e)) {
-			gridChanged = true;
-		}
-	}
-
-	if (gridChanged) {
-
-	}
-}
-
-//Creates the tiles for the grid
-void GridSystem::createTiles() {
-    for (int i = 0; i < grid->gridHeight; i++) {
-        for (int j = 0; j < grid->gridWidth; j++) {
-            Entity e = gCoordinator.createEntity();
-            SDL_FRect* temp = new (SDL_FRect){(j*grid->tileWidth), (i*grid->tileWidth), grid->tileWidth, grid->tileWidth};
-            gCoordinator.addComponent(e, (TileRect){temp, (i*grid->gridWidth)+j});
-        }
-	}
-}
-
-void GridSystem::setGrid(std::shared_ptr<GridData> g) {
-    grid = g;
-}
-
-//This only needs to be filled once the actual destruction pathfinding system has been implemented
-bool GridSystem::tileStatusChanged(Entity e) {
-	return false;
-}
-
 //Pathfinding system initialisation. Incomplete
 void PathFindingSystem::init() {
 
@@ -74,9 +33,9 @@ void PathFindingSystem::update(float dt) {
             */
 
             //Get the path in node form
-            auto path = FindPath(p.startPos, p.endPos, grid, 2);
+            auto path = FindPath(p.startPos, p.endPos, grid, p.size);
             std::vector<Vector2> vecPath(path.size());
-            int cWidth = grid->subWidth;
+            int cWidth = grid->tileWidth;
 
             //Convert it to coordinates
             std::transform(path.begin(), path.end(), vecPath.begin(),

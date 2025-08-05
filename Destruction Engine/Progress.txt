@@ -19,8 +19,9 @@ ECS System: Basic component and entity template setup.
 TODO (for urss):
 			Add agents that can use the basic pathfinding system
 			Add agents that can use the destruction system to find faster paths 
-			Optimise.
-			Re-write in C (most of the code is C anyway)
+			Re-write the ECS system so that all of the data can be freed properly, otherwise get massive memory overuse 
+			and memory loss
+			Optimise + Re-write in C (most of the code is C anyway)
 TODO (general):
 			Add proper file reading and writing for all systems
 			Add a ui for editing
@@ -29,14 +30,9 @@ TODO (general):
 			Make pathfinding work cross-chunk (heirarchical pathfinding)
 
 Things to look into in future for optimisation and fixes:
-The pathfinding needs to have Steering Behaviours added. It currently does not have the actual start
-and end positions added to the returned path. Maybe steering behaviours could be used to fix that, or could use 
-rdp to simplify the a* path.
-Use Entity archetypes -> organise entites by the components that they have as and then just have the systems 
-fetch entities from these archetypes. Apparently this optimises the ECS
-Need to fix the way signatures are set for Systems. Currently this is done manually every time I want to 
-add a system using the coordinator. Need to have a way of each system just holding its own signature, then can
-just use that with the coordinator
+FIGURE OUT WHY SPLITTING TEXTURES INCURS SUCH A HIGH MEMORY USE -> its bad memory management. Need to re-write ecs to handle this 
+properly on entity destruction
+Fix the bug where texture erase cannot happen cross-tile -> this only happens on diagonals for some reason (maybe not important?)
 Need to add a way to check if a system has already been initialised -> maybe just add an "initialised" bool, 
 to prevent repeat initialisations. Or figure out a better way of initialising systems, because currently, if a system
 is added after gCoordinator init is called, its fucked, and have to do it manually, but at the same time, can't just
@@ -45,6 +41,16 @@ for now. NOOO BOOLS BAD. Need to think of a better way, probably just by storing
 Need to add memory arenas to make allocation less painful
 Need to re-write a lot of the iteration code, especially in the collider-tile assignment part to be more batch-based to take
 advantage of SIMD.
+Get rid of the GridSystem class and just make everything run through GridData structs. No need to have two parallel systems that
+do the same thing
+The pathfinding needs to have Steering Behaviours added. It currently does not have the actual start
+and end positions added to the returned path. Maybe steering behaviours could be used to fix that, or could use 
+rdp to simplify the a* path.
+Use Entity archetypes -> organise entites by the components that they have as and then just have the systems 
+fetch entities from these archetypes. Apparently this optimises the ECS
+Need to fix the way signatures are set for Systems. Currently this is done manually every time I want to 
+add a system using the coordinator. Need to have a way of each system just holding its own signature, then can
+just use that with the coordinator
 
 Week 1 Notes:
 Implemented an Event Bus

@@ -27,15 +27,15 @@ int createNewTileClip(TileSet& t, SDL_FRect d, bool colliding) {
 	return 0;
 }
 
-int addElementToTerrainSet(TerrainSet* tSet, Collider* c) {
+int addElementToTerrainSet(TerrainSet* tSet, uint32_t e) {
 	if(tSet->size >= tSet->maxsize) {
-		Collider** temp = (Collider**)malloc(tSet->maxsize*2*sizeof(Collider*));
-		memcpy(temp, tSet->cArr, tSet->maxsize*sizeof(Collider*));
-		tSet->cArr = temp;
+		uint32_t* temp = (uint32_t*)malloc(tSet->maxsize*2*sizeof(uint32_t));
+		memcpy(temp, tSet->eArr, tSet->maxsize*sizeof(uint32_t));
+		tSet->eArr = temp;
 		tSet->maxsize*=2;
 	}
 
-	tSet->cArr[tSet->size] = c;
+	tSet->eArr[tSet->size] = e;
 	tSet->size++;
 	return 0;
 }
@@ -100,10 +100,9 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path, 
 				//Adding the collider here.
 				std::vector<int> points = { 0, (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
 				b2BodyId tempId = createBoxCollider(tr.position, s.surfacePixels->w, s.surfacePixels->h, tr.rotation, worldId);
-				//createTexturePolygon(points, static_cast<int>(t.collidingTileClips[index]->dimensions.w), worldId, s, tr);
 				Collider* c = new Collider(tempId, BOX);
 				gCoordinator.addComponent(e, *c);
-				addElementToTerrainSet(tSet, c);
+				addElementToTerrainSet(tSet, e.id);
 			}
 			else {
 				//Stop loading the map 

@@ -142,9 +142,9 @@ void GridDebugSystem::update(float delta) {
 		SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0xFF);
 		for (Entity e : registeredEntities) {
 			//Just draw a box around the position of the tile (always in the center of the tile)
-			Transform t = gCoordinator.getComponent<Transform>(e);
-			SDL_FRect tileRect = { t.position.x - TILE_WIDTH / 2, t.position.y - TILE_HEIGHT / 2, TILE_WIDTH, TILE_HEIGHT };
-			SDL_RenderRect(gRenderer, &tileRect);
+			TileRect t = gCoordinator.getComponent<TileRect>(e);
+			//SDL_FRect tileRect = { t.position.x - TILE_WIDTH / 2, t.position.y - TILE_HEIGHT / 2, TILE_WIDTH, TILE_HEIGHT };
+			SDL_RenderRect(gRenderer, t.dimensions);
 		}
 	}
 }

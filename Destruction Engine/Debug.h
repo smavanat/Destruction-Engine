@@ -3,7 +3,7 @@
 #include "BasicComponents.h"
 #include "Coordinator.h"
 #include "Entity.h"
-#include "GridSystem.h"
+#include "PathSystem.h"
 
 extern Coordinator gCoordinator;
 extern SDL_Renderer* gRenderer;

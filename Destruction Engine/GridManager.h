@@ -1,6 +1,6 @@
 #pragma once
 #include "TileSystem.h"
-#include "GridSystem.h"
+#include "PathSystem.h"
 #include <fstream>
 #include <memory>
 class GridSystemManager {
@@ -11,7 +11,7 @@ public:
 	void update(float dt);
 	bool loadGridFromFile(std::string path);
 	void setGridTileColliders(TerrainSet* tSet);
-	std::shared_ptr<GridSystem> gSystem;
+	// std::shared_ptr<GridSystem> gSystem;
 	std::shared_ptr<PathFindingSystem> pSystem;
 	std::shared_ptr<GridData> grid;
 };

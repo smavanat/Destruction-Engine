@@ -4,7 +4,6 @@ int drawCircle(SDL_Renderer* gRenderer, Vector2 center, float radius) {
     
     // Printing the initial point on the axes 
     // after translation
-    printf("(%d, %d) ", x + center.x, y + center.y);
 	SDL_RenderPoint(gRenderer, x+center.x, y+center.y);
 
     
@@ -12,10 +11,6 @@ int drawCircle(SDL_Renderer* gRenderer, Vector2 center, float radius) {
     // point will be printed
     if (radius <= 0)
     {
-        printf("(%d, %d) ", x + center.x, -y + center.y);
-        printf("(%d, %d) ", y + center.x, x + center.y);
-        printf("(%d, %d)\n", -y + center.x, x + center.y);
-
 		SDL_RenderPoint(gRenderer, x+center.x, -y+center.y);
 		SDL_RenderPoint(gRenderer, y + center.x, x + center.y);
 		SDL_RenderPoint(gRenderer, -y + center.x, x + center.y);
@@ -45,11 +40,6 @@ int drawCircle(SDL_Renderer* gRenderer, Vector2 center, float radius) {
         
         // Printing the generated point and its reflection
         // in the other octants after translation
-        printf("(%d, %d) ", x + center.x, y + center.y);
-        printf("(%d, %d) ", -x + center.x, y + center.y);
-        printf("(%d, %d) ", x + center.x, -y + center.y);
-        printf("(%d, %d)\n", -x + center.x, -y + center.y);
-
 		SDL_RenderPoint(gRenderer, x + center.x, y + center.y);
 		SDL_RenderPoint(gRenderer, -x + center.x, y + center.y);
 		SDL_RenderPoint(gRenderer, x + center.x, -y + center.y);
@@ -59,11 +49,6 @@ int drawCircle(SDL_Renderer* gRenderer, Vector2 center, float radius) {
         // the perimeter points have already been printed
         if (x != y)
         {
-            printf("(%d, %d) ", y + center.x, x + center.y);
-            printf("(%d, %d) ", -y + center.x, x + center.y);
-            printf("(%d, %d) ", y + center.x, -x + center.y);
-            printf("(%d, %d)\n", -y + center.x, -x + center.y);
-
 			SDL_RenderPoint(gRenderer, y + center.x, x + center.y);
 			SDL_RenderPoint(gRenderer, -y + center.x, x + center.y);
 			SDL_RenderPoint(gRenderer, y + center.x, -x + center.y);
