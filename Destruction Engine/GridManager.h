@@ -11,6 +11,7 @@ public:
 	void update(float dt);
 	bool loadGridFromFile(std::string path);
 	void setGridTileColliders(TerrainSet* tSet);
+	void printWorldGrid();
 	// std::shared_ptr<GridSystem> gSystem;
 	std::shared_ptr<PathFindingSystem> pSystem;
 	std::shared_ptr<GridData> grid;

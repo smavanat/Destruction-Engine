@@ -44,6 +44,7 @@ void PathFindingSystem::update(float dt) {
             for (Vector2 v : vecPath) {
                 printf("(%f, %f)", v.x, v.y);
             }
+            printf("\n");
 
             //Set the path value in the component
             p.path = vecPath;

@@ -38,7 +38,6 @@ struct GridData {
 	Vector2 origin = (Vector2){0, 0};
 	int subWidth = 4; //Holds the width of tiles in subcells (all tiles should be squares so this is enough)
 	int tileWidth = TILE_WIDTH; //Tile width in pixels. Only need to store this since all tiles are square
-	//int tileHeight = TILE_HEIGHT; //Tile height in pixels
 	int gridWidth = GRID_WIDTH; //Width of the grid in tiles
 	int gridHeight = GRID_HEIGHT; //Height of the grid in tiles
 };

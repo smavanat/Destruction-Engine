@@ -16,12 +16,6 @@ GridSystemManager::GridSystemManager() {
 }
 
 GridSystemManager::GridSystemManager(int tWidth, int gWidth, int gHeight) {
-    // {
-    //     Signature sig;
-    //     sig.addComponent<TileRect>();
-    //     gSystem = gCoordinator.addSystem<GridSystem>(sig);
-    // }
-    //gSystem->init();
     {
         Signature sig;
         sig.addComponent<Pathfinding>();
@@ -40,7 +34,6 @@ GridSystemManager::GridSystemManager(int tWidth, int gWidth, int gHeight) {
     grid->tiles = std::vector<TileData>( static_cast<size_t>(gWidth * gHeight) );
 
     //Making sure the child systems all have the same pointer
-    //gSystem->setGrid(grid);
     pSystem->setGrid(grid);
 }
 
@@ -49,21 +42,23 @@ GridSystemManager::GridSystemManager(int tWidth, int gWidth, int gHeight, std::s
 }
 
 void GridSystemManager::update(float dt) {
-    //gSystem->update(dt);
     pSystem->update(dt);
 }
 
 void GridSystemManager::setGridTileColliders(TerrainSet* tSet) {
     //Can literally just get the tile from the collider's position by using worldToGridIndex()
+    //printf("Number of Terrain Tiles: %i\n", tSet->size); //-> 28
     for(int i = 0; i < tSet->size; i++) {
         Entity e = (Entity){tSet->eArr[i]};
         Collider c = gCoordinator.getComponent<Collider>(e);
         Transform t = gCoordinator.getComponent<Transform>(e);
         Vector2 gridPosition = worldToGridPos(grid, t.position);
 
-        SDL_FRect dimensions = {gridPosition.x*grid->tileWidth, gridPosition.x*grid->tileWidth, grid->tileWidth, grid->tileWidth};
+        SDL_FRect dimensions = {gridPosition.x*grid->tileWidth, gridPosition.y*grid->tileWidth, grid->tileWidth, grid->tileWidth};
+        printf("TilePosition: (%f, %f)\n", dimensions.x, dimensions.y);
+
         if(isOverlapping(&dimensions, &c)){
-            intersectingSubcells(grid, worldToGridIndex(grid, (Vector2){dimensions.x, dimensions.y}), &c, true);
+            intersectingSubcells(grid, worldToGridIndex(grid, (Vector2){dimensions.x, dimensions.y}), &c, true); //Why isn't this working?
         }
     }
 }
@@ -117,6 +112,19 @@ bool GridSystemManager::loadGridFromFile(std::string path) {
     return true;
 }
 
+void GridSystemManager::printWorldGrid() {
+    for(int i = 0; i < grid->gridHeight; i++) {//Looping over the grid height
+        for(int p = 0; p < grid->subWidth; p++) { //Looping over the subcell width
+            for(int k = 0; k < grid->gridWidth; k++) { //Looping over the grid width
+                for(int j = 0; j < grid->subWidth; j++) { //Looping over the subcell height
+                    printf("%i ", grid->tiles[(i*grid->gridWidth)+k].subcells[(j*grid->subWidth)+p]);
+                }
+            }
+            printf("\n");
+        }
+    }
+}
+
 //Essentially, this goes over every subcell in a grid tile, and then checks if a given tile overlaps with that specific 
 //grid cell, (and how much? -> Could use Greiner–Hormann algorithm to essentially get the intersection area, calc area of 
 //the polygon, and then use that to determine whether the tile is filled or not)
@@ -164,10 +172,13 @@ float getPolygonArea(Polygon& p) {
     return b2AbsFloat(sum1 - sum2) / 2.0f;
 }
 
+//This function is not actually updating the tiledata. Why?
+
 //Need to make main "insertion" function that takes a TileData struct and a Collider reference, then loops over every subcell
 //to determine whether they are intersecting or not (can just use SAT algorithm)
 //Need to rework this so it batches computations to make it work better with SIMD
 void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c, bool setUnwalkable) {
+    printf("xPos: %i", index % g->gridWidth);
     //Loop over the subcells
     for(int i = 0; i < g->subWidth * g->subWidth; i++) {
         //Get current subcell world position
@@ -177,8 +188,10 @@ void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c, b
         subPos.y += sWidth*(i / g->subWidth);
         //Generate the rect to be used to represent the subcell
         SDL_FRect subRect = (SDL_FRect){subPos.x, subPos.y, sWidth, sWidth};
+        printf("Subcell No.%i position: (%f, %f)\n", i, subPos.x, subPos.y);
         //Check if that rect overlaps with the collider
-        if(isOverlapping(&subRect, c)) {
+        if(isOverlapping(&subRect, c)) { //This is now sometimes false. Need to check why
+            printf("Subcell is overlapping\n");
             //If it does, check by how much using Martinez-Rueda-Fiedo algorithm: https://www.sciencedirect.com/science/article/abs/pii/S0098300408002793
 	        std::vector<Point> rectPoints = getRectVertices(&subRect);
             Polygon testRectPoly = Polygon(rectPoints);
@@ -187,6 +200,13 @@ void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c, b
             Polygon testResult = Polygon();
             Martinez compute = Martinez(testRectPoly, testColliderPoly);
             compute.compute(compute.INTERSECTION, testResult);
+
+            for(int j = 0; j < testResult.ncontours(); j++) {
+                for(int k = 0; k < testResult[j].nvertices(); k++) {
+                    printf("(%f, %f) ", testResult[j].vertex(k).x, testResult[j].vertex(k).y);
+                }
+            }
+            printf("\n");
 
             //If we are checking for collider overlaps to set unwalkable/walkable tiles (on world instantiation or collider creation)
             if(setUnwalkable) {

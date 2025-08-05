@@ -137,6 +137,7 @@ void GridDebugSystem::onGridDebugEvent(const GridDebugEvent* event) {
 	displayGridOutlines = !displayGridOutlines;
 }
 
+//Doesn't work since we got rid of the grid system. Should adjust in future
 void GridDebugSystem::update(float delta) {
 	if (displayGridOutlines) {
 		SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0xFF);

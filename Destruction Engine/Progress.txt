@@ -41,8 +41,6 @@ for now. NOOO BOOLS BAD. Need to think of a better way, probably just by storing
 Need to add memory arenas to make allocation less painful
 Need to re-write a lot of the iteration code, especially in the collider-tile assignment part to be more batch-based to take
 advantage of SIMD.
-Get rid of the GridSystem class and just make everything run through GridData structs. No need to have two parallel systems that
-do the same thing
 The pathfinding needs to have Steering Behaviours added. It currently does not have the actual start
 and end positions added to the returned path. Maybe steering behaviours could be used to fix that, or could use 
 rdp to simplify the a* path.
@@ -216,3 +214,6 @@ but I have figured out a way to significantly optimise it and will go about impl
 
 I have added support for Box, Circle, Capsule and Polygon colliders, meaning it is much easier now to setup tiles and simple agents
 This was done by adding an enum containing all of the collider types, and just switching on them whenever needed (e.g. for visualisation)
+
+Got rid of the GridSystem class since there was no need for it as the GridData struct basically did everything it did and more. This 
+probably means we can also get rid of GridSystemManager since at this point it is literally just a wrapper for the Pathfinding System.

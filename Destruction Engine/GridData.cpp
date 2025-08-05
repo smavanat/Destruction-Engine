@@ -12,7 +12,7 @@ Vector2 gridToWorldPos(std::shared_ptr<GridData> g, Vector2 gridPos) {
 Vector2 gridToWorldPos(std::shared_ptr<GridData> g, int index) {
     return (Vector2) {
         (index % g->gridWidth) * g->tileWidth + (g->tileWidth / 2.0f),
-        (index / g -> gridWidth) * g->tileWidth + (g->tileWidth / 2.0f)
+        (index / g->gridWidth) * g->tileWidth + (g->tileWidth / 2.0f)
     };
 }
 
@@ -24,11 +24,11 @@ Vector2 worldToGridPos(std::shared_ptr<GridData> g, Vector2 worldPos) {
 }
 
 int worldToGridIndex(std::shared_ptr<GridData> g, Vector2 worldPos) {
-    return toIndex(g, (Vector2){worldPos.x / g->tileWidth, worldPos.y / g->tileWidth});
+    return toIndex(g, (Vector2){std::floor(worldPos.x / g->tileWidth), std::floor(worldPos.y / g->tileWidth)});
 }
 
 int toIndex(std::shared_ptr<GridData> g, Vector2 gridPos) {
-    return gridPos.x + gridPos.y * g->gridWidth;
+    return gridPos.x + (gridPos.y * g->gridWidth);
 }
 
 bool inBounds(std::shared_ptr<GridData> g, Vector2 gridPos) {
