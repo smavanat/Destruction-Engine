@@ -165,7 +165,7 @@ bool loadMedia()
 		success = false;
 	}
 
-	gGridManager.setGridTileColliders(&tSet);
+	//gGridManager.setGridTileColliders(&tSet);
 
 	//So that there is some sort of default collider to go along with a default texture.
 	Transform t = gCoordinator.getComponent<Transform>(testTexture);

@@ -125,6 +125,10 @@ void GridSystemManager::printWorldGrid() {
     }
 }
 
+double roundTo3dp(double value) {
+    return std::round(value * 1000.0) / 1000.0;
+}
+
 //Essentially, this goes over every subcell in a grid tile, and then checks if a given tile overlaps with that specific
 //grid cell, (and how much? -> Could use Greiner–Hormann algorithm to essentially get the intersection area, calc area of
 //the polygon, and then use that to determine whether the tile is filled or not)
@@ -154,7 +158,7 @@ std::vector<Point> getColliderVertices(Collider* c) {
     for(int i = 0; i < shapeCount; i++) {
         Vector2* points = b2Shape_GetPolygon(colliderShapes[i]).vertices;
         for(int j = 0; j < numVertices; j++) {
-            Point curr = Point((points[j].x + colliderPosition.x)*metresToPixels, (points[j].y+colliderPosition.y)*metresToPixels);
+            Point curr = Point(roundTo3dp((points[j].x + colliderPosition.x)*metresToPixels), roundTo3dp((points[j].y+colliderPosition.y)*metresToPixels));
             if(std::find(ret.begin(), ret.end(), curr) == ret.end())
                 ret.push_back(curr);
         }
@@ -189,16 +193,16 @@ float getPolygonArea(Polygon& p) {
 //to determine whether they are intersecting or not (can just use SAT algorithm)
 //Need to rework this so it batches computations to make it work better with SIMD
 void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnwalkable, Vector2 start) {
-    // printf("Collider Vertices:\n");
-    // int shapeCount = b2Body_GetShapeCount(c->colliderId);
-    // Vector2 colliderPosition = b2Body_GetPosition(c->colliderId);
-    // b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount*sizeof(b2ShapeId));
-    // b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
-    // Vector2* verts = b2Shape_GetPolygon(colliderShapes[0]).vertices;
-    // for(int i = 0; i < 4; i++) {
-    //     printf("(%f, %f) ", (verts[i].x+colliderPosition.x)*metresToPixels, (verts[i].y + colliderPosition.y)*metresToPixels);
-    // }
-    // printf("\n");
+    printf("Collider Vertices:\n");
+    int shapeCount = b2Body_GetShapeCount(c->colliderId);
+    Vector2 colliderPosition = b2Body_GetPosition(c->colliderId);
+    b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount*sizeof(b2ShapeId));
+    b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
+    Vector2* verts = b2Shape_GetPolygon(colliderShapes[0]).vertices;
+    for(int i = 0; i < 4; i++) {
+        printf("(%f, %f) ", (verts[i].x+colliderPosition.x)*metresToPixels, (verts[i].y + colliderPosition.y)*metresToPixels);
+    }
+    printf("\n");
     int index = worldToGridIndex(g, start);
     //Loop over the subcells
     for(int i = 0; i < g->subWidth * g->subWidth; i++) {
@@ -209,11 +213,11 @@ void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnwa
         subPos.y += sWidth*(i / g->subWidth);
         //Generate the rect to be used to represent the subcell
         SDL_FRect subRect = (SDL_FRect){subPos.x, subPos.y, sWidth, sWidth};
-        //printf("Subcell No.%i position: (%f, %f)\n", i, subPos.x, subPos.y);
+        printf("Subcell No.%i position: (%f, %f)\n", i, subPos.x, subPos.y);
 
         //Check if that rect overlaps with the collider
         if(isOverlapping(&subRect, c)) { 
-            printf("Subcell is overlapping\n");
+            //printf("Subcell is overlapping\n");
             //If it does, check by how much using Martinez-Rueda-Fiedo algorithm: https://www.sciencedirect.com/science/article/abs/pii/S0098300408002793
 	        std::vector<Point> rectPoints = getRectVertices(&subRect);
             Polygon testRectPoly = Polygon(rectPoints);
@@ -221,20 +225,21 @@ void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnwa
             Polygon testColliderPoly = Polygon(colliderPoints);
             Polygon testResult = Polygon();
             Martinez compute = Martinez(testRectPoly, testColliderPoly);
-            compute.compute(compute.INTERSECTION, testResult);
+            compute.compute(compute.INTERSECTION, testResult); 
 
             //If we are checking for collider overlaps to set unwalkable/walkable tiles (on world instantiation or collider creation)
-            // if(setUnwalkable) {
-            //     //If >=20% (arbitrary value, should be adjusted or made adjustable as needed), set the subcell to be unwalkable
-            //     if(getPolygonArea(testResult) / getPolygonArea(testRectPoly) >= 0.2)
-            //         g->tiles[index].subcells[i] = 1;
-            //     else
-            //         g->tiles[index].subcells[i] = 0;
-            // }
-            // //If a collider is destroyed, then we can safely assume that all tiles that it overlaps are walkable (right?)
-            // else {
-            //     g->tiles[index].subcells[i] = 0;
-            // }
+            //This doesn't quite work when tiles are being destroyed. I think its because of the faulty positioning
+            if(setUnwalkable) {
+                //If >=20% (arbitrary value, should be adjusted or made adjustable as needed), set the subcell to be unwalkable
+                if(getPolygonArea(testResult) / getPolygonArea(testRectPoly) >= 0.2)
+                    g->tiles[index].subcells[i] = 1;
+                else
+                    g->tiles[index].subcells[i] = 0;
+            }
+            //If a collider is destroyed, then we can safely assume that all tiles that it overlaps are walkable (right?)
+            else {
+                g->tiles[index].subcells[i] = 0;
+            }
 
             //Need to add code here that makes all other subcells unfilled.
         }

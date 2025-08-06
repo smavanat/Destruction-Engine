@@ -80,7 +80,8 @@ public:
 			//b2DestroyBody(c.colliderId);
 			free(s.surfacePixels);
 			//This and the one below are both wrong.
-			intersectingSubcells(gGridManager.grid, &c, false, t.position);
+			Vector2 gridPosition = worldToGridPos(gGridManager.grid, t.position);
+			intersectingSubcells(gGridManager.grid, &c, false, (Vector2){gridPosition.x*gGridManager.grid->tileWidth, gridPosition.y*gGridManager.grid->tileWidth});
 			gCoordinator.destroyEntity(e);
 		}
 
@@ -95,8 +96,9 @@ public:
 			Entity e = gCoordinator.createEntity();
 			gCoordinator.addComponent(e, transformsToAdd[i]);
 			gCoordinator.addComponent(e, spritesToAdd[i]);
+			Vector2 gridPosition = worldToGridPos(gGridManager.grid, transformsToAdd[i].position);
 			Collider* c = new Collider(createTexturePolygon(temprdpPoints, width, worldId, transformsToAdd[i]), POLYGON);
-			intersectingSubcells(gGridManager.grid, c, true, transformsToAdd[i].position);
+			intersectingSubcells(gGridManager.grid, c, true, (Vector2){gridPosition.x*gGridManager.grid->tileWidth, gridPosition.y*gGridManager.grid->tileWidth});
 			gCoordinator.addComponent(e, *c);
 		}
 		spritesToAdd.clear();
