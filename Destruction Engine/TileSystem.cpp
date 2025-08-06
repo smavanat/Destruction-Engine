@@ -98,7 +98,6 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path, 
 				Sprite s = duplicateSprite(t.srcTex, gRenderer, &t.collidingTileClips[index]->dimensions);
 				gCoordinator.addComponent(e, s);
 				//Adding the collider here.
-				std::vector<int> points = { 0, (s.surfacePixels->h - 1) * s.surfacePixels->w, (s.surfacePixels->h * s.surfacePixels->w) - 1, s.surfacePixels->w - 1 };
 				b2BodyId tempId = createBoxCollider(tr.position, s.surfacePixels->w, s.surfacePixels->h, tr.rotation, worldId);
 				Collider* c = new Collider(tempId, BOX);
 				gCoordinator.addComponent(e, *c);

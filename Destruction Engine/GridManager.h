@@ -35,4 +35,4 @@ struct SegmentIntersection {
 };
 
 bool isOverlapping(SDL_FRect* t, Collider* c);
-void intersectingSubcells(std::shared_ptr<GridData> g, int index, Collider* c, bool setUnWalkable);
+void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnWalkable, Vector2 start);

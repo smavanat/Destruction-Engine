@@ -18,8 +18,8 @@ Vector2 gridToWorldPos(std::shared_ptr<GridData> g, int index) {
 
 Vector2 worldToGridPos(std::shared_ptr<GridData> g, Vector2 worldPos) {
     return (Vector2) {
-        worldPos.x / g->tileWidth,
-        worldPos.y / g->tileWidth
+        std::floor(worldPos.x / g->tileWidth),
+        std::floor(worldPos.y / g->tileWidth)
     };
 }
 
