@@ -3,6 +3,7 @@
 #include "PathSystem.h"
 #include <fstream>
 #include <memory>
+#include <stdint.h>
 class GridSystemManager {
 public:
 	GridSystemManager();
@@ -33,6 +34,31 @@ struct SegmentIntersection {
 	double tC; //This represents the distance the intersection is along the clip polygon edge in the range [0, 1]
 	bool valid;
 };
+
+typedef struct {
+	Vector2 a;
+	Vector2 b;
+} Edge;
+
+typedef struct {
+	Edge* points;
+	uint32_t* count;
+	uint32_t size;
+	uint32_t maxSize;
+} CountMap;
+
+typedef struct {
+	Vector2* forward;
+	Vector2* back;
+	uint32_t size;
+	uint32_t maxSize;
+} PointMap;
+
+typedef struct {
+	Vector2* entries;
+	uint32_t size;
+	uint32_t maxSize;
+} VectorList;
 
 bool isOverlapping(SDL_FRect* t, Collider* c);
 void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnWalkable, Vector2 start);

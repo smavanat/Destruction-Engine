@@ -141,11 +141,15 @@ void GridDebugSystem::onGridDebugEvent(const GridDebugEvent* event) {
 void GridDebugSystem::update(float delta) {
 	if (displayGridOutlines) {
 		SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0xFF);
-		for (Entity e : registeredEntities) {
-			//Just draw a box around the position of the tile (always in the center of the tile)
-			TileRect t = gCoordinator.getComponent<TileRect>(e);
-			//SDL_FRect tileRect = { t.position.x - TILE_WIDTH / 2, t.position.y - TILE_HEIGHT / 2, TILE_WIDTH, TILE_HEIGHT };
-			SDL_RenderRect(gRenderer, t.dimensions);
+		Vector2 start = gGridManager.grid->origin;
+		for(int i = 0; i < gGridManager.grid->gridWidth*gGridManager.grid->subWidth; i++) {
+			SDL_RenderLine(gRenderer, start.x, start.y, start.x, start.y + gGridManager.grid->gridHeight*gGridManager.grid->tileWidth);
+			start.x += gGridManager.grid->tileWidth/gGridManager.grid->subWidth;
+		}
+		start = gGridManager.grid->origin;
+		for(int i = 0; i < gGridManager.grid->gridHeight*gGridManager.grid->subWidth; i++) {
+			SDL_RenderLine(gRenderer, start.x, start.y, start.x+ gGridManager.grid->gridWidth*gGridManager.grid->tileWidth, start.y);
+			start.y += gGridManager.grid->tileWidth/gGridManager.grid->subWidth;
 		}
 	}
 }

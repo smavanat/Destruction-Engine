@@ -22,6 +22,8 @@ Vector2 rotateAboutPoint(Vector2* point, Vector2* centre, double angle, bool inR
 
 Vector2 rotateAboutPoint2(Vector2* point, Vector2* centre, double angle, bool inRadians);
 
+bool equals(Vector2 a, Vector2 b);
+
 double normalizeAngle(double angle);
 
 #ifdef __cplusplus

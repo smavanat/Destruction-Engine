@@ -81,9 +81,9 @@ Polygon::Polygon(const std::vector<Point>& points) {
     }
 
     // Optionally ensure closed loop (optional: depending on whether Contour handles it internally)
-    if (contour.vertex(0) != contour.back()) {
-        contour.add(contour.vertex(0));
-    }
+    // if (contour.vertex(0) != contour.back()) {
+    //     contour.add(contour.vertex(0));
+    // }
 
     this->push_back(contour);
 }

@@ -129,23 +129,203 @@ double roundTo3dp(double value) {
     return std::round(value * 1000.0) / 1000.0;
 }
 
+#pragma region ColliderOrdering
+Edge makeEdge(Vector2 a, Vector2 b) {
+    if (a.x < b.x || (a.x == b.x && a.y < b.y)) {
+        return (Edge){a, b};
+    }
+    return (Edge){b,a};
+}
+
+bool equals(Edge a, Edge b) {
+    return equals(a.a, b.a) && equals(a.b, b.b);
+}
+
+CountMap* initialiseCountMap() {
+    CountMap* cm = (CountMap*)malloc(sizeof(CountMap));
+
+    cm->size = 0;
+    cm->maxSize = 10;
+    cm->points = (Edge*)calloc(10, sizeof(Edge));
+    cm->count = (uint32_t*)calloc(10, sizeof(uint32_t));
+    return cm;
+}
+
+PointMap* initialisePointMap() {
+    PointMap* pm = (PointMap*)malloc(sizeof(PointMap));
+
+    pm->size = 0;
+    pm->maxSize = 10;
+    pm->forward = (Vector2*)malloc(10*sizeof(Vector2));
+    pm->back = (Vector2*)malloc(10*sizeof(Vector2));
+    return pm;
+}
+
+bool contains(PointMap* pm, Vector2* a, Vector2* b) {
+    for(int i =0; i < pm->size; i++) {
+        if(equals(pm->forward[i], *a) && equals(pm->back[i], *b))
+            return true;
+    }
+    return false;
+}
+
+void insert(PointMap* pm, Vector2* a, Vector2* b) {
+    if(contains(pm, a, b)) return;
+
+    if(pm->size >= pm->maxSize) {
+        Vector2* tempF = (Vector2*)malloc(pm->maxSize*2*sizeof(Vector2));
+        memcpy(tempF, pm->forward, pm->maxSize*sizeof(Vector2));
+        free(pm->forward);
+        pm->forward = tempF;
+
+        Vector2* tempP = (Vector2*)malloc(pm->maxSize*2*sizeof(Vector2));
+        memcpy(tempP, pm->back, pm->maxSize*sizeof(Vector2));
+        free(pm->back);
+        pm->back = tempP;
+
+        pm->maxSize*=2;
+    }
+    pm->forward[pm->size] = *a;
+    pm->back[pm->size] = *b;
+    pm->size++;
+}
+
+void add(CountMap* cm, Edge v) {
+    for(int i = 0; i < cm->size; i++) {
+        if(equals(cm->points[i], v)){
+            cm->count[i]++;
+            return;
+        }
+    }
+    if(cm->size >= cm->maxSize) {
+        uint32_t* tempC = (uint32_t*)calloc(cm->maxSize*2, sizeof(uint32_t));
+		memcpy(tempC, cm->count, cm->maxSize*sizeof(uint32_t));
+        free(cm->count);
+		cm->count = tempC;
+
+        Edge* tempP = (Edge*)malloc(cm->maxSize*2*sizeof(Edge));
+		memcpy(tempP, cm->points, cm->maxSize*sizeof(Edge));
+        free(cm->points);
+		cm->points = tempP;
+		cm->maxSize*=2;
+    }
+
+    cm->points[cm->size] = v;
+    cm->count[cm->size] = 1;
+    cm->size++;
+}
+
+VectorList* initialiseVectorList() {
+    VectorList* vl = (VectorList*)malloc(sizeof(VectorList));
+
+    vl->size = 0;
+    vl->maxSize = 10;
+    vl->entries = (Vector2*)malloc(10*sizeof(Vector2));
+    return vl;
+}
+
+void add(VectorList* vl, Vector2* v) {
+    if(vl->size >= vl->maxSize) {
+        Vector2* temp = (Vector2*)malloc(vl->maxSize*2*sizeof(Vector2));
+		memcpy(temp, vl->entries, vl->maxSize*sizeof(Vector2));
+        free(vl->entries);
+		vl->entries = temp;
+		vl->maxSize*=2;
+    }
+
+    vl->entries[vl->size] = *v;
+    vl->size++;
+}
+
+VectorList* getElementsWithEqualKey(PointMap* pm, Vector2 key) {
+    VectorList* ret = initialiseVectorList();
+    for(int i = 0; i < pm->size; i++) {
+        if(equals(pm->forward[i], key)){
+            add(ret, &pm->back[i]);
+        }
+    }
+    return ret;
+}
+
+VectorList* reconstructPolygonBoundary(Collider* c) {
+    //Usual steps of getting collider data
+    int shapeCount = b2Body_GetShapeCount(c->colliderId);
+    Vector2 colliderPosition = b2Body_GetPosition(c->colliderId);
+    b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount*sizeof(b2ShapeId));
+    b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
+
+    //Initiallising the countMap for edges
+    CountMap* cMap = initialiseCountMap();
+
+    //Adding the edges of each triangle to the countMap
+    for(int i = 0; i < shapeCount; i++) {
+        Vector2* points = b2Shape_GetPolygon(colliderShapes[i]).vertices;
+        Vector2 x = points[0];
+        Vector2 y = points[1];
+        Vector2 z = points[2];
+
+        add(cMap, makeEdge(x, y));
+        add(cMap, makeEdge(x, z));
+        add(cMap, makeEdge(y, z));
+    }
+
+    PointMap* pMap = initialisePointMap();
+    //Extracting the unique Edges from the countMap
+    for(int i = 0; i < cMap->size; i++) {
+        if(cMap->count[i] == 1) {
+            insert(pMap, &cMap->points[i].a, &cMap->points[i].b);
+            insert(pMap, &cMap->points[i].b, &cMap->points[i].a);
+        }
+    }
+
+    VectorList* boundary = initialiseVectorList();
+    if(pMap->size == 0) {
+        free(pMap->back);
+        free(pMap->forward);
+        free(pMap);
+        free(cMap->points);
+        free(cMap);
+        free(colliderShapes);
+        return boundary;
+    }
+
+    Vector2 start = pMap->forward[0];
+    Vector2 current = start;
+    Vector2 previous = {9999, 9999};
+
+    do {
+        add(boundary, &current);
+
+        Vector2 next;
+        VectorList* range = getElementsWithEqualKey(pMap, current);
+        for(int i = 0; i < range->size; i++) {
+            if(!equals(range->entries[i], previous)) {
+                next = range->entries[i];
+                break;
+            }
+        }
+        previous = current;
+        current = next;
+        free(range->entries);
+        free(range);
+    }while(!equals(current, start));
+
+    free(pMap->back);
+    free(pMap->forward);
+    free(pMap);
+    free(cMap->points);
+    free(cMap);
+    free(colliderShapes);
+    return boundary;
+}
+#pragma endregion
+
 //Essentially, this goes over every subcell in a grid tile, and then checks if a given tile overlaps with that specific
 //grid cell, (and how much? -> Could use Greiner–Hormann algorithm to essentially get the intersection area, calc area of
 //the polygon, and then use that to determine whether the tile is filled or not)
 #pragma region SubOverlaps
 //function to get all unique collider vertices:
 std::vector<Point> getColliderVertices(Collider* c) {
-    int numVertices = 0;
-    switch(c->type) {
-        case POLYGON:
-            numVertices = 3;
-            break;
-        case BOX:
-            numVertices = 4;
-            break;
-        default:
-            break;
-    }
     //Getting the collider data
     int shapeCount = b2Body_GetShapeCount(c->colliderId);
     Vector2 colliderPosition = b2Body_GetPosition(c->colliderId);
@@ -153,16 +333,28 @@ std::vector<Point> getColliderVertices(Collider* c) {
     b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
     std::vector<Point> ret = std::vector<Point>();
 
-    //Getting all of the unique collider points
-    //Need to figure this part out in a smart way
-    for(int i = 0; i < shapeCount; i++) {
-        Vector2* points = b2Shape_GetPolygon(colliderShapes[i]).vertices;
-        for(int j = 0; j < numVertices; j++) {
-            Point curr = Point(roundTo3dp((points[j].x + colliderPosition.x)*metresToPixels), roundTo3dp((points[j].y+colliderPosition.y)*metresToPixels));
-            if(std::find(ret.begin(), ret.end(), curr) == ret.end())
+    switch(c->type) {
+        case BOX: {
+            Vector2* points = b2Shape_GetPolygon(colliderShapes[0]).vertices;
+
+            for(int i = 0; i < 4; i++) {
+                Point curr = Point(roundTo3dp((points[i].x + colliderPosition.x)*metresToPixels), roundTo3dp((points[i].y+colliderPosition.y)*metresToPixels));
                 ret.push_back(curr);
+            }
+            break;
         }
+        case POLYGON: {
+            VectorList* polyPoints = reconstructPolygonBoundary(c);
+            for(int i = 0; i < polyPoints->size; i++) {
+                Point curr = Point(roundTo3dp((polyPoints->entries[i].x + colliderPosition.x)*metresToPixels), roundTo3dp((polyPoints->entries[i].y+colliderPosition.y)*metresToPixels));
+                ret.push_back(curr);
+            }
+            break;
+        }
+        default:
+            break;
     }
+    free(colliderShapes);
     return ret;
 }
 
@@ -178,31 +370,47 @@ float getPolygonArea(Polygon& p) {
     float sum2 = 0.0f;
 
     for(int i = 0; i < p.ncontours(); i++) {
-		for(int j = 0; j < p[i].nvertices()-1; j++) {
-            sum1 += p[i].vertex(j).x * p[i].vertex(j == p[i].nvertices() ? 0 : j + 1).y;
-            sum2 += p[i].vertex(j).y * p[i].vertex(j == p[i].nvertices() ? 0 : j + 1).x;
+		for(int j = 0; j < p[i].nvertices(); j++) {
+            sum1 += p[i].vertex(j).x * p[i].vertex((j + 1) % p[i].nvertices()).y;
+            sum2 += p[i].vertex(j).y * p[i].vertex((j + 1) % p[i].nvertices()).x;
 		}
 	}
 
     return b2AbsFloat(sum1 - sum2) / 2.0f;
 }
 
-//This function is not actually updating the tiledata. Why?
-
 //Need to make main "insertion" function that takes a TileData struct and a Collider reference, then loops over every subcell
 //to determine whether they are intersecting or not (can just use SAT algorithm)
 //Need to rework this so it batches computations to make it work better with SIMD
 void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnwalkable, Vector2 start) {
-    printf("Collider Vertices:\n");
-    int shapeCount = b2Body_GetShapeCount(c->colliderId);
-    Vector2 colliderPosition = b2Body_GetPosition(c->colliderId);
-    b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount*sizeof(b2ShapeId));
-    b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
-    Vector2* verts = b2Shape_GetPolygon(colliderShapes[0]).vertices;
-    for(int i = 0; i < 4; i++) {
-        printf("(%f, %f) ", (verts[i].x+colliderPosition.x)*metresToPixels, (verts[i].y + colliderPosition.y)*metresToPixels);
-    }
-    printf("\n");
+    // printf("Start: (%f, %f)\n", start.x, start.y);
+    // printf("Collider Vertices:\n");
+    // int numVertices = 0;
+    // switch(c->type) {
+    //     case POLYGON:
+    //         numVertices = 3;
+    //         break;
+    //     case BOX:
+    //         numVertices = 4;
+    //         break;
+    //     default:
+    //         break;
+    // }
+    // int shapeCount = b2Body_GetShapeCount(c->colliderId);
+    // Vector2 colliderPosition = b2Body_GetPosition(c->colliderId);
+    // b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount*sizeof(b2ShapeId));
+    // b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
+    // for(int j = 0; j < shapeCount; j++) {
+    //     Vector2* verts = b2Shape_GetPolygon(colliderShapes[j]).vertices;
+    //     for(int i = 0; i < numVertices; i++) {
+    //         printf("(%f, %f) ", (verts[i].x+colliderPosition.x)*metresToPixels, (verts[i].y + colliderPosition.y)*metresToPixels);
+    //     }
+    // }
+    // printf("\n");
+
+    std::vector<Point> colliderPoints = getColliderVertices(c);
+    Polygon testColliderPoly = Polygon(colliderPoints);
+
     int index = worldToGridIndex(g, start);
     //Loop over the subcells
     for(int i = 0; i < g->subWidth * g->subWidth; i++) {
@@ -213,7 +421,7 @@ void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnwa
         subPos.y += sWidth*(i / g->subWidth);
         //Generate the rect to be used to represent the subcell
         SDL_FRect subRect = (SDL_FRect){subPos.x, subPos.y, sWidth, sWidth};
-        printf("Subcell No.%i position: (%f, %f)\n", i, subPos.x, subPos.y);
+        //printf("Subcell No.%i position: (%f, %f) (%f, %f)\n", i, subRect.x, subRect.y, subRect.w, subRect.h);
 
         //Check if that rect overlaps with the collider
         if(isOverlapping(&subRect, c)) { 
@@ -221,17 +429,39 @@ void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnwa
             //If it does, check by how much using Martinez-Rueda-Fiedo algorithm: https://www.sciencedirect.com/science/article/abs/pii/S0098300408002793
 	        std::vector<Point> rectPoints = getRectVertices(&subRect);
             Polygon testRectPoly = Polygon(rectPoints);
-            std::vector<Point> colliderPoints = getColliderVertices(c);
-            Polygon testColliderPoly = Polygon(colliderPoints);
             Polygon testResult = Polygon();
             Martinez compute = Martinez(testRectPoly, testColliderPoly);
             compute.compute(compute.INTERSECTION, testResult); 
 
+            // printf("Rect Polygon Vertices:\n");
+            // for(int i = 0; i < testRectPoly.ncontours(); i++) {
+            //     for(int j = 0; j < testRectPoly[i].nvertices(); j++) {
+            //         printf("(%f, %f)", testRectPoly[i].vertex(j).x, testRectPoly[i].vertex(j).y);
+            //     }
+            // }
+            // printf("\nCollider Polygon Vertices: \n");
+            // for(int i = 0; i < testColliderPoly.ncontours(); i++) {
+            //     for(int j = 0; j < testColliderPoly[i].nvertices(); j++) {
+            //         printf("(%f, %f)", testColliderPoly[i].vertex(j).x, testColliderPoly[i].vertex(j).y);
+            //     }
+            // }
+            // printf("\nResult Polygon Vertices: \n");
+            // for(int i = 0; i < testResult.ncontours(); i++) {
+            //     for(int j = 0; j < testResult[i].nvertices(); j++) {
+            //         printf("(%f, %f)", testResult[i].vertex(j).x, testResult[i].vertex(j).y);
+            //     }
+            // }
+            // printf("\n");
+
             //If we are checking for collider overlaps to set unwalkable/walkable tiles (on world instantiation or collider creation)
             //This doesn't quite work when tiles are being destroyed. I think its because of the faulty positioning
             if(setUnwalkable) {
-                //If >=20% (arbitrary value, should be adjusted or made adjustable as needed), set the subcell to be unwalkable
-                if(getPolygonArea(testResult) / getPolygonArea(testRectPoly) >= 0.2)
+                float resArea = getPolygonArea(testResult);
+                float rectArea = getPolygonArea(testRectPoly);
+                // printf("Area of the resulting polygon: %f\n", resArea);
+                // printf("Area of the tile rect: %f\n", rectArea);
+                //If >=40% (arbitrary value, should be adjusted or made adjustable as needed), set the subcell to be unwalkable
+                if(resArea / rectArea >= 0.4)
                     g->tiles[index].subcells[i] = 1;
                 else
                     g->tiles[index].subcells[i] = 0;
@@ -241,9 +471,37 @@ void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnwa
                 g->tiles[index].subcells[i] = 0;
             }
 
-            //Need to add code here that makes all other subcells unfilled.
         }
-   }
+        //Need to add code that re-evaluates the status of the tile (walkable, unwalkable or partial)
+        //Need to add code that re-evaluates the exitable statuses of the tile
+        if(setUnwalkable) {
+            //Resetting exitable status of the tile's edges:
+            g->tiles[index].exitable = {false, false, false, false};
+            //Setting the status of the tile
+            int walkable = 0;
+            int unwalkable = 0;
+            for(int i = 0; i < g->subWidth * g->subWidth; i++) {
+                if(g->tiles[index].subcells[i] == 0) {
+                    walkable++;
+                    //Setting the exitable statuses of the tile's edges
+                    if(i / g->subWidth == 0) g->tiles[index].exitable[0] = true; //North
+                    if(i % g->subWidth == g->subWidth-1) g->tiles[index].exitable[1] = true; //East
+                    if(i / g->subWidth == g->subWidth-1) g->tiles[index].exitable[2] = true; //South
+                    if(i % g->subWidth == 0) g->tiles[index].exitable[3] = true; //West
+                }
+                else unwalkable++;
+            }
+            if(walkable == g->subWidth*g->subWidth) g->tiles[index].status = 0; //set the tile to be walkable
+            else if (unwalkable == g->subWidth*g->subWidth) g->tiles[index].status = 1; //set the tile to be unwalkable
+            else g->tiles[index].status = 2; //set the tile to be partial
+        }
+    }
+    for(int i = 0; i < g->subWidth; i++) {
+        for(int j = 0; j < g->subWidth; j ++) {
+            printf("%i ", g->tiles[index].subcells[(i*g->subWidth)+j]);
+        }
+        printf("\n");
+    }
 }
 #pragma endregion
 

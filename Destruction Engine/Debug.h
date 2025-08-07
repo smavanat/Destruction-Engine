@@ -4,9 +4,11 @@
 #include "Coordinator.h"
 #include "Entity.h"
 #include "PathSystem.h"
+#include "GridManager.h"
 
 extern Coordinator gCoordinator;
 extern SDL_Renderer* gRenderer;
+extern GridSystemManager gGridManager;
 
 using Debug = System;
 

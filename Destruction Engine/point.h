@@ -15,10 +15,10 @@ class Point {
 
 public:
 	/** coordinates */
-	double x, y;
+	float x, y;
 
 	Point (): x(0), y (0) {}
-	Point (double ax, double ay): x (ax), y (ay) {}
+	Point (float ax, float ay): x (ax), y (ay) {}
 
 /** Distance to other point */
 	float dist(const Point& p) const
@@ -28,7 +28,7 @@ public:
 		return sqrt (dx * dx + dy * dy);
 	}
 	
-	bool operator== (const Point& p) const { return (x == p.x) && (y == p.y); }
+	bool operator== (const Point& p) const { return fabs(x - p.x) < 0.001f && fabs(y - p.y) < 0.001f; }
 	bool operator!= (const Point& p) const { return !(*this == p); }
 };
 

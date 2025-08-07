@@ -247,7 +247,7 @@ int main(int argc, char* args[]) {
 								gCoordinator.getEventBus()->publish(new ColliderDebugEvent());
 							}
 							if (e.key.key == SDLK_G) {
-								gGridManager.printWorldGrid();
+								//gGridManager.printWorldGrid();
 								gCoordinator.getEventBus()->publish(new GridDebugEvent());
 							}
 							if (e.key.key == SDLK_P) {
