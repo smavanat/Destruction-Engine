@@ -496,12 +496,12 @@ void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnwa
             else g->tiles[index].status = 2; //set the tile to be partial
         }
     }
-    for(int i = 0; i < g->subWidth; i++) {
-        for(int j = 0; j < g->subWidth; j ++) {
-            printf("%i ", g->tiles[index].subcells[(i*g->subWidth)+j]);
-        }
-        printf("\n");
-    }
+    // for(int i = 0; i < g->subWidth; i++) {
+    //     for(int j = 0; j < g->subWidth; j ++) {
+    //         printf("%i ", g->tiles[index].subcells[(i*g->subWidth)+j]);
+    //     }
+    //     printf("\n");
+    // }
 }
 #pragma endregion
 

@@ -43,6 +43,7 @@ public:
 			
 			Vector2 temp = b2Body_GetPosition(collider.colliderId);
 			transform.rotation = normalizeAngle(b2Rot_GetAngle(b2Body_GetRotation(collider.colliderId)))/DEGREES_TO_RADIANS;
+			transform.position = (Vector2){temp.x*metresToPixels, temp.y * metresToPixels};
 		}
 	}
 };
@@ -59,14 +60,17 @@ public:
 		std::vector<Entity> entitiesToRemove; 
 		std::vector<Sprite> spritesToAdd;
 		std::vector<Transform> transformsToAdd;
+		std::vector<Terrain> terrainToAdd;
 
 		for (Entity entity : registeredEntities) {
 			Sprite& s = gCoordinator.getComponent<Sprite>(entity);
 			Transform& t = gCoordinator.getComponent<Transform>(entity);
+			Terrain te = gCoordinator.getComponent<Terrain>(entity);
 			if (s.needsSplitting) {
 				for (std::pair<Sprite, Transform> pair : splitTextureAtEdge(s, t, gRenderer)) {
 					spritesToAdd.push_back(pair.first);
 					transformsToAdd.push_back(pair.second);
+					terrainToAdd.push_back(Terrain(te.isTerrain));
 				}
 				s.needsSplitting = false;
 				entitiesToRemove.push_back(entity);
@@ -77,11 +81,13 @@ public:
 			Transform t = gCoordinator.getComponent<Transform>(e);
 			Collider c = gCoordinator.getComponent<Collider>(e);
 			Sprite s = gCoordinator.getComponent<Sprite>(e);
+			Terrain te = gCoordinator.getComponent<Terrain>(e);
 			//b2DestroyBody(c.colliderId);
 			free(s.surfacePixels);
-			//This and the one below are both wrong.
-			Vector2 gridPosition = worldToGridPos(gGridManager.grid, t.position);
-			intersectingSubcells(gGridManager.grid, &c, false, (Vector2){gridPosition.x*gGridManager.grid->tileWidth, gridPosition.y*gGridManager.grid->tileWidth});
+			if(te.isTerrain) {
+				Vector2 gridPosition = worldToGridPos(gGridManager.grid, t.position);
+				intersectingSubcells(gGridManager.grid, &c, false, (Vector2){gridPosition.x*gGridManager.grid->tileWidth, gridPosition.y*gGridManager.grid->tileWidth});
+			}
 			gCoordinator.destroyEntity(e);
 		}
 
@@ -96,13 +102,17 @@ public:
 			Entity e = gCoordinator.createEntity();
 			gCoordinator.addComponent(e, transformsToAdd[i]);
 			gCoordinator.addComponent(e, spritesToAdd[i]);
-			Vector2 gridPosition = worldToGridPos(gGridManager.grid, transformsToAdd[i].position);
 			Collider* c = new Collider(createTexturePolygon(temprdpPoints, width, worldId, transformsToAdd[i]), POLYGON);
-			intersectingSubcells(gGridManager.grid, c, true, (Vector2){gridPosition.x*gGridManager.grid->tileWidth, gridPosition.y*gGridManager.grid->tileWidth});
+			if(terrainToAdd[i].isTerrain) {
+				Vector2 gridPosition = worldToGridPos(gGridManager.grid, transformsToAdd[i].position);
+				intersectingSubcells(gGridManager.grid, c, true, (Vector2){gridPosition.x*gGridManager.grid->tileWidth, gridPosition.y*gGridManager.grid->tileWidth});
+			}
 			gCoordinator.addComponent(e, *c);
+			gCoordinator.addComponent(e, terrainToAdd[i]);
 		}
 		spritesToAdd.clear();
 		transformsToAdd.clear();
+		terrainToAdd.clear();
 
 		entitiesToRemove.clear();
 	}
@@ -120,6 +130,12 @@ public:
 					) {
 					erasePixels(s, t, gRenderer, scale, in->mouseX, in->mouseY);
 				}
+
+				// if (rotated.x + scale >= getOrigin(s, t).x && rotated.x - scale < getOrigin(s,t ).x + s.surfacePixels->w &&
+				// 	rotated.y - scale < getOrigin(s, t).y + s.surfacePixels->h && rotated.y + scale >= getOrigin(s, t).y
+				// 	) {
+				// 	erasePixels(s, t, gRenderer, scale, in->mouseX, in->mouseY);
+				// }
 			}
 		}
 	}

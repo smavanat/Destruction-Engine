@@ -101,6 +101,7 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path, 
 				b2BodyId tempId = createBoxCollider(tr.position, s.surfacePixels->w, s.surfacePixels->h, tr.rotation, worldId);
 				Collider* c = new Collider(tempId, BOX);
 				gCoordinator.addComponent(e, *c);
+				gCoordinator.addComponent(e, Terrain(true));
 				addElementToTerrainSet(tSet, e.id);
 			}
 			else {

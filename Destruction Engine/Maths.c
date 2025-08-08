@@ -44,6 +44,13 @@ double normalizeAngle(double angle) {
 	return angle;
 }
 
+void normalise(Vector2* v) {
+	float mag = sqrt((v->x*v->x)+(v->y*v->y));
+
+	v->x /= mag;
+	v->y /= mag;
+}
+
 bool equals(Vector2 a, Vector2 b) {
 	return fabs(a.x - b.x) < 0.001f && fabs(a.y - b.y) < 0.001f;
 }

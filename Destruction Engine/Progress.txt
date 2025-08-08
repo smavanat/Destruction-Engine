@@ -16,8 +16,8 @@ ECS System: Basic component and entity template setup.
 			A good TileSet struct
 			Support for Box, Circle, Capsule and Polygon colliders
 			Assigment of colliders to tiles at init and updating of subcell grid at runtime (needs optimisation)
+			Agents that can use the basic pathfinding system
 TODO (for urss):
-			Add agents that can use the basic pathfinding system
 			Add agents that can use the destruction system to find faster paths 
 			Re-write the ECS system so that all of the data can be freed properly, otherwise get massive memory overuse 
 			and memory loss
@@ -33,6 +33,10 @@ Things to look into in future for optimisation and fixes:
 FIGURE OUT WHY SPLITTING TEXTURES INCURS SUCH A HIGH MEMORY USE -> its bad memory management. Need to re-write ecs to handle this 
 properly on entity destruction
 Fix the bug where texture erase cannot happen cross-tile -> this only happens on diagonals for some reason (maybe not important?)
+For some reason Joel has a bug where erasure causes a memory free error? it happens because of the free on line 81 in Basic Systems 
+(freeing the old surface pixels).
+Need to change the way coordinates are determined for pathfinding -> currently it just goes to the center of the tile, but this doesn't
+work if the path is going in-between tiles
 Need to add a way to check if a system has already been initialised -> maybe just add an "initialised" bool, 
 to prevent repeat initialisations. Or figure out a better way of initialising systems, because currently, if a system
 is added after gCoordinator init is called, its fucked, and have to do it manually, but at the same time, can't just
@@ -217,3 +221,14 @@ This was done by adding an enum containing all of the collider types, and just s
 
 Got rid of the GridSystem class since there was no need for it as the GridData struct basically did everything it did and more. This 
 probably means we can also get rid of GridSystemManager since at this point it is literally just a wrapper for the Pathfinding System.
+
+Fixed a bug where mrf was failing because the order of points representing a polygon collider outline where out of order. Had to 
+wirte a whole system for re-ordering them. I extracted the unique edges and then formed a chain of points that circumnavigated the whole
+polygon boundary.
+
+Finished the updating of the tile grid at runtime:
+Essentially, after a tile is destroyed, we get its collider and then we set all subcells that it overlaps to be walkable.
+Then we get the colliders of the new tiles sprites formed, and check for overlap with subcells, and if a subcell has more than 40% 
+(can be adjusted) of its area covered by a collider, it is considered unwalkable. Use martinez-finto-rueda tile clipping and the shoelace
+formula to determine the overlapping area.
+Then re-evaluate the tile's current status (walkable, unwalkable or partial) and the exitable status of its four sides.

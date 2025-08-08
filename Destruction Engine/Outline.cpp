@@ -43,6 +43,42 @@ void erasePixels(Sprite &s, Transform& t, SDL_Renderer* gRenderer, int scale, in
 	loadFromPixels(s, gRenderer);
 }
 
+void erasePixels2(Sprite &s, Transform& t, SDL_Renderer* gRenderer, int scale, int x, int y) {
+	Vector2 temp = {x, y};
+	Vector2 newOrigin = rotateAboutPoint(&temp, &t.position, -t.rotation, false);
+
+	x = newOrigin.x - getOrigin(s, t).x;
+	y = newOrigin.y - getOrigin(s, t).y;
+	int width = s.surfacePixels->w;
+	int height = s.surfacePixels->h;
+
+	Uint32* pixels = getPixels32(s);
+
+	if (scale > 0) {
+		for (int w = 0; w < scale * 2; w++)
+		{
+			for (int h = 0; h < scale * 2; h++)
+			{
+				int dx = scale - w; // horizontal offset
+				int dy = scale - h; // vertical offset
+				if ((dx * dx + dy * dy) < (scale * scale) && (x + dx < width) && (x + dx > -1) && (y + dy < height) && (y + dy > -1))
+				{
+					if (pixels[(y + dy) * width + (x + dx)] == NO_PIXEL_COLOUR) continue;
+					else {
+						pixels[(y + dy) * width + (x + dx)] = NO_PIXEL_COLOUR;
+						if (!s.needsSplitting) s.needsSplitting = true;
+					}
+				}
+			}
+		}
+	}
+	else {
+		pixels[y * width + x] = NO_PIXEL_COLOUR;
+	}
+
+	loadFromPixels(s, gRenderer);
+}
+
 bool isAtTopEdge(int pixelPosition, int arrayWidth) {
 	if (pixelPosition < arrayWidth) {
 		return true;

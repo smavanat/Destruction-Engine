@@ -26,6 +26,8 @@ bool equals(Vector2 a, Vector2 b);
 
 double normalizeAngle(double angle);
 
+void normalise(Vector2* v);
+
 #ifdef __cplusplus
 }
 #endif

@@ -37,7 +37,8 @@ TerrainSet tSet;
 
 //Test entities;
 Entity testTexture;
-Entity testPath;
+//Entity testPath;
+Entity testAgent;
 
 int scale = 20;
 
@@ -67,6 +68,7 @@ bool init()
 		sig.addComponent<Transform>();
 		sig.addComponent<Sprite>();
 		sig.addComponent<Collider>();
+		sig.addComponent<Terrain>();
 		destructionSystem = gCoordinator.addSystem<DestructionSystem>(sig);
 	}
 
@@ -83,7 +85,8 @@ bool init()
 	gDebugManager.init(); //In case Debug systems/manager need some other form of initialisation
 
 	testTexture = gCoordinator.createEntity();
-	testPath = gCoordinator.createEntity();
+	//testPath = gCoordinator.createEntity();
+	testAgent = gCoordinator.createEntity();
 	//Creating the tileset
 	Sprite* srcSprite = (Sprite*)malloc(sizeof(Sprite));
 	*srcSprite = Sprite(nullptr, nullptr, false);
@@ -127,7 +130,11 @@ bool init()
 			}
 		}
 		gCoordinator.addComponent(testTexture, Transform((Vector2){1420.0f, 440.0f}, 0.0));
-		gCoordinator.addComponent(testPath, Pathfinding((Vector2){10, 10}, (Vector2){500, 500}, 2));
+		gCoordinator.addComponent(testTexture, Terrain(false));
+		//gCoordinator.addComponent(testPath, Pathfinding((Vector2){10, 10}, (Vector2){500, 500}, 2));
+		gCoordinator.addComponent(testAgent, Transform((Vector2){40, 40}, 0.0f));
+		gCoordinator.addComponent(testAgent, Terrain(false));
+		gCoordinator.addComponent(testAgent, Pathfinding((Vector2){10, 10}, (Vector2){500, 500}, 2));
 
 		worldDef = b2DefaultWorldDef();
 		worldDef.gravity = { 0.0f, 0.0f };
@@ -155,6 +162,20 @@ bool loadMedia()
 		}
 	}
 
+	Sprite as = Sprite(NULL, NULL, false);
+	if (!loadPixelsFromFile(as, "assets/TestSprite.png"))
+	{
+		printf("Failed to load TestSprite' texture!\n");
+		success = false;
+	}
+	else {
+		if (!loadFromPixels(as, gRenderer))
+		{
+			printf("Unable to load TestSprite' texture from surface!\n");
+		}
+	}
+	gCoordinator.addComponent(testAgent, as);
+
 	if (!initialiseDemoTileMap(t, gRenderer, "assets/MarchingSquares.png", "assets/Pathfinding.map", &tSet)) {
 		printf("Unable to load tileset\n");
 		success = false;
@@ -171,6 +192,9 @@ bool loadMedia()
 	Transform t = gCoordinator.getComponent<Transform>(testTexture);
 	b2BodyId tempId = createBoxCollider(t.position, s.surfacePixels->w, s.surfacePixels->h, t.rotation, worldId);
 	gCoordinator.addComponent(testTexture, Collider(tempId, BOX));
+	t = gCoordinator.getComponent<Transform>(testAgent);
+	tempId = createCircleCollider(t.position, 20, worldId);
+	gCoordinator.addComponent(testAgent, Collider(tempId, CIRCLE));
 
 	return success;
 }
@@ -221,9 +245,9 @@ int main(int argc, char* args[]) {
 						case SDL_EVENT_MOUSE_BUTTON_UP:
 							if (e.button.button == SDL_BUTTON_LEFT) {
 								gCoordinator.getInput()->leftMouseButtonDown = false;
-								Pathfinding &p = gCoordinator.getComponent<Pathfinding>(testPath);
-								p.startPos = (Vector2){10, 10};
-								p.endPos = (Vector2){500, 500};
+								//Pathfinding &p = gCoordinator.getComponent<Pathfinding>(testPath);
+								//p.startPos = (Vector2){10, 10};
+								//p.endPos = (Vector2){500, 500};
 								gCoordinator.getEventBus()->publish(new ErasureEvent());
 								break;
 							}

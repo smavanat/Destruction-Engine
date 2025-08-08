@@ -91,16 +91,15 @@ void ColliderDebugSystem::update(float dt) {
 				case CIRCLE:
 					for(int j = 0; j < shapeCount; j++) {
 						b2Circle circle = b2Shape_GetCircle(colliderShapes[j]);
-						
-						drawCircle(gRenderer, {circle.center.x*metresToPixels, circle.center.y * metresToPixels}, circle.radius*metresToPixels);
+						drawCircle(gRenderer, {(circle.center.x+colliderPosition.x)*metresToPixels, (circle.center.y+colliderPosition.y) * metresToPixels}, circle.radius*metresToPixels);
 					}
 					break;
 				case CAPSULE:
 					for(int j = 0; j < shapeCount; j++) {
 						b2Capsule capsule = b2Shape_GetCapsule(colliderShapes[j]);
 						
-						drawCircle(gRenderer, {capsule.center1.x*metresToPixels, capsule.center1.y * metresToPixels}, capsule.radius*metresToPixels);
-						drawCircle(gRenderer, {capsule.center2.x*metresToPixels, capsule.center2.y * metresToPixels}, capsule.radius*metresToPixels);
+						drawCircle(gRenderer, {(capsule.center1.x+colliderPosition.x)*metresToPixels, (capsule.center1.y+colliderPosition.y) * metresToPixels}, capsule.radius*metresToPixels);
+						drawCircle(gRenderer, {(capsule.center2.x+colliderPosition.x)*metresToPixels, (capsule.center2.y+colliderPosition.y) * metresToPixels}, capsule.radius*metresToPixels);
 					}
 					break;
 				case POLYGON:

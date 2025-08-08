@@ -105,6 +105,15 @@ struct Pathfinding : public Component<Pathfinding> {
     Pathfinding(Vector2 st, Vector2 e, int s) : startPos(st), endPos(e), path(std::vector<Vector2>()), size(s) {};
 };
 
+//A struct that holds if a destructible entity is a part of the terrain or not
+struct Terrain : public Component<Terrain> {
+    bool isTerrain;
+
+    Terrain() = default;
+
+    Terrain(bool t) : isTerrain(t) {};
+};
+
 //(Tile)Sprite functions
 
 Vector2 getOrigin(Sprite& s, Transform& t);
