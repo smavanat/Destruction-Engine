@@ -38,15 +38,11 @@ public:
 
 	void update(float dt) {
 		for (Entity entity : registeredEntities) {
-			Transform transform = gCoordinator.getComponent<Transform>(entity);
+			Transform& transform = gCoordinator.getComponent<Transform>(entity);
 			Collider collider = gCoordinator.getComponent<Collider>(entity);
 			
 			Vector2 temp = b2Body_GetPosition(collider.colliderId);
 			transform.rotation = normalizeAngle(b2Rot_GetAngle(b2Body_GetRotation(collider.colliderId)))/DEGREES_TO_RADIANS;
-			Vector2 velocity = b2Body_GetLinearVelocity(collider.colliderId);
-			if(velocity.x != 0 && velocity.y != 0) {
-				printf("Position: (%f, %f)\n", temp.x, temp.y);
-			}
 			transform.position = (Vector2){temp.x*metresToPixels, temp.y * metresToPixels};
 		}
 	}
@@ -89,7 +85,7 @@ public:
 			Collider c = gCoordinator.getComponent<Collider>(e);
 			Sprite s = gCoordinator.getComponent<Sprite>(e);
 			Terrain te = gCoordinator.getComponent<Terrain>(e);
-			//b2DestroyBody(c.colliderId);
+			//b2DestroyBody(c.colliderId); //Why does this cause a crash???
 			free(s.surfacePixels);
 			if(te.isTerrain) {
 				Vector2 gridPosition = worldToGridPos(gGridManager.grid, t.position);

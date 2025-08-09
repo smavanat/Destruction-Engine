@@ -15,17 +15,21 @@ void PathFindingSystem::update(float dt) {
         if ((p.startPos.x == -1 && p.startPos.y == -1) || (p.endPos.x == -1 && p.endPos.y == -1)) {
             if(p.path.size() > 0) {
                 Transform t = gCoordinator.getComponent<Transform>(e);
+                Collider c = gCoordinator.getComponent<Collider>(e);
+
                 if(b2Distance((Vector2){t.position.x*pixelsToMetres, t.position.y*pixelsToMetres}, 
                                 (Vector2){p.path.front().x*pixelsToMetres, p.path.front().y*pixelsToMetres}) < 0.1f){
                     p.path.erase(p.path.begin());
-                    if(p.path.size() == 0) continue;
+                    if(p.path.size() == 0) {
+                        b2Body_SetLinearDamping(c.colliderId, 5.0f);
+                        continue;
+                    }
                 }
-                Collider c = gCoordinator.getComponent<Collider>(e);
                 Vector2 dir = (Vector2){p.path.front().x - t.position.x, p.path.front().y - t.position.y};
 
                 normalise(&dir);
 
-                float speed = 5.0f;
+                float speed = 0.3f;
 
                 b2Body_SetLinearVelocity(c.colliderId, dir*speed);
             }
