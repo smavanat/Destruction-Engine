@@ -136,8 +136,8 @@ Sprite duplicateSprite(Sprite* original, SDL_Renderer* gRenderer, SDL_FRect* src
 
 //Collider functions
 
-b2BodyId createCircleCollider(Vector2 center, float radius, b2WorldId worldId);
-b2BodyId createBoxCollider(Vector2 center, int width, int height, float rotation, b2WorldId worldId);
-b2BodyId createCapsuleCollider(Vector2 center1, Vector2 center2, float rotation, float radius, b2WorldId worldId);
-b2BodyId createPolygonCollider(Vector2* points, int pointsSize, Vector2 center, float rotation, b2WorldId worldId);
+b2BodyId createCircleCollider(Vector2 center, float radius, b2WorldId worldId, b2BodyType type);
+b2BodyId createBoxCollider(Vector2 center, int width, int height, float rotation, b2WorldId worldId, b2BodyType type);
+b2BodyId createCapsuleCollider(Vector2 center1, Vector2 center2, float rotation, float radius, b2WorldId worldId, b2BodyType type);
+b2BodyId createPolygonCollider(Vector2* points, int pointsSize, Vector2 center, float rotation, b2WorldId worldId, b2BodyType type);
 Vector2 rotateTranslate(Vector2& vector, float angle);

@@ -43,6 +43,10 @@ public:
 			
 			Vector2 temp = b2Body_GetPosition(collider.colliderId);
 			transform.rotation = normalizeAngle(b2Rot_GetAngle(b2Body_GetRotation(collider.colliderId)))/DEGREES_TO_RADIANS;
+			Vector2 velocity = b2Body_GetLinearVelocity(collider.colliderId);
+			if(velocity.x != 0 && velocity.y != 0) {
+				printf("Position: (%f, %f)\n", temp.x, temp.y);
+			}
 			transform.position = (Vector2){temp.x*metresToPixels, temp.y * metresToPixels};
 		}
 	}
@@ -61,16 +65,19 @@ public:
 		std::vector<Sprite> spritesToAdd;
 		std::vector<Transform> transformsToAdd;
 		std::vector<Terrain> terrainToAdd;
+		std::vector<b2BodyType> collidersToAdd;
 
 		for (Entity entity : registeredEntities) {
 			Sprite& s = gCoordinator.getComponent<Sprite>(entity);
-			Transform& t = gCoordinator.getComponent<Transform>(entity);
-			Terrain te = gCoordinator.getComponent<Terrain>(entity);
 			if (s.needsSplitting) {
+				Transform& t = gCoordinator.getComponent<Transform>(entity);
+				Terrain te = gCoordinator.getComponent<Terrain>(entity);
+				Collider c = gCoordinator.getComponent<Collider>(entity);
 				for (std::pair<Sprite, Transform> pair : splitTextureAtEdge(s, t, gRenderer)) {
 					spritesToAdd.push_back(pair.first);
 					transformsToAdd.push_back(pair.second);
 					terrainToAdd.push_back(Terrain(te.isTerrain));
+					collidersToAdd.push_back(b2Body_GetType(c.colliderId));
 				}
 				s.needsSplitting = false;
 				entitiesToRemove.push_back(entity);
@@ -102,7 +109,7 @@ public:
 			Entity e = gCoordinator.createEntity();
 			gCoordinator.addComponent(e, transformsToAdd[i]);
 			gCoordinator.addComponent(e, spritesToAdd[i]);
-			Collider* c = new Collider(createTexturePolygon(temprdpPoints, width, worldId, transformsToAdd[i]), POLYGON);
+			Collider* c = new Collider(createTexturePolygon(temprdpPoints, width, worldId, collidersToAdd[i], transformsToAdd[i]), POLYGON);
 			if(terrainToAdd[i].isTerrain) {
 				Vector2 gridPosition = worldToGridPos(gGridManager.grid, transformsToAdd[i].position);
 				intersectingSubcells(gGridManager.grid, c, true, (Vector2){gridPosition.x*gGridManager.grid->tileWidth, gridPosition.y*gGridManager.grid->tileWidth});
@@ -125,11 +132,6 @@ public:
 				Transform t = gCoordinator.getComponent<Transform>(entity);
 				Vector2 temp = {in->mouseX, in->mouseY};
 				Vector2 rotated = rotateAboutPoint(&temp, &t.position, -t.rotation, false);
-				// if (rotated.x >= getOrigin(s, t).x && rotated.x < getOrigin(s,t ).x + s.surfacePixels->w &&
-				// 	rotated.y < getOrigin(s, t).y + s.surfacePixels->h && rotated.y >= getOrigin(s, t).y
-				// 	) {
-				// 	erasePixels(s, t, gRenderer, scale, in->mouseX, in->mouseY);
-				// }
 
 				//This is the correct version for doing outside, just need to update erasePixels to go along with this
 				if((rotated.x + scale >= getOrigin(s, t).x && rotated.x + scale < getOrigin(s,t ).x + s.surfacePixels->w) //West

@@ -232,3 +232,6 @@ Then we get the colliders of the new tiles sprites formed, and check for overlap
 (can be adjusted) of its area covered by a collider, it is considered unwalkable. Use martinez-finto-rueda tile clipping and the shoelace
 formula to determine the overlapping area.
 Then re-evaluate the tile's current status (walkable, unwalkable or partial) and the exitable status of its four sides.
+
+Fixed a bug where erasing would only work if the point where the user clicked was within an erasable object, and did not account for 
+the radius of erasure being able to overlap with the given erasable sprite.

@@ -439,7 +439,7 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 #pragma endregion
 
 #pragma region ColliderGeneration
-	b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, Transform& t) {
+	b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, b2BodyType type, Transform& t) {
 		//Getting points
 		Vector2* points = new Vector2[rdpPoints.size()];
 		for (int i = 0; i < rdpPoints.size(); i++) {
@@ -447,6 +447,6 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 			points[i] = { (temp[0]) * pixelsToMetres, (temp[1]) * pixelsToMetres };
 		}
 
-		return createPolygonCollider(points, rdpPoints.size(), t.position, t.rotation, worldId);
+		return createPolygonCollider(points, rdpPoints.size(), t.position, t.rotation, worldId, type);
 	}
 #pragma endregion

@@ -174,10 +174,10 @@ Sprite duplicateSprite(Sprite* original, SDL_Renderer* gRenderer, SDL_FRect* src
 
 //Collider related functions
 #pragma region Collider
-b2BodyId createCircleCollider(Vector2 center, float radius, b2WorldId worldId) {
+b2BodyId createCircleCollider(Vector2 center, float radius, b2WorldId worldId, b2BodyType type) {
     //Default shape initialisation code
 	b2BodyDef retBodyDef = b2DefaultBodyDef();
-	retBodyDef.type = b2_dynamicBody;
+	retBodyDef.type = type;
     retBodyDef.position = {center.x * pixelsToMetres, center.y * pixelsToMetres};
     b2BodyId retId = b2CreateBody(worldId, &retBodyDef);
 
@@ -189,10 +189,10 @@ b2BodyId createCircleCollider(Vector2 center, float radius, b2WorldId worldId) {
     return retId;
 }
 
-b2BodyId createBoxCollider(Vector2 center, int width, int height, float rotation, b2WorldId worldId) {
+b2BodyId createBoxCollider(Vector2 center, int width, int height, float rotation, b2WorldId worldId, b2BodyType type) {
     //Default shape initialisation code
 	b2BodyDef retBodyDef = b2DefaultBodyDef();
-	retBodyDef.type = b2_dynamicBody;
+	retBodyDef.type = type;
     retBodyDef.position = {center.x * pixelsToMetres, center.y * pixelsToMetres};
     retBodyDef.rotation = { (float)cos(rotation * DEGREES_TO_RADIANS), (float)sin(rotation * DEGREES_TO_RADIANS) };
     b2BodyId retId = b2CreateBody(worldId, &retBodyDef);
@@ -205,13 +205,13 @@ b2BodyId createBoxCollider(Vector2 center, int width, int height, float rotation
     return retId;
 }
 
-b2BodyId createCapsuleCollider(Vector2 center1, Vector2 center2, float radius, float rotation, b2WorldId worldId) {
+b2BodyId createCapsuleCollider(Vector2 center1, Vector2 center2, float radius, float rotation, b2WorldId worldId, b2BodyType type) {
     //Calculate actual center of the capsule
     Vector2 center = (Vector2){(center2.x - center1.x)/2.0f, (center2.y - center1.y)/2.0f};
 
     //Default shape initialisation code
 	b2BodyDef retBodyDef = b2DefaultBodyDef();
-	retBodyDef.type = b2_dynamicBody;
+	retBodyDef.type = type;
     retBodyDef.position = {center.x * pixelsToMetres, center.y * pixelsToMetres};
     retBodyDef.rotation = { (float)cos(rotation * DEGREES_TO_RADIANS), (float)sin(rotation * DEGREES_TO_RADIANS) };
     b2BodyId retId = b2CreateBody(worldId, &retBodyDef);
@@ -302,10 +302,10 @@ void CenterCompundShape(TPPLPolyList &shapes) {
 }
 //Creates a texture polygon by using pure triangulation, and then moves the origin so that it is in the centre of the 
 //shape rather than at the top-left corner.
-b2BodyId createPolygonCollider(Vector2* points, int pointsSize, Vector2 center, float rotation, b2WorldId worldId) {
+b2BodyId createPolygonCollider(Vector2* points, int pointsSize, Vector2 center, float rotation, b2WorldId worldId, b2BodyType type) {
     //Default polygon initialisation
     b2BodyDef retBodyDef = b2DefaultBodyDef();
-	retBodyDef.type = b2_dynamicBody;
+	retBodyDef.type = type;
     retBodyDef.position = {center.x * pixelsToMetres, center.y * pixelsToMetres};
     retBodyDef.rotation = { (float)cos(rotation * DEGREES_TO_RADIANS), (float)sin(rotation * DEGREES_TO_RADIANS) };
     b2BodyId retId = b2CreateBody(worldId, &retBodyDef);
