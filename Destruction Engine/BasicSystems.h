@@ -85,12 +85,12 @@ public:
 			Collider c = gCoordinator.getComponent<Collider>(e);
 			Sprite s = gCoordinator.getComponent<Sprite>(e);
 			Terrain te = gCoordinator.getComponent<Terrain>(e);
-			//b2DestroyBody(c.colliderId); //Why does this cause a crash???
-			free(s.surfacePixels);
 			if(te.isTerrain) {
 				Vector2 gridPosition = worldToGridPos(gGridManager.grid, t.position);
 				intersectingSubcells(gGridManager.grid, &c, false, (Vector2){gridPosition.x*gGridManager.grid->tileWidth, gridPosition.y*gGridManager.grid->tileWidth});
 			}
+			free(s.surfacePixels);
+			b2DestroyBody(c.colliderId);
 			gCoordinator.destroyEntity(e);
 		}
 
