@@ -235,3 +235,6 @@ Then re-evaluate the tile's current status (walkable, unwalkable or partial) and
 
 Fixed a bug where erasing would only work if the point where the user clicked was within an erasable object, and did not account for 
 the radius of erasure being able to overlap with the given erasable sprite.
+
+I added a simple agent that can follow the pre-defined pathfind path. The next step will be to upgrade it so it can modify the 
+terrain to get a faster path.
