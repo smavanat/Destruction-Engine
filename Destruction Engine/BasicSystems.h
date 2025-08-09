@@ -125,17 +125,20 @@ public:
 				Transform t = gCoordinator.getComponent<Transform>(entity);
 				Vector2 temp = {in->mouseX, in->mouseY};
 				Vector2 rotated = rotateAboutPoint(&temp, &t.position, -t.rotation, false);
-				if (rotated.x >= getOrigin(s, t).x && rotated.x < getOrigin(s,t ).x + s.surfacePixels->w &&
-					rotated.y < getOrigin(s, t).y + s.surfacePixels->h && rotated.y >= getOrigin(s, t).y
-					) {
-					erasePixels(s, t, gRenderer, scale, in->mouseX, in->mouseY);
-				}
-
-				// if (rotated.x + scale >= getOrigin(s, t).x && rotated.x - scale < getOrigin(s,t ).x + s.surfacePixels->w &&
-				// 	rotated.y - scale < getOrigin(s, t).y + s.surfacePixels->h && rotated.y + scale >= getOrigin(s, t).y
+				// if (rotated.x >= getOrigin(s, t).x && rotated.x < getOrigin(s,t ).x + s.surfacePixels->w &&
+				// 	rotated.y < getOrigin(s, t).y + s.surfacePixels->h && rotated.y >= getOrigin(s, t).y
 				// 	) {
 				// 	erasePixels(s, t, gRenderer, scale, in->mouseX, in->mouseY);
 				// }
+
+				//This is the correct version for doing outside, just need to update erasePixels to go along with this
+				if((rotated.x + scale >= getOrigin(s, t).x && rotated.x + scale < getOrigin(s,t ).x + s.surfacePixels->w) //West
+					|| (rotated.y + scale >= getOrigin(s, t).y && rotated.x + scale < getOrigin(s,t ).y + s.surfacePixels->h) //North
+					|| (rotated.x - scale >= getOrigin(s, t).x && rotated.x - scale < getOrigin(s,t ).x + s.surfacePixels->w) //East
+					|| (rotated.y - scale >= getOrigin(s, t).y && rotated.x - scale < getOrigin(s,t ).y + s.surfacePixels->h) //South
+				) {
+					erasePixels(s, t, gRenderer, scale, in->mouseX, in->mouseY);
+				}
 			}
 		}
 	}
