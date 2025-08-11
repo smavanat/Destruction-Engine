@@ -21,7 +21,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#include "Polypartition/polypartition.h"
+#include "PolyPartition/polypartition.h"
 
 #include <math.h>
 #include <string.h>

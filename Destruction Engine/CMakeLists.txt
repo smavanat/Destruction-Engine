@@ -26,29 +26,46 @@ if(WIN32)
         # Set .lib files on msvc
         target_link_libraries(my_app
             PRIVATE 
-            "${CMAKE_SOURCE_DIR}/externals/libs/SDL3.lib"
-            "${CMAKE_SOURCE_DIR}/externals/libs/SDL3_image.lib"
-            "${CMAKE_SOURCE_DIR}/externals/libs/box2dd.lib"
+            "${CMAKE_SOURCE_DIR}/externals/libs/Windows/SDL3.lib"
+            "${CMAKE_SOURCE_DIR}/externals/libs/Windows/SDL3_image.lib"
+            "${CMAKE_SOURCE_DIR}/externals/libs/Windows/box2dd.lib"
             user32 gdi32 winmm imm32 ole32 oleaut32 shell32 uuid version
             )
     else()
     # Assume other users are using MinGW.
         target_link_libraries(my_app
             PRIVATE
-                "${CMAKE_SOURCE_DIR}/externals/libs/libSDL3.dll.a"
-                "${CMAKE_SOURCE_DIR}/externals/libs/libSDL3_image.dll.a"
-                "${CMAKE_SOURCE_DIR}/externals/libs/libbox2dd.a"
+                "${CMAKE_SOURCE_DIR}/externals/libs/Windows/libSDL3.dll.a"
+                "${CMAKE_SOURCE_DIR}/externals/libs/Windows/libSDL3_image.dll.a"
+                "${CMAKE_SOURCE_DIR}/externals/libs/Windows/libbox2dd.a"
                 mingw32 user32 gdi32 winmm imm32 ole32 oleaut32 shell32 uuid version
         )
     endif()
 
-# Copy .dll to output directory on build (Windows only)
-add_custom_command(TARGET my_app POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${PROJECT_SOURCE_DIR}/externals/libs/SDL3.dll"
-        "${PROJECT_SOURCE_DIR}/externals/libs/SDL3_image.dll"
-        $<TARGET_FILE_DIR:my_app>
-)
+    # Copy .dll to output directory on build (Windows only)
+    add_custom_command(TARGET my_app POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${PROJECT_SOURCE_DIR}/externals/libs/SDL3.dll"
+            "${PROJECT_SOURCE_DIR}/externals/libs/SDL3_image.dll"
+            $<TARGET_FILE_DIR:my_app>
+    )
+elseif(UNIX AND NOT APPLE)
+    #Linux specific settings:
+    target_link_libraries(my_app
+        PRIVATE
+        #"${CMAKE_SOURCE_DIR}/externals/libs/Linux/libSDL3.a"
+        #"${CMAKE_SOURCE_DIR}/externals/libs/Linux/libSDL3_image.dll.a"
+        "${PROJECT_SOURCE_DIR}/externals/libs/Linux/libSDL3.so.0.2.18"
+        "${PROJECT_SOURCE_DIR}/externals/libs/Linux/libSDL3_image.so.0.2.4"
+        "${CMAKE_SOURCE_DIR}/externals/libs/Linux/libbox2d.a")
+    
+    # Add .so for SDL3_image post build
+    add_custom_command(TARGET my_app POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${PROJECT_SOURCE_DIR}/externals/libs/Linux/libSDL3_image.so.0"
+            "${PROJECT_SOURCE_DIR}/externals/libs/Linux/libSDL3.so.0"
+            $<TARGET_FILE_DIR:my_app>
+    )
 endif()
 
 # Have to copy all of the assets to the output directory
