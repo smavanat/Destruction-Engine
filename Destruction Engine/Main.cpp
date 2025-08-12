@@ -15,6 +15,7 @@
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
+const int FRAME_RATE = 1000/60.0f;
 
 ////Some global variables
 SDL_Window* gWindow = NULL;
@@ -303,9 +304,12 @@ int main(int argc, char* args[]) {
 				SDL_RenderPresent(gRenderer); //Need to put this outside the render system update since need to call it after both render and debug have drawn
 
 				auto stopTime = std::chrono::high_resolution_clock::now();
-				//This reduces cpu usage from like 10-12% down to 0.6%
-				//SDL_Delay(1000/60.0f); //Turned this off for now since it makes manually doing the destruction quite laggy.
 				dt = std::chrono::duration<float, std::chrono::seconds::period>(stopTime - startTime).count();
+				if(dt < FRAME_RATE) {
+					//This reduces cpu usage from like 10-12% down to 0.6%
+					SDL_Delay(FRAME_RATE - dt);
+					dt = FRAME_RATE;
+				}
 			}
 		}
 	}

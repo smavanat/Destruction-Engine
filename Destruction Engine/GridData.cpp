@@ -1,6 +1,5 @@
 #include "GridData.h"
 #include <queue>
-#include <iostream>
 
 Vector2 gridToWorldPos(std::shared_ptr<GridData> g, Vector2 gridPos) {
     return (Vector2) {
@@ -434,7 +433,7 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
     startNode.h = getDistance(startNode, goalNode);
     startNode.f = startNode.g + startNode.h;
 
-    gScore[toIndex(grid, (Vector2){startNode.x, startNode.y})] = 0;
+    gScore[toIndex(grid, (Vector2){static_cast<float>(startNode.x),static_cast<float>(startNode.y)})] = 0;
     openList.push(startNode);
 
     //While there are nodes to visit
@@ -462,7 +461,7 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
         
         std::vector<Node> goodNeighbours; //For holding neighbour nodes to be processed and added to the openList
 
-        if (grid->tiles[toIndex(grid, (Vector2){current.x, current.y})].status == 0) {
+        if (grid->tiles[toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)})].status == 0) {
             //Visit all of its neighbours and insert them into the openList
             for (int i = 0; i < 8; ++i) {
                 //The neighbour's coordinates
@@ -471,7 +470,7 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
 
                 //Making sure we don't go out of grid bounds and crash the program
                 if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
-                    int index = toIndex(grid, (Vector2){newX, newY});
+                    int index = toIndex(grid, (Vector2){static_cast<float>(newX),static_cast<float>(newY)});
                     if (grid->tiles[index].status == 0) { //If neighbour is walkable
                         //If we are walking to a neighbour that is walkable, but diagonally adjacent, 
                         //need to manually check if there is a path between these tiles, otherwise 
@@ -479,7 +478,7 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
                         if (directionX[i] != 0 && directionY[i] != 0) {
                             auto direction = directionMap.at(std::make_pair(directionX[i], directionY[i]));
                             auto directionFrom = (current == startNode) ? S : directionMap.at(std::make_pair(cameFrom[current].x - current.x, cameFrom[current].y - current.y));
-                            if (isPathBetween(directionFrom, direction, grid, toIndex(grid, (Vector2){current.x, current.y}), size)) {
+                            if (isPathBetween(directionFrom, direction, grid, toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)}), size)) {
                                 goodNeighbours.push_back(Node(newX, newY));
                             }
                         }
@@ -491,7 +490,7 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
                     if (grid->tiles[index].status == 2) { //If neighbour is partial
                         auto direction = directionMap.at(std::make_pair(directionX[i], directionY[i]));
                         auto directionFrom = (current == startNode) ? S : directionMap.at(std::make_pair(cameFrom[current].x - current.x, cameFrom[current].y - current.y));
-                        if (isPathBetween(directionFrom, direction, grid, toIndex(grid, (Vector2){current.x, current.y}), size)) {
+                        if (isPathBetween(directionFrom, direction, grid, toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)}), size)) {
                             goodNeighbours.push_back(Node(newX, newY));
                         }
                     }
@@ -499,7 +498,7 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
             }
         }
         else {
-            const TileData& t = grid->tiles[toIndex(grid, (Vector2){current.x, current.y})];
+            const TileData& t = grid->tiles[toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)})];
             for(int i = 0; i < 8; i++) {
                 //The neighbour's coordinates
                 int newX = current.x + directionX[i];
@@ -510,7 +509,7 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
                     auto direction = directionMap.at(std::make_pair(directionX[i], directionY[i]));
                     auto directionFrom = (current == startNode) ? S : directionMap.at(std::make_pair(cameFrom[current].x - current.x, cameFrom[current].y - current.y));
                     //Need to figure out how to get direction that we are coming from.
-                    if(isPathBetween(directionFrom, direction, grid, toIndex(grid, (Vector2){current.x, current.y}), size)) {
+                    if(isPathBetween(directionFrom, direction, grid, toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)}), size)) {
                         goodNeighbours.push_back(Node(newX, newY));
                     }
                 }
@@ -522,8 +521,8 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
             //If it is not already visited
             if (closedList.find(neighbor) == closedList.end()) {
                 int moveCost = ((current.x - neighbor.x) != 0 && (current.y -neighbor.y) != 0) ? diagonalCost : straightCost;
-                int index = toIndex(grid, (Vector2){neighbor.x, neighbor.y});
-                int tentativeG = gScore[toIndex(grid, (Vector2){current.x, current.y})] + moveCost;
+                int index = toIndex(grid, (Vector2){static_cast<float>(neighbor.x),static_cast<float>(neighbor.y)});
+                int tentativeG = gScore[toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)})] + moveCost;
 
                 if (tentativeG < gScore[index]) {
                     gScore[index] = tentativeG;
@@ -564,7 +563,7 @@ std::vector<Node> FindPathAStar(Vector2 start, Vector2 goal, std::shared_ptr<Gri
     startNode.h = getDistance(startNode, goalNode);
     startNode.f = startNode.g + startNode.h;
 
-    gScore[toIndex(grid, (Vector2){startNode.x, startNode.y})] = 0;
+    gScore[toIndex(grid, (Vector2){static_cast<float>(startNode.x),static_cast<float>(startNode.y)})] = 0;
     openList.push(startNode);
 
     //While there are nodes to visit
