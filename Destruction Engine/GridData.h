@@ -62,7 +62,7 @@ enum Direction8 {
 	S,
 	SW,
 	W,
-	INVALID
+	// INVALID
 };
 
 enum Direction4 {
@@ -73,6 +73,7 @@ enum Direction4 {
 struct Node {
 	int x, y; //Coordinates of the node in the graph
 	int f, g, h; //Values used by the A* algorithm
+    int movementPenalty; //Used to determine the cost for moving through a destructibel tile
 	bool partial; //Whether or not the node is somewhat destroyed
 
 	Node() = default;
@@ -111,4 +112,6 @@ int numExits(const TileData& t);
 bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int s);
 //Returns the path between two positions
 std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid, int size);
+std::vector<Node> FindPathAStar(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid, int size);
 Vector2 nodeToWorldPos(Node n, int w);
+std::vector<int> getDestroyedTile(const TileData& t, Direction8 d, int destructionWidth, int width);

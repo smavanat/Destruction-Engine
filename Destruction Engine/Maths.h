@@ -1,8 +1,7 @@
 #pragma once
 #ifndef MATHS_H
 #define MATHS_H
-#include <SDL3/SDL.h>
-#include<box2d/box2d.h>
+#include"externals/Include/box2d/box2d.h"
 
 static const double DEGREES_TO_RADIANS = ((2 * acos(0.0)) / 180);
 

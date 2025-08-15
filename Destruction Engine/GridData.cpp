@@ -1,5 +1,8 @@
 #include "GridData.h"
+#include "Maths.h"
 #include <queue>
+#include <cstring>
+#include <vector>
 
 Vector2 gridToWorldPos(std::shared_ptr<GridData> g, Vector2 gridPos) {
     return (Vector2) {
@@ -35,7 +38,7 @@ bool inBounds(std::shared_ptr<GridData> g, Vector2 gridPos) {
 }
 
 //Node constructor
-Node::Node(int xPos, int yPos) : x(xPos), y(yPos), f(0), g(0), h(0), partial(false) {}
+Node::Node(int xPos, int yPos) : x(xPos), y(yPos), f(0), g(0), h(0), movementPenalty(0), partial(false) {}
 
 bool Node::operator>(const Node& other) const {
 	return f > other.f;
@@ -458,7 +461,7 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
         }
         //Otherwise mark the current node as visited
         closedList.insert(current);
-        
+
         std::vector<Node> goodNeighbours; //For holding neighbour nodes to be processed and added to the openList
 
         if (grid->tiles[toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)})].status == 0) {
@@ -539,12 +542,317 @@ std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData
     return std::vector<Node>(); // No path found
 }
 
+std::vector<int> getDestroyedTile(const TileData& t, Direction8 d, int destructionWidth, int width) {
+    std::vector<int> ret(t.subcells);
+    int buffer = (width - destructionWidth) / 2;
+    switch(d) {
+        case N:
+        case S:
+            for(int i = buffer; i < destructionWidth+buffer; i++) {
+                for(int j = 0; j < width; j++) {
+                    ret[(j*width)+i] = 0;
+                }
+            }
+            break;
+        case E:
+        case W:
+            for(int i = 0; i < width; i++) {
+                for(int j = buffer; j < destructionWidth+buffer; j++) {
+                    ret[(j*width)+i] = 0;
+                }
+            }
+            break;
+        case NE:
+        case SW: {
+            int j = 0;
+            for(int i = width-2; i > -1 ; i--) {
+                for(int p = 0; p < destructionWidth; p++) {
+                    for(int q = 0; q < destructionWidth; q++) {
+                        ret[((i+q)*width)+j+p] = 0;
+                    }
+                }
+                j++;
+            }
+            break;
+        }
+        case NW:
+        case SE:
+            for(int i = 0; i < width-1; i++) {
+                for(int p = 0; p < destructionWidth; p++) {
+                    for(int q = 0; q < destructionWidth; q++) {
+                        ret[((i+q)*width)+i+p] = 0;
+                    }
+                }
+            }
+            break;
+    }
+    return ret;
+}
+
+// This version of find path should be for when the ai agent can destroy a wall. Let's say that impassible tiles and partial tiles that are impassible
+// have a movement cost of 2*their regular cost
+// I think the way we should do it is just to ignore the actual status (passiable, impassable, partial) when iterating over neighbours, that should
+// only come when caluculating gCost. This is becuase, technically, with this magical destruction, every tile will become passable
+// Then, when an agent needs to path through a tile that should be impassible to it at that moment, it simply creates a path for itself through destruction
+// This system could then be expanded so that the agent, instead of being able to destroy an inifinite numbe of tiles, can only destroy n, after which it 
+// has to revert to normal pathfinding, although I think that version would be a bit harder to implement
+// For this, could we not just use a modified version of Djikstra's algorithm, where:
+// All nodes start as walkable (for same reasons above)
+// Once a node is destroyed, a count increments
+// Once the counter reaches n, the nodes revert
+// This would however, be really slow
+std::vector<Node> FindPathDestruction(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid, int size) {
+    //Represents the (x,y) coordinates of all possible neighbours
+    const int directionX[] = { -1, 0, 1, 0, 1, 1, -1, -1 };
+    const int directionY[] = { 0, 1, 0, -1, 1, -1, 1, -1 };
+
+    std::unordered_map<std::pair<int, int>, Direction8, Vector2Hasher> directionMap = {{std::make_pair(-1, -1), NW}, {std::make_pair(0, -1), N},
+                                                                                    {std::make_pair(1, -1), NE},  {std::make_pair(-1, 0), W},
+                                                                                    {std::make_pair(1, 0), E},   {std::make_pair(-1, 1), SW}, 
+                                                                                    {std::make_pair(0, 1), S},   {std::make_pair(1, 1), SE}};
+
+    const int straightCost = 10; //Cost of moving straight -> 1* 10
+    const int diagonalCost = 14; //Cost of moving diagonally ~sqrt(2) *10
+    const int destructionAmount = 2; //How many tiles are "destroyed" by an agent when moving through an impassable tile
+
+    int rows = grid->gridHeight;
+    int cols = grid->gridWidth;
+
+    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList; //Nodes to visit
+    std::unordered_set<Node, NodeHasher> closedList; //Nodes visited
+    std::unordered_map<Node, Node, NodeHasher> cameFrom; //Holds the parents of each node -> the one visited before 
+    std::vector<int> gScore(rows * cols, INT_MAX);//Holds the gScore of every node 
+
+    // Initialize start node
+    Node startNode = nodeFromWorldPos(start, grid->tileWidth, grid->tileWidth);
+    Node goalNode = nodeFromWorldPos(goal, grid->tileWidth, grid->tileWidth);
+    startNode.g = 0;
+    startNode.h = getDistance(startNode, goalNode);
+    startNode.f = startNode.g + startNode.h;
+
+    gScore[toIndex(grid, (Vector2){static_cast<float>(startNode.x),static_cast<float>(startNode.y)})] = 0;
+    openList.push(startNode);
+
+    //While there are nodes to visit
+    while (!openList.empty()) {
+        //Since openList is a pq, this will get the node with the lowest f score
+        Node current = openList.top();
+        openList.pop();
+
+        //If we have reached the end
+        if (current == goalNode) {
+            //Get all of the nodes in the path from the start to the end
+            std::vector<Node> path;
+            Node trace = current;
+            while (!(trace == startNode)) {
+                path.push_back(trace);
+                trace = cameFrom[trace];
+            }
+            path.push_back(startNode);
+            //Reverse it so it is in the correct order
+            reverse(path.begin(), path.end());
+            return path;
+        }
+        //Otherwise mark the current node as visited
+        closedList.insert(current);
+
+        std::vector<Node> goodNeighbours; //For holding neighbour nodes to be processed and added to the openList
+        std::vector<Node> badNeighbours; //For holding neighbours that have an extra cost due to destruction
+
+        //If the current tile is walkable
+        if (grid->tiles[toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)})].status == 0) {
+           for (int i = 0; i < 8; ++i) {
+                //The neighbour's coordinates
+                int newX = current.x + directionX[i];
+                int newY = current.y + directionY[i];
+
+                //Making sure we don't go out of grid bounds and crash the program
+                if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+                    Node neighbor(newX, newY);
+                    //If it is not already visited
+                    if (closedList.find(neighbor) == closedList.end()) {
+                        // int moveCost = (directionX[i] != 0 && directionY[i] != 0) ? diagonalCost : straightCost; //Calculate the movement cost for moving straight or diagnoally
+
+                        auto direction = directionMap.at(std::make_pair(directionX[i], directionY[i]));
+                        auto directionFrom = (current == startNode) ? S : directionMap.at(std::make_pair(cameFrom[current].x - current.x, cameFrom[current].y - current.y)); 
+                        //If we are moving through an impassable tile or a partial tile that is unwalkable, then double the movement cost by 2 (arbitrary number)
+                        if(grid->tiles[toIndex(grid,(Vector2){static_cast<float>(newX), static_cast<float>(newY)})].status == 1) badNeighbours.push_back(neighbor);
+                        //Need to precalculate some values for determining if the path is passable or not
+                        else if(grid->tiles[toIndex(grid,(Vector2){static_cast<float>(newX), static_cast<float>(newY)})].status == 2
+                            && !isPathBetween(directionFrom, direction, grid, toIndex(grid,(Vector2){static_cast<float>(newX), static_cast<float>(newY)}), size)) badNeighbours.push_back(neighbor);
+                        else {
+                            goodNeighbours.push_back(neighbor);
+                        }
+                    }
+                }
+            }
+        }
+        //Need to figure out how we are going to deal with impassable and unwalkable partial tiles. Since we need to save their "Destroyed" representation somehow
+        //so that we can access it at some later point.
+        else if (grid->tiles[toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)})].status == 1){ //Impassable tiles
+            //Do not need to store "destroyed" representation in memory, can just recalculate it on the fly right here by just assuming always destroy the tiles in a straight line
+            //and by some constant ammount.
+            //I do not think we even need to calculate the "destroyed" path, since we automatically know based on the direction of destruction what neighbours to check
+            Direction8 directionFrom = (current == startNode) ? S : directionMap.at(std::make_pair(cameFrom[current].x - current.x, cameFrom[current].y - current.y)); 
+            int newX = 0;
+            int newY = 0;
+            switch(directionFrom) {
+                case N:
+                    newY = 1;
+                break;
+                case NE:
+                    newX = 1;
+                    newY = 1;
+                break;
+                case E:
+                    newX = 1;
+                break;
+                case SE:
+                    newX = 1;
+                    newY = -1;
+                break;
+                case S:
+                    newY = -1;
+                break;
+                case SW:
+                    newX = -1;
+                    newY = -1;
+                break;
+                case W:
+                    newX = -1;
+                break;
+                case NW:
+                    newX = -1;
+                    newY = 1;
+                break;
+            }
+            newX += current.x;
+            newY += current.y;
+            if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+                Node neighbor(newX, newY);
+                //If it is not already visited
+                if (closedList.find(neighbor) == closedList.end()) {
+                    // int moveCost = (directionX[i] != 0 && directionY[i] != 0) ? diagonalCost : straightCost; //Calculate the movement cost for moving straight or diagnoally
+
+                    auto direction = directionMap.at(std::make_pair(newX - current.x, newY - current.y));
+                    auto directionFrom = (current == startNode) ? S : directionMap.at(std::make_pair(cameFrom[current].x - current.x, cameFrom[current].y - current.y)); 
+                    //If we are moving through an impassable tile or a partial tile that is unwalkable, then double the movement cost by 2 (arbitrary number)
+                    if(grid->tiles[toIndex(grid,(Vector2){static_cast<float>(newX), static_cast<float>(newY)})].status == 1) badNeighbours.push_back(neighbor);
+                    //Need to precalculate some values for determining if the path is passable or not
+                    else if(grid->tiles[toIndex(grid,(Vector2){static_cast<float>(newX), static_cast<float>(newY)})].status == 2
+                        && !isPathBetween(directionFrom, direction, grid, toIndex(grid,(Vector2){static_cast<float>(newX), static_cast<float>(newY)}), size)) badNeighbours.push_back(neighbor);
+                    else {
+                        goodNeighbours.push_back(neighbor);
+                    }
+                }
+            }
+        }
+        else { //Partial tiles
+            if(gScore[toIndex(grid, (Vector2){static_cast<float>(current.x), static_cast<float>(current.y)})] > 14) { //ie, is it wieghted higher because of destruction
+                //Then we know we need calculate a path through the tiles just like for the impassable tile:
+                Direction8 directionFrom = (current == startNode) ? S : directionMap.at(std::make_pair(cameFrom[current].x - current.x, cameFrom[current].y - current.y)); 
+                int newX = 0;
+                int newY = 0;
+                switch(directionFrom) {
+                    case N:
+                        newY = 1;
+                    break;
+                    case NE:
+                        newX = 1;
+                        newY = 1;
+                    break;
+                    case E:
+                        newX = 1;
+                    break;
+                    case SE:
+                        newX = 1;
+                        newY = -1;
+                    break;
+                    case S:
+                        newY = -1;
+                    break;
+                    case SW:
+                        newX = -1;
+                        newY = -1;
+                    break;
+                    case W:
+                        newX = -1;
+                    break;
+                    case NW:
+                        newX = -1;
+                        newY = 1;
+                    break;
+                }
+                newX += current.x;
+                newY += current.y;
+                if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+                    Node neighbor(newX, newY);
+                    //If it is not already visited
+                    if (closedList.find(neighbor) == closedList.end()) {
+                        // int moveCost = (directionX[i] != 0 && directionY[i] != 0) ? diagonalCost : straightCost; //Calculate the movement cost for moving straight or diagnoally
+
+                        auto direction = directionMap.at(std::make_pair(newX - current.x, newY - current.y));
+                        auto directionFrom = (current == startNode) ? S : directionMap.at(std::make_pair(cameFrom[current].x - current.x, cameFrom[current].y - current.y)); 
+                        //If we are moving through an impassable tile or a partial tile that is unwalkable, then double the movement cost by 2 (arbitrary number)
+                        if(grid->tiles[toIndex(grid,(Vector2){static_cast<float>(newX), static_cast<float>(newY)})].status == 1) badNeighbours.push_back(neighbor);
+                        //Need to precalculate some values for determining if the path is passable or not
+                        else if(grid->tiles[toIndex(grid,(Vector2){static_cast<float>(newX), static_cast<float>(newY)})].status == 2
+                            && !isPathBetween(directionFrom, direction, grid, toIndex(grid,(Vector2){static_cast<float>(newX), static_cast<float>(newY)}), size)) badNeighbours.push_back(neighbor);
+                        else {
+                            goodNeighbours.push_back(neighbor);
+                        }
+                    }
+                }
+            }
+            else {
+                //We can just do the regular partial tile pathfinding
+            }
+        }
+        for(auto neighbor : goodNeighbours) {
+            //If it is not already visited
+            if (closedList.find(neighbor) == closedList.end()) {
+                int moveCost = ((current.x - neighbor.x) != 0 && (current.y -neighbor.y) != 0) ? diagonalCost : straightCost;
+                int index = toIndex(grid, (Vector2){static_cast<float>(neighbor.x),static_cast<float>(neighbor.y)});
+                int tentativeG = gScore[toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)})] + moveCost;
+
+                if (tentativeG < gScore[index]) {
+                    gScore[index] = tentativeG;
+                    neighbor.g = tentativeG;
+                    neighbor.h = getDistance(neighbor, goalNode);
+                    neighbor.f = neighbor.g + neighbor.h;
+                    cameFrom[neighbor] = current;
+                    openList.push(neighbor);
+                }
+            }
+        }
+        for(auto neighbor : badNeighbours) {
+            //If it is not already visited
+            if (closedList.find(neighbor) == closedList.end()) {
+                int moveCost = ((current.x - neighbor.x) != 0 && (current.y -neighbor.y) != 0) ? diagonalCost : straightCost;
+                moveCost *= 2;
+                int index = toIndex(grid, (Vector2){static_cast<float>(neighbor.x),static_cast<float>(neighbor.y)});
+                int tentativeG = gScore[toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)})] + moveCost;
+
+                if (tentativeG < gScore[index]) {
+                    gScore[index] = tentativeG;
+                    neighbor.g = tentativeG;
+                    neighbor.h = getDistance(neighbor, goalNode);
+                    neighbor.f = neighbor.g + neighbor.h;
+                    cameFrom[neighbor] = current;
+                    openList.push(neighbor);
+                }
+            }
+        }
+    }
+
+    return std::vector<Node>(); // No path found
+}
 //Original pure A* implementation:
 std::vector<Node> FindPathAStar(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid) {
     //Represents the (x,y) coordinates of all possible neighbours
     const int directionX[] = { -1, 0, 1, 0, 1, 1, -1, -1 };
     const int directionY[] = { 0, 1, 0, -1, 1, -1, 1, -1 };
-    
+
     const int straightCost = 10; //Cost of moving straight -> 1* 10
     const int diagonalCost = 14; //Cost of moving diagonally ~sqrt(2) *10
 
@@ -598,16 +906,16 @@ std::vector<Node> FindPathAStar(Vector2 start, Vector2 goal, std::shared_ptr<Gri
 
             //Making sure we don't go out of grid bounds and crash the program
             if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
-                if (grid->tiles[toIndex(grid, (Vector2){newX, newY})].status == 0) { //If it walkable
+                if (grid->tiles[toIndex(grid, (Vector2){static_cast<float>(newX),static_cast<float>(newY)})].status == 0) { //If it walkable
                     Node neighbor(newX, newY);
                     //If it is not already visited
                     if (closedList.find(neighbor) == closedList.end()) {
                         int moveCost = (directionX[i] != 0 && directionY[i] != 0) ? diagonalCost : straightCost;
 
-                        int tentativeG = gScore[toIndex(grid, (Vector2){current.x, current.y})] + moveCost;
+                        int tentativeG = gScore[toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)})] + moveCost;
 
-                        if (tentativeG < gScore[toIndex(grid, (Vector2){newX, newY})]) {
-                            gScore[toIndex(grid, (Vector2){newX, newY})] = tentativeG;
+                        if (tentativeG < gScore[toIndex(grid, (Vector2){static_cast<float>(newX),static_cast<float>(newY)})]) {
+                            gScore[toIndex(grid, (Vector2){static_cast<float>(newX),static_cast<float>(newY)})] = tentativeG;
                             neighbor.g = tentativeG;
                             neighbor.h = getDistance(neighbor, goalNode);
                             neighbor.f = neighbor.g + neighbor.h;

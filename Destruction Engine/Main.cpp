@@ -1,14 +1,14 @@
 #include<SDL3_image/SDL_image.h>
+#include <array>
 #include <chrono>
+#include <cstdio>
+#include <vector>
 #include "Outline.h"
 #include "BasicSystems.h"
 #include "TileSystem.h"
 #include "Debug.h"
 #include "GridData.h"
 #include "GridManager.h"
-#include "point.h"
-#include "polygon.h"
-#include "martinez.h"
 
 //TODO: Figure out how do deal with small shapes. Colliders are not generated for them, but they are still there.
 //		Maybe just erase them? Or put a default small collider around them.
@@ -148,6 +148,15 @@ bool init()
 		worldDef = b2DefaultWorldDef();
 		worldDef.gravity = { 0.0f, 0.0f };
 		worldId = b2CreateWorld(&worldDef);
+
+        // TileData testData = (TileData){std::vector<int>{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, std::array<bool, 4>{false, false, false, false}, 1, 0};
+        // auto ret = getDestroyedTile(testData, NE, 2, 4);
+        // for(int i = 0; i < 4; i++) {
+        //     for(int j = 0; j < 4; j++) {
+        //         printf("%i ", ret[(i*4)+j]);
+        //     }
+        //     printf("\n");
+        // }
 	}
 	return success;
 }
