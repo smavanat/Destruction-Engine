@@ -3,6 +3,7 @@
 #include <queue>
 #include <cstring>
 #include <vector>
+#include <stdio.h>
 
 Vector2 gridToWorldPos(std::shared_ptr<GridData> g, Vector2 gridPos) {
     return (Vector2) {
@@ -693,37 +694,37 @@ std::vector<Node> FindPathDestruction(Vector2 start, Vector2 goal, std::shared_p
             //Do not need to store "destroyed" representation in memory, can just recalculate it on the fly right here by just assuming always destroy the tiles in a straight line
             //and by some constant ammount.
             //I do not think we even need to calculate the "destroyed" path, since we automatically know based on the direction of destruction what neighbours to check
-            Direction8 directionFrom = (current == startNode) ? S : directionMap.at(std::make_pair(cameFrom[current].x - current.x, cameFrom[current].y - current.y)); 
+            Direction8 directionTo = (current == startNode) ? S : directionMap.at(std::make_pair(current.x - cameFrom[current].x, current.y - cameFrom[current].y )); 
             int newX = 0;
             int newY = 0;
-            switch(directionFrom) {
+            switch(directionTo) {
                 case N:
-                    newY = 1;
+                    newY = -1;
                 break;
                 case NE:
                     newX = 1;
-                    newY = 1;
+                    newY = -1;
                 break;
                 case E:
                     newX = 1;
                 break;
                 case SE:
                     newX = 1;
-                    newY = -1;
+                    newY = 1;
                 break;
                 case S:
-                    newY = -1;
+                    newY = 1;
                 break;
                 case SW:
                     newX = -1;
-                    newY = -1;
+                    newY = 1;
                 break;
                 case W:
                     newX = -1;
                 break;
                 case NW:
                     newX = -1;
-                    newY = 1;
+                    newY = -1;
                 break;
             }
             newX += current.x;
@@ -750,37 +751,37 @@ std::vector<Node> FindPathDestruction(Vector2 start, Vector2 goal, std::shared_p
         else { //Partial tiles
             if(gScore[toIndex(grid, (Vector2){static_cast<float>(current.x), static_cast<float>(current.y)})] > 14) { //ie, is it wieghted higher because of destruction
                 //Then we know we need calculate a path through the tiles just like for the impassable tile:
-                Direction8 directionFrom = (current == startNode) ? S : directionMap.at(std::make_pair(cameFrom[current].x - current.x, cameFrom[current].y - current.y)); 
+                Direction8 directionTo = (current == startNode) ? S : directionMap.at(std::make_pair(current.x - cameFrom[current].x, current.y - cameFrom[current].y )); 
                 int newX = 0;
                 int newY = 0;
-                switch(directionFrom) {
+                switch(directionTo) {
                     case N:
-                        newY = 1;
+                        newY = -1;
                     break;
                     case NE:
                         newX = 1;
-                        newY = 1;
+                        newY = -1;
                     break;
                     case E:
                         newX = 1;
                     break;
                     case SE:
                         newX = 1;
-                        newY = -1;
+                        newY = 1;
                     break;
                     case S:
-                        newY = -1;
+                        newY = 1;
                     break;
                     case SW:
                         newX = -1;
-                        newY = -1;
+                        newY = 1;
                     break;
                     case W:
                         newX = -1;
                     break;
                     case NW:
                         newX = -1;
-                        newY = 1;
+                        newY = -1;
                     break;
                 }
                 newX += current.x;
@@ -789,8 +790,7 @@ std::vector<Node> FindPathDestruction(Vector2 start, Vector2 goal, std::shared_p
                     Node neighbor(newX, newY);
                     //If it is not already visited
                     if (closedList.find(neighbor) == closedList.end()) {
-                        // int moveCost = (directionX[i] != 0 && directionY[i] != 0) ? diagonalCost : straightCost; //Calculate the movement cost for moving straight or diagnoally
-
+                        // int moveCost = (directionX[i] != 0 && directionY[i] != 0) ? diagonalCost : straightCost; //Calculate the movement cost for moving straight or diagnoally                        auto direction = directionMap.at(std::make_pair(newX - current.x, newY - current.y));
                         auto direction = directionMap.at(std::make_pair(newX - current.x, newY - current.y));
                         auto directionFrom = (current == startNode) ? S : directionMap.at(std::make_pair(cameFrom[current].x - current.x, cameFrom[current].y - current.y)); 
                         //If we are moving through an impassable tile or a partial tile that is unwalkable, then double the movement cost by 2 (arbitrary number)
@@ -806,6 +806,22 @@ std::vector<Node> FindPathDestruction(Vector2 start, Vector2 goal, std::shared_p
             }
             else {
                 //We can just do the regular partial tile pathfinding
+                const TileData& t = grid->tiles[toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)})];
+                for(int i = 0; i < 8; i++) {
+                    //The neighbour's coordinates
+                    int newX = current.x + directionX[i];
+                    int newY = current.y + directionY[i];
+
+                    //Making sure we don't go out of grid bounds and crash the program
+                    if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+                        auto direction = directionMap.at(std::make_pair(directionX[i], directionY[i]));
+                        auto directionFrom = (current == startNode) ? S : directionMap.at(std::make_pair(cameFrom[current].x - current.x, cameFrom[current].y - current.y));
+                        //Need to figure out how to get direction that we are coming from.
+                        if(isPathBetween(directionFrom, direction, grid, toIndex(grid, (Vector2){static_cast<float>(current.x),static_cast<float>(current.y)}), size)) {
+                            goodNeighbours.push_back(Node(newX, newY));
+                        }
+                    }
+                }
             }
         }
         for(auto neighbor : goodNeighbours) {

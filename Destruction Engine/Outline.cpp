@@ -2,13 +2,12 @@
 #include<algorithm>
 #include "Outline.h"
 #include "Maths.h"
-#include<PolyPartition/polypartition.h>
 
 #pragma region splitTexture
 //Erases pixels in a texture in a circular radius determined by scale and marks the texture for alteration. 
 //If all the pixels in the radius have been erased, then the texture is not marked for alteration.
 void erasePixels(Sprite &s, Transform& t, SDL_Renderer* gRenderer, int scale, int x, int y) {
-	Vector2 temp = {x, y};
+	Vector2 temp = {static_cast<float>(x), static_cast<float>(y)};
 	Vector2 newOrigin = rotateAboutPoint(&temp, &t.position, -t.rotation, false);
 
 	x = newOrigin.x - getOrigin(s, t).x;
@@ -40,6 +39,50 @@ void erasePixels(Sprite &s, Transform& t, SDL_Renderer* gRenderer, int scale, in
 		pixels[y * width + x] = NO_PIXEL_COLOUR;
 	}
 
+	loadFromPixels(s, gRenderer);
+}
+
+void erasePixelsRectangle(Sprite &s, Transform& t, SDL_Renderer* gRenderer, int halfX, int halfY, float rot, int x, int y) {
+	Vector2 temp = {static_cast<float>(x), static_cast<float>(y)};
+	Vector2 newOrigin = rotateAboutPoint(&temp, &t.position, -t.rotation, false);
+
+	x = newOrigin.x - getOrigin(s, t).x;
+	y = newOrigin.y - getOrigin(s, t).y;
+	int width = s.surfacePixels->w;
+	int height = s.surfacePixels->h;
+
+	Uint32* pixels = getPixels32(s);
+
+    //Precompute cos/sin
+    float cosA = cos(rot * DEGREES_TO_RADIANS);
+    float sinA = sin(rot * DEGREES_TO_RADIANS);
+
+    // Compute the AABB of the rotated rectangle to limit pixel checks
+	int maxRadius = static_cast<int>(ceil(sqrt(halfX * halfX + halfY * halfY)));
+	int startX = std::max(0, x - maxRadius);
+	int endX = std::min(width - 1, x + maxRadius);
+	int startY = std::max(0, y - maxRadius);
+	int endY = std::min(height - 1, y + maxRadius);
+
+    for (int px = startX; px <= endX; px++) {
+		for (int py = startY; py <= endY; py++) {
+			// Translate pixel into rectangle local space (centered at x, y)
+			float dx = px - x;
+			float dy = py - y;
+
+			// Rotate into local unrotated space
+			float localX = dx * cosA + dy * sinA;
+			float localY = -dx * sinA + dy * cosA;
+
+			// Now check if within rectangle bounds
+			if (abs(localX) <= halfX && abs(localY) <= halfY) {
+				if (pixels[py * width + px] != NO_PIXEL_COLOUR) {
+					pixels[py * width + px] = NO_PIXEL_COLOUR;
+					if (!s.needsSplitting) s.needsSplitting = true;
+				}
+			}
+		}
+	}
 	loadFromPixels(s, gRenderer);
 }
 

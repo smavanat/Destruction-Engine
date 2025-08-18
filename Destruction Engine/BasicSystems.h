@@ -1,3 +1,5 @@
+#include "Event.h"
+#include "SDL3/SDL_rect.h"
 #include "System.h"
 #include "BasicComponents.h"
 #include "Coordinator.h"
@@ -53,7 +55,21 @@ class DestructionSystem : public System {
 public:
 	void init() {
 		gCoordinator.getEventBus()->subscribe(this, &DestructionSystem::onErasureEvent);
+        gCoordinator.getEventBus()->subscribe(this, &DestructionSystem::onDestructionEvent);
 	}
+
+    void onDestructionEvent(const DestructionEvent* destr) {
+        for(Entity e : registeredEntities) {
+            Sprite& s = gCoordinator.getComponent<Sprite>(e);
+            Transform& t = gCoordinator.getComponent<Transform>(e);
+            Terrain& tr = gCoordinator.getComponent<Terrain>(e);
+            SDL_FRect sRect = (SDL_FRect){getOrigin(s, t).x, getOrigin(s, t).y, static_cast<float>(s.surfacePixels->w), static_cast<float>(s.surfacePixels->h)};
+            if(tr.isTerrain && isOverlapping(&sRect, t.rotation, destr->quad, destr->rot)) {
+                erasePixelsRectangle(s,t, gRenderer, destr->quad->w/2, destr->quad->h/2, destr->rot, destr->quad->x, destr->quad->y);
+            }
+        }
+        gCoordinator.getEventBus()->publish(new ErasureEvent());
+    }
 
 	void onErasureEvent(const ErasureEvent* erasure) {
 		//Need to hold the removed/added entities in vectors so we don't modify the registeredEntities set as we iterate over it
@@ -129,7 +145,7 @@ public:
 				Vector2 temp = {in->mouseX, in->mouseY};
 				Vector2 rotated = rotateAboutPoint(&temp, &t.position, -t.rotation, false);
 
-				//This is the correct version for doing outside, just need to update erasePixels to go along with this
+				//This is the correct version for doing outside
 				if((rotated.x + scale >= getOrigin(s, t).x && rotated.x + scale < getOrigin(s,t ).x + s.surfacePixels->w) //West
 					|| (rotated.y + scale >= getOrigin(s, t).y && rotated.x + scale < getOrigin(s,t ).y + s.surfacePixels->h) //North
 					|| (rotated.x - scale >= getOrigin(s, t).x && rotated.x - scale < getOrigin(s,t ).x + s.surfacePixels->w) //East
@@ -140,4 +156,23 @@ public:
 			}
 		}
 	}
+};
+
+class UISystem : public System{
+public: 
+    void init() {
+		gCoordinator.getEventBus()->subscribe(this, &UISystem::onClickedEvent);
+    }
+
+    void onClickedEvent(const ClickedEvent* event) {
+        for(Entity e : registeredEntities) {
+            Button b = gCoordinator.getComponent<Button>(e);
+            if(event->pos.x >= b.area->x && event->pos.x < b.area->x + b.area->w
+                && event->pos.y >= b.area->y && event->pos.y < b.area->y + b.area->h) {
+                //Do something
+            }
+        }
+    }
+
+    void update(float dt) {}
 };

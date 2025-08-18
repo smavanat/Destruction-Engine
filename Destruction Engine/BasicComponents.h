@@ -114,6 +114,22 @@ struct Terrain : public Component<Terrain> {
     Terrain(bool t) : isTerrain(t) {};
 };
 
+//For handling world state in the demo
+enum DEMO_STATE {
+    FIRST,
+    SECOND,
+    THIRD
+};
+
+struct Button : public Component<Button> {
+    SDL_FRect* area;
+    DEMO_STATE state;
+
+    Button() = default;
+
+    Button(SDL_FRect* a) : area(a) {};
+};
+
 //(Tile)Sprite functions
 
 Vector2 getOrigin(Sprite& s, Transform& t);

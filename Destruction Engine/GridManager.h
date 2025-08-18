@@ -1,4 +1,5 @@
 #pragma once
+#include "Maths.h"
 #include "TileSystem.h"
 #include "PathSystem.h"
 #include <fstream>
@@ -60,5 +61,13 @@ typedef struct {
 	uint32_t maxSize;
 } VectorList;
 
+typedef struct {
+    Vector2 ul;
+    Vector2 ur;
+    Vector2 ll;
+    Vector2 lr;
+} Quad;
+
 bool isOverlapping(SDL_FRect* t, Collider* c);
+bool isOverlapping(SDL_FRect* t1, float r1, SDL_FRect* t2, float r2);
 void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnWalkable, Vector2 start);

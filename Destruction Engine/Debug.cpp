@@ -1,4 +1,5 @@
 #include "Debug.h"
+#include "SDL3/SDL_render.h"
 #include "utils.h"
 #pragma region DebugManager
 
@@ -139,16 +140,28 @@ void GridDebugSystem::onGridDebugEvent(const GridDebugEvent* event) {
 //Doesn't work since we got rid of the grid system. Should adjust in future
 void GridDebugSystem::update(float delta) {
 	if (displayGridOutlines) {
-		SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0xFF);
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0x40);
 		Vector2 start = gGridManager.grid->origin;
 		for(int i = 0; i < gGridManager.grid->gridWidth*gGridManager.grid->subWidth; i++) {
+            if(i%4 == 0) {
+                SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0xFF);
+            }
 			SDL_RenderLine(gRenderer, start.x, start.y, start.x, start.y + gGridManager.grid->gridHeight*gGridManager.grid->tileWidth);
 			start.x += gGridManager.grid->tileWidth/gGridManager.grid->subWidth;
+            if(i%4 == 0) {
+                SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0x40);
+            }
 		}
 		start = gGridManager.grid->origin;
 		for(int i = 0; i < gGridManager.grid->gridHeight*gGridManager.grid->subWidth; i++) {
+            if(i%4 == 0) {
+                SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0xFF);
+            }
 			SDL_RenderLine(gRenderer, start.x, start.y, start.x+ gGridManager.grid->gridWidth*gGridManager.grid->tileWidth, start.y);
 			start.y += gGridManager.grid->tileWidth/gGridManager.grid->subWidth;
+            if(i%4 == 0) {
+                SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0x40);
+            }
 		}
 	}
 }

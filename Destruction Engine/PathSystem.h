@@ -1,11 +1,6 @@
 #pragma once
-#include <vector>
-#include <queue>
 #include <cmath>
-#include <unordered_map>
-#include "Maths.h"
 #include "Coordinator.h"
-#include "BasicComponents.h"
 #include "GridData.h"
 extern Coordinator gCoordinator;
 

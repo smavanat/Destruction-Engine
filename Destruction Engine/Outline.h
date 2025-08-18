@@ -1,16 +1,15 @@
 #pragma once
 #include<SDL3/SDL.h>
 #include<stdio.h>
-#include<iostream>
 #include<vector>
 #include<box2d/box2d.h>
 #include<PolyPartition/polypartition.h>
 #include "BasicComponents.h"
-// const float metresToPixels = 50.0f;
-// const float pixelsToMetres = 1.0f / metresToPixels;
 const Uint32 NO_PIXEL_COLOUR = SDL_MapRGBA(SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_ARGB8888), NULL, 0xff, 0xff, 0xff, 0x00);
 
 void erasePixels(Sprite &s, Transform& t, SDL_Renderer* gRenderer, int scale, int x, int y);
+
+void erasePixelsRectangle(Sprite &s, Transform& t, SDL_Renderer* gRenderer, int halfX, int halfY, float rot, int x, int y);
 
 bool isAtTopEdge(int pixelPosition, int arrayWidth);
 

@@ -1,4 +1,6 @@
 #pragma once
+#include "Maths.h"
+#include "SDL3/SDL_rect.h"
 #include <vector>
 /*
 * This file holds all of the different types of events
@@ -13,7 +15,13 @@ protected:
 //These events are all really basic and just exist to be fired to tell some system that something has happened,
 //they don't send any data
 struct ErasureEvent : public Event {};
-
+struct DestructionEvent: public Event{
+    SDL_FRect* quad;
+    float rot;
+};
+struct ClickedEvent: public Event {
+    Vector2 pos;
+};
 struct ColliderDebugEvent : public Event {};
 
 struct GridDebugEvent : public Event {};

@@ -1,5 +1,7 @@
 #include "GridManager.h"
+#include "Maths.h"
 #include "martinez.h"
+#include <cstdlib>
 GridSystemManager::GridSystemManager() {
     //gSystem = nullptr;
     pSystem = nullptr;
@@ -510,6 +512,18 @@ void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnwa
 //Why use SAT to get overlap initially when we know both things will be bounding boxes with 0 rotation. Why not just
 //use bounding box collisions and use SAT at more complex times?
 #pragma region SAT
+Vector2* convertRectToQuad(SDL_FRect* t, float r) {
+    Vector2* ret = (Vector2*)malloc(sizeof(Vector2));
+    Vector2 colliderVertices[] = {(Vector2){t->x, t->y}, (Vector2){t->x+t->w, t->y}, (Vector2){t->x+t->w, t->y+t->h}, (Vector2){t->x, t->y+t->h}};
+    Vector2 rCentre = {t->x + (t->w/2.0f), t->y + (t->h/2.0f)};
+    
+    for(int i = 0; i < 4; i ++) {
+        ret[0] = rotateAboutPoint(&colliderVertices[i], &rCentre, r, false);
+    }
+
+    return ret;
+}
+
 Vector2* getSeperatingAxes(b2ShapeId id, Vector2* pos, int numVertices) {
     Vector2* axes = (Vector2*)calloc(numVertices, sizeof(Vector2));
     Vector2* colliderVertices = b2Shape_GetPolygon(id).vertices;
@@ -555,6 +569,27 @@ Vector2* getSeperatingAxes(SDL_FRect* rect) {
     return axes;
 }
 
+Vector2* getSeperatingAxes(Vector2* rect) {
+    Vector2* axes = (Vector2*)calloc(4, sizeof(Vector2));
+
+    for(int i = 0; i < 4; i++) {
+        //Get the current vertex
+        Vector2 start = rect[i];
+        //Get the next vertex
+        Vector2 end = rect[(i + 1) % 4];
+        //Subtract the two to get the edge vector
+        Vector2 edge = (Vector2){end.x - start.x, end.y - start.y};
+        //Get the normal of the edge
+        Vector2 normal = (Vector2){-edge.y, edge.x};
+        float length = sqrt(normal.x * normal.x + normal.y * normal.y);
+        if (length > 0) {
+            normal.x /= length;
+            normal.y /= length;
+        }
+        axes[i] = normal;
+    }
+    return axes;
+}
 Vector2 projectShape(b2ShapeId id, Vector2* axis, Vector2* pos, int numVertices) {
     Vector2* colliderVertices = b2Shape_GetPolygon(id).vertices;
     double min = (axis->x * (colliderVertices[0].x + pos->x)*metresToPixels) + (axis->y * (colliderVertices[0].y + pos->y)*metresToPixels);
@@ -583,6 +618,18 @@ Vector2 projectShape(SDL_FRect* rect, Vector2* axis) {
     return (Vector2){min, max};
 }
 
+Vector2 projectShape(Vector2* rect, Vector2* axis) {
+    double min = (axis->x * rect[0].x) + (axis->y * rect[0].y);
+    double max = min;
+
+    for(int i = 1; i < 4; i++) {
+        double c = (axis->x * rect[i].x) + (axis->y * rect[i].y);
+        if(c < min) min = c;
+        else if(c > max) max = c;
+    }
+
+    return (Vector2){min, max};
+}
 //Checks if two 1D vectors overlap
 bool overlap(Vector2* a, Vector2* b) {
     return a->x <= b->y && b->x <= a->y;
@@ -609,6 +656,7 @@ bool isOverlapping(SDL_FRect* t, Collider* c) {
     }
 
     //Getting collider data
+    //Never account for tile rotation. Might be useful in future
     int shapeCount = b2Body_GetShapeCount(c->colliderId);
     Vector2 colliderPosition = b2Body_GetPosition(c->colliderId);
     b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount*sizeof(b2ShapeId));
@@ -655,6 +703,48 @@ bool isOverlapping(SDL_FRect* t, Collider* c) {
     }
     free(colliderShapes);
     free(axes1);
+    return false;
+}
+
+bool isOverlapping(SDL_FRect* t1, float r1, SDL_FRect* t2, float r2) {
+    //Add bounding box checks before doing SAT
+    //Axes of the rect always the same, can generate them outside the loop
+    Vector2* q1 = convertRectToQuad(t1, r1);
+    Vector2* q2 = convertRectToQuad(t2, r2);
+    Vector2* axes1 = getSeperatingAxes(q1);
+    Vector2* axes2 = getSeperatingAxes(q2);
+
+    for(int j = 0; j < 4; j++) {
+        Vector2 p1 = projectShape(q1, &axes1[j]);
+        Vector2 p2 = projectShape(q2, &axes1[j]);
+        //If projection does not overlap then shape does not overlap
+        if(overlap(&p1, &p2)){
+            free(q1);
+            free(q2);
+            free(axes1);
+            free(axes2);
+            return true;
+        }
+    }
+
+    //Check that rect axes projection overlaps with shape
+    for(int j = 0; j < 4; j++) {
+        Vector2 p1 = projectShape(q1, &axes2[j]);
+        Vector2 p2 = projectShape(q2, &axes2[j]);
+
+        //If projection does not overlap then shape does not overlap
+        if(overlap(&p1, &p2)){
+            free(q1);
+            free(q2);
+            free(axes1);
+            free(axes2);
+            return true;
+        }
+    }
+    free(q1);
+    free(q2);
+    free(axes1);
+    free(axes2);
     return false;
 }
 #pragma endregion
