@@ -479,6 +479,46 @@ std::vector<std::pair<Sprite, Transform>> splitTextureAtEdge(Sprite& s, Transfor
 			}
 		}
 	}
+
+	float lineDist(Vector2 point, Vector2 startPoint, Vector2 endPoint) {
+
+		//The source for this very cursed single line of code can be found here : https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
+		float distance = abs(((endPoint.y - startPoint.y) * point.x) -
+			((endPoint.x - startPoint.x) * point.y) +
+			(endPoint.x * startPoint.y) - (endPoint.y * startPoint.x)) /
+			sqrt(pow((endPoint.y - startPoint.y), 2) + pow((endPoint.x - startPoint.x), 2));
+		return distance;
+	}
+
+	int findFurthest(std::vector<Vector2>& allPoints, int a, int b, float epsilon) {
+		float recordDistance = -1;
+		int furthestIndex = -1;
+		Vector2 start = allPoints[a];
+        Vector2 end = allPoints[b];
+		for (int i = a + 1; i < b; i++) {
+			float d = lineDist(allPoints[i], start, end);
+			if (d > recordDistance) {
+				recordDistance = d;
+				furthestIndex = i;
+			}
+		}
+		if (recordDistance > epsilon) return furthestIndex;
+		else return -1;
+	}
+
+	//This method would be used for lines that do not join up
+	void rdp(int startIndex, int endIndex, float epsilon, std::vector<Vector2>& allPoints, std::vector<Vector2>& rdpPoints) {
+		int nextIndex = findFurthest(allPoints, startIndex, endIndex, epsilon);
+		if (nextIndex > 0) {
+			if (startIndex != nextIndex) {
+				rdp(startIndex, nextIndex, epsilon, allPoints, rdpPoints);
+			}
+			rdpPoints.push_back(allPoints[nextIndex]); 
+			if (endIndex != nextIndex) {
+				rdp(nextIndex, endIndex, epsilon, allPoints, rdpPoints);
+			}
+		}
+	}
 #pragma endregion
 
 #pragma region ColliderGeneration

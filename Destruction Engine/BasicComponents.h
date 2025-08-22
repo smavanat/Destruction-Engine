@@ -127,7 +127,7 @@ struct Button : public Component<Button> {
 
     Button() = default;
 
-    Button(SDL_FRect* a) : area(a) {};
+    Button(SDL_FRect* a, DEMO_STATE s) : area(a), state(s) {};
 };
 
 //(Tile)Sprite functions

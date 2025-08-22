@@ -106,7 +106,7 @@ bool loadTileMapFromFile(TileSet& t, SDL_Renderer* gRenderer, std::string path, 
 			}
 			else {
 				//Stop loading the map 
-				("Error loading map: Invalid tile type\n");
+				printf("Error loading map: Invalid tile type\n");
 				tilesLoaded = false;
 				break;
 			}

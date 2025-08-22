@@ -1,14 +1,22 @@
 #include<SDL3_image/SDL_image.h>
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
+#include <memory>
 #include <vector>
 #include "BasicComponents.h"
 #include "BasicSystems.h"
+#include "Entity.h"
+#include "Event.h"
+#include "Maths.h"
 #include "SDL3/SDL_rect.h"
+#include "Signature.h"
 #include "TileSystem.h"
 #include "Debug.h"
 #include "GridData.h"
 #include "GridManager.h"
+#include "box2d/box2d.h"
+#include "box2d/id.h"
 
 //TODO: Figure out how do deal with small shapes. Colliders are not generated for them, but they are still there.
 //		Maybe just erase them? Or put a default small collider around them.
@@ -26,23 +34,27 @@ b2WorldId worldId;
 //ECS Managers
 Coordinator gCoordinator;
 DebugManager gDebugManager;
-GridSystemManager gGridManager;
+std::shared_ptr<GridData> grid;
+// GridSystemManager gGridManager;
 
 //ECS systems
 std::shared_ptr<RenderSystem> renderSystem;
 std::shared_ptr<TransformSystem> transformSystem;
 std::shared_ptr<DestructionSystem> destructionSystem;
 std::shared_ptr<TileRenderSystem> tileSystem;
+std::shared_ptr<UISystem> uiSystem;
+std::shared_ptr<PathFindingSystem> pSystem;
 TileSet t;
 TerrainSet tSet;
 
 //Test entities;
-// Entity testTexture;
-//Entity testPath;
 Entity testAgent;
+Entity b1;
+Entity b2;
+Entity b3;
 Sprite as;
 
-int scale = 20;
+int scale = 30;
 
 bool init();
 bool loadMedia();
@@ -95,15 +107,25 @@ bool init()
 		sig.addComponent<TileSprite>();
 		tileSystem = gCoordinator.addSystem<TileRenderSystem>(sig);
 	}
-	gGridManager = GridSystemManager(TILE_WIDTH, GRID_WIDTH, GRID_HEIGHT);
+
+    {
+        Signature sig;
+        sig.addComponent<Button>();
+        uiSystem = gCoordinator.addSystem<UISystem>(sig);
+    }
+    {
+        Signature sig;
+        sig.addComponent<Pathfinding>();
+        pSystem = gCoordinator.addSystem<PathFindingSystem>(sig);
+    }
+    grid = std::make_shared<GridData>();
+    CreateGridData(grid, TILE_WIDTH, GRID_WIDTH, GRID_HEIGHT);
+    pSystem->setGrid(grid);
 
 	//Initialise all the systems.
 	gCoordinator.init();
 	gDebugManager.init(); //In case Debug systems/manager need some other form of initialisation
 
-	// testTexture = gCoordinator.createEntity();
-	// testPath = gCoordinator.createEntity();
-	// testAgent = gCoordinator.createEntity();
 	//Creating the tileset
 	Sprite* srcSprite = (Sprite*)malloc(sizeof(Sprite));
 	*srcSprite = Sprite(nullptr, nullptr, false);
@@ -111,6 +133,7 @@ bool init()
 
 	//Creating the array that holds all of the terrain colliders
 	tSet = (TerrainSet){(uint32_t*)calloc(25, sizeof(uint32_t)), 0, 25};
+
 	//Initialization flag
 	bool success = true;
 
@@ -146,153 +169,124 @@ bool init()
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 			}
 		}
-		// gCoordinator.addComponent(testTexture, Transform((Vector2){1420.0f, 440.0f}, 0.0));
-		// gCoordinator.addComponent(testTexture, Terrain(false));
-		// gCoordinator.addComponent(testAgent, Transform((Vector2){40, 40}, 0.0f));
-		// gCoordinator.addComponent(testAgent, Terrain(false));
-		// gCoordinator.addComponent(testAgent, Pathfinding((Vector2){10, 10}, (Vector2){500, 500}, 2));
+        b1 = gCoordinator.createEntity();
+        b2 = gCoordinator.createEntity();
+        b3 = gCoordinator.createEntity();
 
-		// worldDef = b2DefaultWorldDef();
-		// worldDef.gravity = { 0.0f, 0.0f };
-		// worldId = b2CreateWorld(&worldDef);
+        SDL_FRect* t1 = (SDL_FRect*)malloc(sizeof(SDL_FRect));
+        *t1 = (SDL_FRect){1400, 200, 100, 50};
+        SDL_FRect* t2 = (SDL_FRect*)malloc(sizeof(SDL_FRect));
+        *t2 = (SDL_FRect){1400, 400, 100, 50};
+        SDL_FRect* t3 = (SDL_FRect*)malloc(sizeof(SDL_FRect));
+        *t3 = (SDL_FRect){1400, 600, 100, 50};
+
+        gCoordinator.addComponent(b1, Button(t1, FIRST));
+        gCoordinator.addComponent(b2, Button(t2, SECOND));
+        gCoordinator.addComponent(b3, Button(t3, THIRD));
+
+        gCoordinator.addComponent(b1, Transform((Vector2){1450, 225}, 0.0f));
+        gCoordinator.addComponent(b2, Transform((Vector2){1450, 425}, 0.0f));
+        gCoordinator.addComponent(b3, Transform((Vector2){1450, 625}, 0.0f));
+
+        worldDef = b2DefaultWorldDef();
+        worldDef.gravity = { 0.0f, 0.0f };
+        worldId = b2CreateWorld(&worldDef);
 	}
 	return success;
+}
+
+bool loadSprite(Sprite& s, std::string path) {
+	if (!loadPixelsFromFile(s, path))
+	{
+		printf("Failed to load %s texture!\n", path.data());
+        return false;
+	}
+	else {
+		if (!loadFromPixels(s, gRenderer))
+		{
+			printf("Unable to load %s' texture from surface!\n", path.data());
+            return false;
+		}
+	}
+    return true;
 }
 
 bool loadMedia()
 {
 	//Loading success flag
 	bool success = true;
-	// gCoordinator.addComponent(testTexture, Sprite(NULL, NULL, false));
-	// Sprite &s = gCoordinator.getComponent<Sprite>(testTexture);
-	//Load Foo' texture
-	// if (!loadPixelsFromFile(s, "assets/foo.png"))
-	// {
-	// 	printf("Failed to load Foo' texture!\n");
-	// 	success = false;
-	// }
-	// else {
-	// 	if (!loadFromPixels(s, gRenderer))
-	// 	{
-	// 		printf("Unable to load Foo' texture from surface!\n");
-	// 	}
-	// }
-
 	as = Sprite(NULL, NULL, false);
-	if (!loadPixelsFromFile(as, "assets/TestSprite.png"))
-	{
-		printf("Failed to load TestSprite' texture!\n");
-		success = false;
-	}
-	else {
-		if (!loadFromPixels(as, gRenderer))
-		{
-			printf("Unable to load TestSprite' texture from surface!\n");
-		}
-	}
-	// gCoordinator.addComponent(testAgent, as);
+    Sprite sb1 = Sprite(NULL, NULL, false);
+    Sprite sb2 = Sprite(NULL, NULL, false);
+    Sprite sb3 = Sprite(NULL, NULL, false);
+    // success = loadSprite(as, "assets/TestSprite.png");
+    success = loadSprite(sb1, "assets/b1.png");
+    success = loadSprite(sb2, "assets/b2.png");
+    success = loadSprite(sb3, "assets/b3.png");
+    success = initialiseDemoTileMap(t, gRenderer, "assets/MarchingSquares.png", "assets/Pathfinding2.map", &tSet);
 
-	// if (!initialiseDemoTileMap(t, gRenderer, "assets/MarchingSquares.png", "assets/Pathfinding.map", &tSet)) {
-	// 	printf("Unable to load tileset\n");
-	// 	success = false;
-	// }
-	//
-	// if (!gGridManager.loadGridFromFile("assets/Pathfinding.map")) {
-	// 	printf("Unable to load grid\n");
-	// 	success = false;
-	// }
-
-	//So that there is some sort of default collider to go along with a default texture.
-	// Transform t = gCoordinator.getComponent<Transform>(testTexture);
-	// b2BodyId tempId = createBoxCollider(t.position, s.surfacePixels->w, s.surfacePixels->h, t.rotation, worldId, b2_staticBody);
-	// gCoordinator.addComponent(testTexture, Collider(tempId, BOX));
-	// Transform t = gCoordinator.getComponent<Transform>(testAgent);
-	// b2BodyId tempId = createCircleCollider(t.position, 20, worldId, b2_dynamicBody);
-	// gCoordinator.addComponent(testAgent, Collider(tempId, CIRCLE));
+    gCoordinator.addComponent(b1, sb1);
+    gCoordinator.addComponent(b2, sb2);
+    gCoordinator.addComponent(b3, sb3);
 
 	return success;
 }
 
-bool initD1() {
-    worldDef = b2DefaultWorldDef();
-    worldDef.gravity = { 0.0f, 0.0f };
-    worldId = b2CreateWorld(&worldDef);
 
+bool initAgent(bool basic) {
+    testAgent = gCoordinator.createEntity();
+
+   gCoordinator.addComponent(testAgent, Transform((Vector2){40, 40}, 0.0f));
+   gCoordinator.addComponent(testAgent, Pathfinding((Vector2){10, 10}, (Vector2){1240, 920}, 2));
+
+    if(!basic) {
+        Transform t = gCoordinator.getComponent<Transform>(testAgent);
+        b2BodyId tempId = createCircleCollider(t.position, 20, worldId, b2_dynamicBody);
+        gCoordinator.addComponent(testAgent, Collider(tempId, CIRCLE));
+    }
     return true;
 }
 
-bool initD2() {
-	testAgent = gCoordinator.createEntity();
+bool loadMap(std::string path, bool addAgent) {
+    if(addAgent) {
+        if(!loadSprite(as, "assets/TestSprite.png")) {
+            printf("Unable to load agent sprite\n");
+            return false;
+        }
+        gCoordinator.addComponent(testAgent, as);
+    }
 
-    gCoordinator.addComponent(testAgent, Transform((Vector2){40, 40}, 0.0f));
-    gCoordinator.addComponent(testAgent, Terrain(false));
-    gCoordinator.addComponent(testAgent, Pathfinding((Vector2){10, 10}, (Vector2){500, 500}, 2));
-	gCoordinator.addComponent(testAgent, as);
-
-    worldDef = b2DefaultWorldDef();
-    worldDef.gravity = { 0.0f, 0.0f };
-    worldId = b2CreateWorld(&worldDef);
-
-	Transform t = gCoordinator.getComponent<Transform>(testAgent);
-	b2BodyId tempId = createCircleCollider(t.position, 20, worldId, b2_dynamicBody);
-	gCoordinator.addComponent(testAgent, Collider(tempId, CIRCLE));
-    return true;
-}
-
-bool initD3() {
-	testAgent = gCoordinator.createEntity();
-    gCoordinator.addComponent(testAgent, Transform((Vector2){40, 40}, 0.0f));
-    gCoordinator.addComponent(testAgent, Terrain(false));
-    gCoordinator.addComponent(testAgent, Pathfinding((Vector2){10, 10}, (Vector2){500, 500}, 2));
-	gCoordinator.addComponent(testAgent, as);
-
-    worldDef = b2DefaultWorldDef();
-    worldDef.gravity = { 0.0f, 0.0f };
-    worldId = b2CreateWorld(&worldDef);
-
-	Transform t = gCoordinator.getComponent<Transform>(testAgent);
-	b2BodyId tempId = createCircleCollider(t.position, 20, worldId, b2_dynamicBody);
-	gCoordinator.addComponent(testAgent, Collider(tempId, CIRCLE));
-    return true;
-}
-
-bool loadD1() {
-	if (!initialiseDemoTileMap(t, gRenderer, "assets/MarchingSquares.png", "assets/Pathfinding.map", &tSet)) {
+	if (!loadTileMapFromFile(t, gRenderer, path, &tSet)) {
 		printf("Unable to load tileset\n");
 		return false;
 	}
 
-	if (!gGridManager.loadGridFromFile("assets/Pathfinding.map")) {
+	if (!LoadGridFromFile(grid, path)) {
 		printf("Unable to load grid\n");
 		return false;
 	}
     return true;
 }
 
-bool loadD2() {
-	if (!initialiseDemoTileMap(t, gRenderer, "assets/MarchingSquares.png", "assets/Pathfinding.map", &tSet)) {
-		printf("Unable to load tileset\n");
-		return false;
-	}
+void closeDemo() {
+    std::vector<Entity> entitiesToDestroy = std::vector<Entity>();
+    for(Entity e : destructionSystem->registeredEntities) {
+        Sprite s = gCoordinator.getComponent<Sprite>(e);
+        if(s.surfacePixels != NULL)
+            free(s.surfacePixels);
+        Collider c = gCoordinator.getComponent<Collider>(e);
+        b2DestroyBody(c.colliderId);
+        entitiesToDestroy.push_back(e);
+        // gCoordinator.destroyEntity(e);
+    }
+    for(int i = 0; i < entitiesToDestroy.size(); i++) {
+        gCoordinator.destroyEntity(entitiesToDestroy[i]);
+    }
 
-	if (!gGridManager.loadGridFromFile("assets/Pathfinding.map")) {
-		printf("Unable to load grid\n");
-		return false;
-	}
-    return true;
-}
-
-bool loadD3() {
-	if (!initialiseDemoTileMap(t, gRenderer, "assets/MarchingSquares.png", "assets/Pathfinding.map", &tSet)) {
-		printf("Unable to load tileset\n");
-		return false;
-	}
-
-	if (!gGridManager.loadGridFromFile("assets/Pathfinding.map")) {
-		printf("Unable to load grid\n");
-		return false;
-	}
-    return true;
+    grid->tiles.clear();
+    grid->tiles = std::vector<TileData>(static_cast<size_t>(grid->gridHeight* grid->gridWidth));
+    as = Sprite(NULL, NULL, false);
+    gCoordinator.destroyEntity(testAgent);
 }
 
 void close()
@@ -305,6 +299,7 @@ void close()
 	b2DestroyWorld(worldId);
 	freeTileSet(t);
 	free(tSet.eArr);
+
 	//Destroy window	
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);
@@ -312,7 +307,6 @@ void close()
 	gRenderer = NULL;
 
 	//Quit SDL subsystems
-	//IMG_Quit();
 	SDL_Quit();
 }
 
@@ -326,15 +320,17 @@ int main(int argc, char* args[]) {
 			printf("Failed to load media!\n");
 		}
 		else {
-            initD2();
-            loadD2();
+            initAgent(true);
+            loadMap("assets/Pathfinding2.map", false);
+
 			bool quit = false;
 			float dt = 0.0f;
+            DEMO_STATE cState = gCoordinator.state;
 
 			SDL_Event e;
 			while (!quit) {
 				//This is where all the functionality in the main loop will go.
-				int x, y;
+				// int x, y;
 				while (SDL_PollEvent(&e)) {
 					switch (e.type) {
 						case SDL_EVENT_QUIT:
@@ -342,18 +338,21 @@ int main(int argc, char* args[]) {
 							break;
 						case SDL_EVENT_MOUSE_BUTTON_UP:
 							if (e.button.button == SDL_BUTTON_LEFT) {
-								gCoordinator.getInput()->leftMouseButtonDown = false;
-								//Pathfinding &p = gCoordinator.getComponent<Pathfinding>(testPath);
-								//p.startPos = (Vector2){10, 10};
-								//p.endPos = (Vector2){500, 500};
-								gCoordinator.getEventBus()->publish(new ErasureEvent());
+                                gCoordinator.getInput()->leftMouseButtonDown = false;
+                                if(gCoordinator.state != THIRD) {
+                                    gCoordinator.getEventBus()->publish(new ErasureEvent());
+                                }
 								break;
 							}
 						case SDL_EVENT_MOUSE_BUTTON_DOWN:
 							if (e.button.button == SDL_BUTTON_LEFT) {
+                                bool old = gCoordinator.getInput()->leftMouseButtonDown;
 								gCoordinator.getInput()->leftMouseButtonDown = true;
 								gCoordinator.getInput()->mouseX = e.motion.x;
 								gCoordinator.getInput()->mouseY = e.motion.y;
+                                if(old == false) {
+                                    gCoordinator.getEventBus()->publish(new ClickedEvent(Vector2{e.motion.x, e.motion.y}));
+                                }
 								break;
 							}
 
@@ -377,17 +376,35 @@ int main(int argc, char* args[]) {
 							}
 					}
 				}
+                if(gCoordinator.state != cState) {
+                    closeDemo();
+                    cState = gCoordinator.state;
+                    switch (cState) {
+                        case FIRST:
+                            initAgent(true);
+                            loadMap("assets/Pathfinding2.map", false);
+                            break;
+                        case SECOND:
+                            initAgent(false);
+                            loadMap("assets/Pathfinding2.map", true);
+                            break;
+                        case THIRD:
+                            initAgent(false);
+                            loadMap("assets/Pathfinding.map", true);
+                            break;
+                    }
+                }
 
 				auto startTime = std::chrono::high_resolution_clock::now();
 
 				destructionSystem->update(dt);
-				tileSystem->update(dt);
-				gGridManager.update(dt);
+                pSystem->update(dt);
 				b2World_Step(worldId, 1.0f/60.0f, 4);
 				transformSystem->update(dt);
 
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderClear(gRenderer);
+				tileSystem->update(dt);
 				renderSystem->update(dt);
 				gDebugManager.update(dt);
 				SDL_RenderPresent(gRenderer); //Need to put this outside the render system update since need to call it after both render and debug have drawn

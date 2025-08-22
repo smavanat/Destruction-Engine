@@ -5,10 +5,11 @@
 #include "Entity.h"
 #include "PathSystem.h"
 #include "GridManager.h"
+#include <memory>
 
 extern Coordinator gCoordinator;
 extern SDL_Renderer* gRenderer;
-extern GridSystemManager gGridManager;
+extern std::shared_ptr<GridData> grid;
 
 using Debug = System;
 
@@ -45,7 +46,7 @@ public:
 	void update(float dt);
 	void onColliderDebugEvent(const ColliderDebugEvent* event);
 private:
-	bool displayColliderOutlines = true;
+	bool displayColliderOutlines = false;
 };
 
 //Gets the grid outlines
@@ -65,5 +66,5 @@ public:
 	void update(float dt);
 	void onPathFindingDebugEvent(const PathFindingDebugEvent* event);
 private:
-	bool displayPath = false;
+	bool displayPath = true;
 };

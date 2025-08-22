@@ -21,6 +21,8 @@ struct DestructionEvent: public Event{
 };
 struct ClickedEvent: public Event {
     Vector2 pos;
+
+    ClickedEvent(Vector2 v) : pos(v) {};
 };
 struct ColliderDebugEvent : public Event {};
 

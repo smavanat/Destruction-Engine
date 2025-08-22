@@ -1,6 +1,7 @@
 #pragma once
 #include<memory>
 #include<type_traits>
+#include "BasicComponents.h"
 #include "ComponentManager.h"
 #include "EntityManager.h"
 #include "SystemManager.h"
@@ -20,6 +21,7 @@ public:
 		entManager = std::make_unique<EntityManager>();
 		eBus = std::make_unique<EventBus>();
 		input = std::make_unique<Input>();
+        state = FIRST;
 	}
 
 	//Called on engine init
@@ -93,6 +95,7 @@ public:
 		return entManager->getSignature(e);
 	}
 
+DEMO_STATE state;
 private:
 	std::unique_ptr<SystemManager> sysManager;
 	std::unique_ptr<ComponentManager> compManager;
@@ -100,4 +103,3 @@ private:
 	std::unique_ptr<EventBus> eBus;
 	std::unique_ptr<Input> input;
 };
-

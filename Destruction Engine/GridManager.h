@@ -1,24 +1,9 @@
 #pragma once
 #include "Maths.h"
 #include "TileSystem.h"
-#include "PathSystem.h"
 #include <fstream>
 #include <memory>
 #include <stdint.h>
-class GridSystemManager {
-public:
-	GridSystemManager();
-	GridSystemManager(int tWidth, int gWidth, int gHeight);
-	GridSystemManager(int tWidth, int gWidth, int gHeight, std::string path);
-	void update(float dt);
-	bool loadGridFromFile(std::string path);
-	void setGridTileColliders(TerrainSet* tSet);
-	void printWorldGrid();
-	// std::shared_ptr<GridSystem> gSystem;
-	std::shared_ptr<PathFindingSystem> pSystem;
-	std::shared_ptr<GridData> grid;
-};
-
 struct GHVertex {
 	GHVertex* next, *prev, *neighbour;
 	Vector2 p;
@@ -71,3 +56,6 @@ typedef struct {
 bool isOverlapping(SDL_FRect* t, Collider* c);
 bool isOverlapping(SDL_FRect* t1, float r1, SDL_FRect* t2, float r2);
 void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnWalkable, Vector2 start);
+bool LoadGridFromFile(std::shared_ptr<GridData> grid, std::string path);
+void PrintGrid(std::shared_ptr<GridData> grid);
+void CreateGridData(std::shared_ptr<GridData> grid, int tWidth, int gWidth, int gHeight);

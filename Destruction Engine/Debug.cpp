@@ -141,25 +141,25 @@ void GridDebugSystem::onGridDebugEvent(const GridDebugEvent* event) {
 void GridDebugSystem::update(float delta) {
 	if (displayGridOutlines) {
 		SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0x40);
-		Vector2 start = gGridManager.grid->origin;
-		for(int i = 0; i < gGridManager.grid->gridWidth*gGridManager.grid->subWidth; i++) {
-            if(i%4 == 0) {
+		Vector2 start = grid->origin;
+		for(int i = 0; i <= grid->gridWidth*grid->subWidth; i++) {
+            if(i% grid->subWidth == 0) {
                 SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0xFF);
             }
-			SDL_RenderLine(gRenderer, start.x, start.y, start.x, start.y + gGridManager.grid->gridHeight*gGridManager.grid->tileWidth);
-			start.x += gGridManager.grid->tileWidth/gGridManager.grid->subWidth;
-            if(i%4 == 0) {
+			SDL_RenderLine(gRenderer, start.x, start.y, start.x, start.y + grid->gridHeight*grid->tileWidth);
+			start.x += grid->tileWidth/grid->subWidth;
+            if(i%grid->subWidth == 0) {
                 SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0x40);
             }
 		}
-		start = gGridManager.grid->origin;
-		for(int i = 0; i < gGridManager.grid->gridHeight*gGridManager.grid->subWidth; i++) {
-            if(i%4 == 0) {
+		start = grid->origin;
+		for(int i = 0; i <= grid->gridHeight*grid->subWidth; i++) {
+            if(i%grid->subWidth == 0) {
                 SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0xFF);
             }
-			SDL_RenderLine(gRenderer, start.x, start.y, start.x+ gGridManager.grid->gridWidth*gGridManager.grid->tileWidth, start.y);
-			start.y += gGridManager.grid->tileWidth/gGridManager.grid->subWidth;
-            if(i%4 == 0) {
+			SDL_RenderLine(gRenderer, start.x, start.y, start.x+ grid->gridWidth*grid->tileWidth, start.y);
+			start.y += grid->tileWidth/grid->subWidth;
+            if(i%grid->subWidth== 0) {
                 SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0x40);
             }
 		}

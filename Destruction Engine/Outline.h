@@ -43,4 +43,6 @@ int findFurthest(std::vector<int> allPoints, int a, int b, int epsilon, int arra
 
 void rdp(int startIndex, int endIndex, int epsilon, int arrayWidth, std::vector<int> allPoints, std::vector<int>& rdpPoints);
 
+void rdp(int startIndex, int endIndex, float epsilon, std::vector<Vector2>& allPoints, std::vector<Vector2>& rdpPoints);
+
 b2BodyId createTexturePolygon(std::vector<int> rdpPoints, int arrayWidth, b2WorldId worldId, b2BodyType type, Transform& t);

@@ -6,12 +6,14 @@
 #include "Entity.h"
 #include "Outline.h"
 #include "GridManager.h"
+#include <cstdio>
+#include <memory>
 
 extern Coordinator gCoordinator;
 extern SDL_Renderer* gRenderer;
 extern int scale;
 extern b2WorldId worldId;
-extern GridSystemManager gGridManager;
+extern std::shared_ptr<GridData> grid;
 
 //Renders Sprites
 class RenderSystem : public System {
@@ -102,8 +104,8 @@ public:
 			Sprite s = gCoordinator.getComponent<Sprite>(e);
 			Terrain te = gCoordinator.getComponent<Terrain>(e);
 			if(te.isTerrain) {
-				Vector2 gridPosition = worldToGridPos(gGridManager.grid, t.position);
-				intersectingSubcells(gGridManager.grid, &c, false, (Vector2){gridPosition.x*gGridManager.grid->tileWidth, gridPosition.y*gGridManager.grid->tileWidth});
+				Vector2 gridPosition = worldToGridPos(grid, t.position);
+				intersectingSubcells(grid, &c, false, (Vector2){gridPosition.x*grid->tileWidth, gridPosition.y*grid->tileWidth});
 			}
 			free(s.surfacePixels);
 			b2DestroyBody(c.colliderId);
@@ -123,8 +125,8 @@ public:
 			gCoordinator.addComponent(e, spritesToAdd[i]);
 			Collider* c = new Collider(createTexturePolygon(temprdpPoints, width, worldId, collidersToAdd[i], transformsToAdd[i]), POLYGON);
 			if(terrainToAdd[i].isTerrain) {
-				Vector2 gridPosition = worldToGridPos(gGridManager.grid, transformsToAdd[i].position);
-				intersectingSubcells(gGridManager.grid, c, true, (Vector2){gridPosition.x*gGridManager.grid->tileWidth, gridPosition.y*gGridManager.grid->tileWidth});
+				Vector2 gridPosition = worldToGridPos(grid, transformsToAdd[i].position);
+				intersectingSubcells(grid, c, true, (Vector2){gridPosition.x*grid->tileWidth, gridPosition.y*grid->tileWidth});
 			}
 			gCoordinator.addComponent(e, *c);
 			gCoordinator.addComponent(e, terrainToAdd[i]);
@@ -138,23 +140,28 @@ public:
 
 	void update(float dt) {
 		Input* in = gCoordinator.getInput();
-		if (in->leftMouseButtonDown) {//Checking that lmb is activated
-			for (Entity entity : registeredEntities) {
-				Sprite &s = gCoordinator.getComponent<Sprite>(entity);
-				Transform t = gCoordinator.getComponent<Transform>(entity);
-				Vector2 temp = {in->mouseX, in->mouseY};
-				Vector2 rotated = rotateAboutPoint(&temp, &t.position, -t.rotation, false);
+        if(gCoordinator.state != THIRD) {
+            if (in->leftMouseButtonDown) {//Checking that lmb is activated
+                if(in->mouseX < 0 || in->mouseX > grid->gridWidth*grid->tileWidth
+                    || in->mouseY < 0 || in->mouseY > grid->gridHeight*grid->tileWidth)
+                        return;
+                for (Entity entity : registeredEntities) {
+                    Sprite &s = gCoordinator.getComponent<Sprite>(entity);
+                    Transform t = gCoordinator.getComponent<Transform>(entity);
+                    Vector2 temp = {in->mouseX, in->mouseY};
+                    Vector2 rotated = rotateAboutPoint(&temp, &t.position, -t.rotation, false);
 
-				//This is the correct version for doing outside
-				if((rotated.x + scale >= getOrigin(s, t).x && rotated.x + scale < getOrigin(s,t ).x + s.surfacePixels->w) //West
-					|| (rotated.y + scale >= getOrigin(s, t).y && rotated.x + scale < getOrigin(s,t ).y + s.surfacePixels->h) //North
-					|| (rotated.x - scale >= getOrigin(s, t).x && rotated.x - scale < getOrigin(s,t ).x + s.surfacePixels->w) //East
-					|| (rotated.y - scale >= getOrigin(s, t).y && rotated.x - scale < getOrigin(s,t ).y + s.surfacePixels->h) //South
-				) {
-					erasePixels(s, t, gRenderer, scale, in->mouseX, in->mouseY);
-				}
-			}
-		}
+                    //This is the correct version for doing outside
+                    if((rotated.x + scale >= getOrigin(s, t).x && rotated.x + scale < getOrigin(s,t ).x + s.surfacePixels->w) //West
+                        || (rotated.y + scale >= getOrigin(s, t).y && rotated.x + scale < getOrigin(s,t ).y + s.surfacePixels->h) //North
+                        || (rotated.x - scale >= getOrigin(s, t).x && rotated.x - scale < getOrigin(s,t ).x + s.surfacePixels->w) //East
+                        || (rotated.y - scale >= getOrigin(s, t).y && rotated.x - scale < getOrigin(s,t ).y + s.surfacePixels->h) //South
+                    ) {
+                        erasePixels(s, t, gRenderer, scale, in->mouseX, in->mouseY);
+                    }
+                }
+            }
+        }
 	}
 };
 
@@ -170,6 +177,8 @@ public:
             if(event->pos.x >= b.area->x && event->pos.x < b.area->x + b.area->w
                 && event->pos.y >= b.area->y && event->pos.y < b.area->y + b.area->h) {
                 //Do something
+                printf("Clicked a button\n");
+                gCoordinator.state = b.state;
             }
         }
     }

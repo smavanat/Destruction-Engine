@@ -111,11 +111,12 @@ int numExits(const TileData& t);
 //one direction and another
 bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int s);
 //Returns the path between two positions taking into account tile destruction
-std::vector<Node> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid, int size);
+std::vector<Vector2> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid, int size);
 //Basic A* implementation
-std::vector<Node> FindPathAStar(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid, int size);
+std::vector<Vector2> FindPathAStar(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid, int size);
 //Finds a path between two points assuming that the agent has an infinite amount of destructive potential
-std::vector<Node> FindPathDestruction(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid, int size);
+std::vector<Vector2> FindPathDestruction(Vector2 start, Vector2 goal, std::shared_ptr<GridData> grid, int size);
 Vector2 nodeToWorldPos(Node n, int w);
+Node nodeFromWorldPos(Vector2 pos, int w, int h);
 //Returns the representation of a tile after it has been "destroyed"
 std::vector<int> getDestroyedTile(const TileData& t, Direction8 d, int destructionWidth, int width);

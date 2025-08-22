@@ -2,70 +2,18 @@
 #include "Maths.h"
 #include "martinez.h"
 #include <cstdlib>
-GridSystemManager::GridSystemManager() {
-    //gSystem = nullptr;
-    pSystem = nullptr;
-    //tSystem = nullptr;
-    grid = std::make_shared<GridData>();
-
+#include <memory>
+void CreateGridData(std::shared_ptr<GridData> grid, int tWidth, int gWidth, int gHeight) {
     //Initialising the grid height
-    grid->subWidth = 0;
-    grid->tileWidth = 0;
-    //grid->tileHeight = 0;
-    grid->gridWidth = 0;
-    grid->gridHeight = 0;
-    grid->tiles = std::vector<TileData>( static_cast<size_t>(grid->gridWidth * grid->gridHeight) );
-}
-
-GridSystemManager::GridSystemManager(int tWidth, int gWidth, int gHeight) {
-    {
-        Signature sig;
-        sig.addComponent<Pathfinding>();
-        pSystem = gCoordinator.addSystem<PathFindingSystem>(sig);
-    }
-    //pSystem->init();
-
-    grid = std::make_shared<GridData>();
-
-    //Initialising the grid height
-    grid->subWidth = 4;
+    grid->subWidth = 8;
     grid->tileWidth = tWidth;
     //grid->tileHeight = tHeight;
     grid->gridWidth = gWidth;
     grid->gridHeight = gHeight;
     grid->tiles = std::vector<TileData>( static_cast<size_t>(gWidth * gHeight) );
-
-    //Making sure the child systems all have the same pointer
-    pSystem->setGrid(grid);
 }
 
-GridSystemManager::GridSystemManager(int tWidth, int gWidth, int gHeight, std::string path) : GridSystemManager(tWidth, gWidth, gHeight) {
-    loadGridFromFile(path);
-}
-
-void GridSystemManager::update(float dt) {
-    pSystem->update(dt);
-}
-
-void GridSystemManager::setGridTileColliders(TerrainSet* tSet) {
-    //Can literally just get the tile from the collider's position by using worldToGridIndex()
-    //printf("Number of Terrain Tiles: %i\n", tSet->size); //-> 28
-    for(int i = 0; i < tSet->size; i++) {
-        Entity e = (Entity){tSet->eArr[i]};
-        Collider c = gCoordinator.getComponent<Collider>(e);
-        Transform t = gCoordinator.getComponent<Transform>(e);
-        Vector2 gridPosition = worldToGridPos(grid, t.position);
-
-        SDL_FRect dimensions = {gridPosition.x*grid->tileWidth, gridPosition.y*grid->tileWidth, grid->tileWidth, grid->tileWidth};
-        //printf("TilePosition: (%f, %f)\n", dimensions.x, dimensions.y);
-
-        if(isOverlapping(&dimensions, &c)){
-            intersectingSubcells(grid, &c, true, (Vector2){dimensions.x, dimensions.y});
-        }
-    }
-}
-
-bool GridSystemManager::loadGridFromFile(std::string path) {
+bool LoadGridFromFile(std::shared_ptr<GridData> grid, std::string path) {
     //Loading the grid to make the GridData tile vector:
     std::ifstream map(path);
 
@@ -114,7 +62,7 @@ bool GridSystemManager::loadGridFromFile(std::string path) {
     return true;
 }
 
-void GridSystemManager::printWorldGrid() {
+void PrintGrid(std::shared_ptr<GridData> grid) {
     for(int i = 0; i < grid->gridHeight; i++) {//Looping over the grid height
         for(int p = 0; p < grid->subWidth; p++) { //Looping over the subcell width
             for(int k = 0; k < grid->gridWidth; k++) { //Looping over the grid width
