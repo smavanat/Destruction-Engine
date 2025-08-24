@@ -17,6 +17,8 @@
 #include "GridManager.h"
 #include "box2d/box2d.h"
 #include "box2d/id.h"
+#include "externals/Include/box2d/math_functions.h"
+#include "externals/Include/box2d/types.h"
 
 //TODO: Figure out how do deal with small shapes. Colliders are not generated for them, but they are still there.
 //		Maybe just erase them? Or put a default small collider around them.
@@ -28,7 +30,7 @@ const int FRAME_RATE = 1000/60.0f;
 ////Some global variables
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
-b2WorldDef worldDef;
+// b2WorldDef worldDef;
 b2WorldId worldId;
 
 //ECS Managers
@@ -188,8 +190,8 @@ bool init()
         gCoordinator.addComponent(b2, Transform((Vector2){1450, 425}, 0.0f));
         gCoordinator.addComponent(b3, Transform((Vector2){1450, 625}, 0.0f));
 
-        worldDef = b2DefaultWorldDef();
-        worldDef.gravity = { 0.0f, 0.0f };
+        b2WorldDef worldDef = b2DefaultWorldDef();
+        worldDef.gravity = (b2Vec2){ 0.0f, 0.0f };
         worldId = b2CreateWorld(&worldDef);
 	}
 	return success;

@@ -14,17 +14,29 @@ FetchContent_Declare(
     GIT_TAG release-3.2.18
 )
 
+#Fetch SDL3_Image:
 FetchContent_Declare (
-    SDL_image
+    SDL3_image
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
     GIT_TAG release-3.2.4
 )
 
+#Fetch box2D:
+FetchContent_Declare (
+    box2d
+    GIT_REPOSITORY https://github.com/erincatto/box2d.git
+    GIT_TAG v3.1.0
+)
 set(SDL_TEST OFF CACHE BOOL "" FORCE)
 set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
 
+set(BOX2D_BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
+set(BOX2D_BUILD_TESTBED OFF CACHE BOOL "" FORCE)
+set(BOX2D_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+
 FetchContent_MakeAvailable(SDL3)
-FetchContent_MakeAvailable(SDL_Image)
+FetchContent_MakeAvailable(SDL3_image)
+FetchContent_MakeAvailable(box2d)
 
 # Collect all .cpp files in current directory
 file(GLOB CPP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
@@ -40,57 +52,8 @@ target_include_directories(my_app
         "${CMAKE_SOURCE_DIR}/externals/Include"
 )
 
-# Link the SDL and Box2D libraries
-# Set platform-specific libraries:
-# if(WIN32) 
-#     if(MSVC)
-#         # Set .lib files on msvc
-#         target_link_libraries(my_app
-#             PRIVATE 
-#             "${CMAKE_SOURCE_DIR}/externals/libs/Windows/SDL3.lib"
-#             "${CMAKE_SOURCE_DIR}/externals/libs/Windows/SDL3_image.lib"
-#             "${CMAKE_SOURCE_DIR}/externals/libs/Windows/box2dd.lib"
-#             user32 gdi32 winmm imm32 ole32 oleaut32 shell32 uuid version
-#             )
-#     else()
-#     # Assume other users are using MinGW.
-#         target_link_libraries(my_app
-#             PRIVATE
-#                 "${CMAKE_SOURCE_DIR}/externals/libs/Windows/libSDL3.dll.a"
-#                 "${CMAKE_SOURCE_DIR}/externals/libs/Windows/libSDL3_image.dll.a"
-#                 "${CMAKE_SOURCE_DIR}/externals/libs/Windows/libbox2dd.a"
-#                 mingw32 user32 gdi32 winmm imm32 ole32 oleaut32 shell32 uuid version
-#         )
-#     endif()
-#
-#     # Copy .dll to output directory on build (Windows only)
-#     add_custom_command(TARGET my_app POST_BUILD
-#         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#             "${PROJECT_SOURCE_DIR}/externals/libs/SDL3.dll"
-#             "${PROJECT_SOURCE_DIR}/externals/libs/SDL3_image.dll"
-#             $<TARGET_FILE_DIR:my_app>
-#     )
-# elseif(UNIX AND NOT APPLE)
-#     #Linux specific settings:
-#     target_link_libraries(my_app
-#         PRIVATE
-#         #"${CMAKE_SOURCE_DIR}/externals/libs/Linux/libSDL3.a"
-#         #"${CMAKE_SOURCE_DIR}/externals/libs/Linux/libSDL3_image.dll.a"
-#         "${PROJECT_SOURCE_DIR}/externals/libs/Linux/libSDL3.so.0.2.18"
-#         "${PROJECT_SOURCE_DIR}/externals/libs/Linux/libSDL3_image.so.0.2.4"
-#         "${CMAKE_SOURCE_DIR}/externals/libs/Linux/libbox2d.a")
-#
-#     # Add .so for SDL3_image post build
-#     add_custom_command(TARGET my_app POST_BUILD
-#         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#             "${PROJECT_SOURCE_DIR}/externals/libs/Linux/libSDL3_image.so.0"
-#             "${PROJECT_SOURCE_DIR}/externals/libs/Linux/libSDL3.so.0"
-#             $<TARGET_FILE_DIR:my_app>
-#     )
-# endif()
-
-target_link_libraries(my_app PRIVATE SDL3::SDL3 SDL_image::SDL_image)
-# target_link_libraries(my_app PRIVATE SDL_image::SDL_image)
+target_link_libraries(my_app PRIVATE SDL3::SDL3 SDL3_image::SDL3_image box2d::box2d)
+# target_link_libraries(my_app PRIVATE SDL3_image::SDL3_image)
 
 # Have to copy all of the assets to the output directory
 add_custom_command(TARGET my_app POST_BUILD
