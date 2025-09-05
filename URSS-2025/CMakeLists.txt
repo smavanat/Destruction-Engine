@@ -44,20 +44,20 @@ file(GLOB C_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 set(SOURCES ${CPP_SOURCES} ${C_SOURCES})
 
 # Create the executable target
-add_executable(my_app ${SOURCES})
+add_executable(urss ${SOURCES})
 
 # Add include directories (external libraries)
-target_include_directories(my_app
+target_include_directories(urss
     PRIVATE
         "${CMAKE_SOURCE_DIR}/externals/Include"
 )
 
-target_link_libraries(my_app PRIVATE SDL3::SDL3 SDL3_image::SDL3_image box2d::box2d)
-# target_link_libraries(my_app PRIVATE SDL3_image::SDL3_image)
+target_link_libraries(urss PRIVATE SDL3::SDL3 SDL3_image::SDL3_image box2d::box2d)
+# target_link_libraries(urss PRIVATE SDL3_image::SDL3_image)
 
 # Have to copy all of the assets to the output directory
-add_custom_command(TARGET my_app POST_BUILD
+add_custom_command(TARGET urss POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/assets"
-        $<TARGET_FILE_DIR:my_app>/assets
+        $<TARGET_FILE_DIR:urss>/assets
 )
