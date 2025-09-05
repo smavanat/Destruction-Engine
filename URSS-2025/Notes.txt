@@ -1,3 +1,0 @@
-Look into scene graphs for how to make child-parent relationships in scene: https://en.wikipedia.org/wiki/Scene_graph
-Code for engine based off of https://savas.ca/nomad and https://austinmorlan.com/posts/entity_component_system/
-MAKE SURE THAT SDL FOR DIFFERENT PLATFORMS IS BASED OFF OF SDL3 3.2.18 AND SDL_IMAGE 3.2.4!!!!
