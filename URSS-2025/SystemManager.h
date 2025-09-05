@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include<unordered_map>
-#include<iostream>
+#include<cassert>
 #include "System.h"
 class SystemManager {
 public:

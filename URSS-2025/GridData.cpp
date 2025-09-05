@@ -221,12 +221,13 @@ std::vector<int>* getNeighbourCells(int index, std::shared_ptr<GridData>g, std::
 std::vector<int> createSurroundGrid(int index, std::shared_ptr<GridData> g, std::pair<int, int> *startPos, std::pair<int, int> *dimensions) {
     //Get the coordinates of all of the neighbours of the cell that are inside the grid
     std::vector<std::pair<int, int>> neighbours = trimCells(index, g->gridWidth, g->gridHeight, startPos);
-    //std::pair<int, int> dimensions = std::make_pair(0,0);
 
+    //In a corner
     if(neighbours.size() == 4) {
         dimensions->first = 2;
         dimensions->second =2;
     }
+    //At an edge
     else if (neighbours.size() == 6) {
         if(index % g->gridWidth == 0 || index % g->gridWidth == g->gridWidth -1) {
             dimensions->first = 2;
@@ -237,6 +238,7 @@ std::vector<int> createSurroundGrid(int index, std::shared_ptr<GridData> g, std:
             dimensions->second = 2;
         }
     }
+    //Normal
     else {
         dimensions->first = 3;
         dimensions->second = 3;
@@ -343,7 +345,7 @@ std::vector<bool> preprocessRestrictedValidPositions(std::vector<int> subcellArr
     for (int i = -1; i <= w; i++) {//x position
         for (int j = -1; j <= w; j++) {//y position
             //This should avoid the issue of agents of size 1 being able to "go around" impassible subcells
-            //by going through passible subcells on neighbouring tiles to reach the desired target, which 
+            //by going through passible subcells on neighbouring tiles to reach the desired target, which
             //would seriously mess up the A*
             if (j + offsetY < 0 || i + offsetX < 0 || i + offsetX >= gW || j + offsetY >= subcellArr.size()/gW ) continue;
             if(s == 1) 
@@ -367,14 +369,14 @@ std::vector<bool> preprocessRestrictedValidPositions(std::vector<int> subcellArr
 //indexAt is the index of the current TileData in g
 //s is the size of the agent passing through
 bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, int indexAt, int s) {
-    std::pair<int, int> dimensions = std::make_pair(0,0);
+    std::pair<int, int> dimensions = std::make_pair(0,0); //Represents the dimensions of the grid of all the neighbour cells that surround the tile
     std::pair<int, int> startTile = std::make_pair(1, 1); //Represents the coordinates of the starting tile in the 3x3 grid where (0,0) is the top left
 
     //Make the grid subset that we need to path on to get to the desired direction
     std::vector<int> combinedCells = createSurroundGrid(indexAt, g, &startTile, &dimensions);
 
     int offsetX = startTile.first*g->subWidth;
-    int offsetY = startTile.second*g->subWidth;    
+    int offsetY = startTile.second*g->subWidth;
 
     //Find startPosition and endPosition depending on from and to
     std::pair<int, int> startPos = getRestrictedStartPos(combinedCells, g->subWidth, g->subWidth * dimensions.first, offsetX, offsetY, s, from);
@@ -382,7 +384,7 @@ bool isPathBetween(Direction8 from, Direction8 to, std::shared_ptr<GridData> g, 
     std::pair<int, int> endPos = getRestrictedEndPos(combinedCells, g->subWidth, g->subWidth * dimensions.first, offsetX, offsetY, s, to);
     if (endPos == std::make_pair(-1, -1)) return false; //Check that it is valid
 
-    //Find if there is a path between them 
+    //Find if there is a path between them
     std::vector<bool> prepArray = preprocessRestrictedValidPositions(combinedCells, g->subWidth, g->subWidth*dimensions.first, s, offsetX, offsetY);//Get the valid positions in the array
     return pathExistsTo(startPos.first, startPos.second, endPos.first, endPos.second, s, dimensions.first*g->subWidth, prepArray); //Check that a valid path exists through the tile
 }
@@ -412,61 +414,13 @@ std::vector<Vector2> getPathBetween(Direction8 from, Direction8 to, std::shared_
     tileY *= g->tileWidth;
     ret.push_back({tileX + (startPos.first + static_cast<float>(s/2.0f)*(g->tileWidth/g->subWidth)), tileY + (startPos.second+ static_cast<float>(s/2.0f)*(g->tileWidth/g->subWidth))});
     ret.push_back({tileY + (endPos.first + static_cast<float>(s/2.0f)*(g->tileWidth/g->subWidth)), tileY + (endPos.second+ static_cast<float>(s/2.0f)*(g->tileWidth/g->subWidth))});
-    //Find if there is a path between them 
-    // std::vector<bool> prepArray = preprocessRestrictedValidPositions(combinedCells, g->subWidth, g->subWidth*dimensions.first, s, offsetX, offsetY);//Get the valid positions in the array
-
-    // bool* visitedArr = (bool*)malloc(prepArray.size() * sizeof(bool)); //Marks which nodes we have visited
-    // if (!visitedArr) return ret;
-    // memset(visitedArr, false, prepArray.size() * sizeof(bool)); //All nodes are initially unvisited
-    // std::queue<std::pair<int, int>> validPositions; //Queue to hold all of the positions to visit in bfs.
-    // //For iterating over neighbour coordinates
-    // //We can only allow diagonal traversal between valid tiles when agents are of size > 1, since the 
-    // //issue of agents crashing into walls forever should be avoided by the fact that valid tiles 
-    // //should be surrounded by other tiles which are technically passable, but not valid, so this should
-    // //allow for diagonal traversal
-    // std::vector<int> directionX = (s > 1) ? std::vector<int>{-1, 0, 1, 0, 1, 1, -1, -1} : std::vector<int>{ -1, 1, 0, 0 };
-    // std::vector<int> directionY = (s > 1) ? std::vector<int>{0, 1, 0, -1, 1, -1, 1, -1} : std::vector<int>{ 0, 0, -1, 1 };
-    //
-    // //Add it to the queue of positions to run bfs on.
-    // validPositions.push(startPos);
-    // visitedArr[(startPos.second* g->subWidth) + startPos.first] = true; //Mark is as visited
-    //
-    // while (!validPositions.empty()) {
-    //     std::pair<int, int> p = validPositions.front(); //Get first elem of queue
-    //
-    //     //If this node is touching an edge, and that edge is not the start edge, then we have found a valid path 
-    //     //out of the subcell array
-    //     if (p.first + s >= endPos.first && p.second + s >= endPos.second) {
-    //         while()
-    //         break;
-    //     }
-    //
-    //     //Visiting all of the cardinal neighbours of this cell
-    //     for (int i = 0; i < directionX.size(); i++) {
-    //         int newX = p.first + directionX[i];
-    //         int newY = p.second + directionY[i];
-    //
-    //         //Checking bounds are fine
-    //         if (newX >= 0 && newX < g->subWidth && newY >= 0 && newY < (prepArray.size()/g->subWidth) && !visitedArr[(newY * g->subWidth) + newX]) {
-    //             visitedArr[(newY * g->subWidth) + newX] = true; //Marking it as visited
-    //             //Checking that it is a valid position, and pushing to the queue if it is
-    //             if (prepArray[(newY*g->subWidth)+newX]) {
-    //                 validPositions.push({ newX, newY });
-    //             }
-    //         }
-    //     }
-    //     //Removing the first element of the queue
-    //     validPositions.pop();
-    // }
-    // free(visitedArr);
-    //
     return ret; //No path out of the subcell grid found
 }
 
 //Gets the relevant node from the world position
 Node nodeFromWorldPos(Vector2 pos, int w, int h) {
 	return Node(static_cast<int>(floor(pos.x / w)), static_cast<int>(floor(pos.y / h)));
-}   
+}
 
 //Converts a node's grid position to its world position
 Vector2 nodeToWorldPos(Node n, int w) {
@@ -529,21 +483,7 @@ std::vector<Vector2> FindPath(Vector2 start, Vector2 goal, std::shared_ptr<GridD
             std::vector<Vector2> path;
             Node trace = current;
             while (!(trace == startNode)) {
-                // if(path.size() > 0)
-                //     printf("(%f, %f)", path.back().x, path.back().y);
-                // if(grid->tiles[toIndex(grid, {trace.x, trace.y})].status == 2) {
-                //     std::pair<int, int> tempDir = std::make_pair(nodeFromWorldPos(path.back(), grid->tileWidth, grid->tileWidth).x - trace.x, nodeFromWorldPos(path.back(), grid->tileWidth, grid->tileWidth).y - trace.y);
-                //     printf("(%i, %i)\n", tempDir.first, tempDir.second);
-                //     auto direction = directionMap.at(tempDir); //Need to fix this
-                //     auto directionFrom = (current == startNode) ? S : directionMap.at(std::make_pair(cameFrom[current].x - current.x, cameFrom[current].y - current.y));
-                //     for(Vector2 v : getPathBetween(directionFrom, direction, grid, toIndex(grid, {trace.x, trace.y}), size)) {
-                //         path.push_back(v);
-                //     }
-                // }
-                // else {
-                    path.push_back(nodeToWorldPos(trace, grid->tileWidth));
-                // }
-                // path.push_back(trace);
+                path.push_back(nodeToWorldPos(trace, grid->tileWidth));
                 trace = cameFrom[trace];
             }
             path.push_back(nodeToWorldPos(startNode, grid->tileWidth));

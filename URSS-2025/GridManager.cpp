@@ -333,31 +333,6 @@ float getPolygonArea(Polygon& p) {
 //to determine whether they are intersecting or not (can just use SAT algorithm)
 //Need to rework this so it batches computations to make it work better with SIMD
 void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnwalkable, Vector2 start) {
-    // printf("Start: (%f, %f)\n", start.x, start.y);
-    // printf("Collider Vertices:\n");
-    // int numVertices = 0;
-    // switch(c->type) {
-    //     case POLYGON:
-    //         numVertices = 3;
-    //         break;
-    //     case BOX:
-    //         numVertices = 4;
-    //         break;
-    //     default:
-    //         break;
-    // }
-    // int shapeCount = b2Body_GetShapeCount(c->colliderId);
-    // Vector2 colliderPosition = b2Body_GetPosition(c->colliderId);
-    // b2ShapeId* colliderShapes = (b2ShapeId*)malloc(shapeCount*sizeof(b2ShapeId));
-    // b2Body_GetShapes(c->colliderId, colliderShapes, shapeCount);
-    // for(int j = 0; j < shapeCount; j++) {
-    //     Vector2* verts = b2Shape_GetPolygon(colliderShapes[j]).vertices;
-    //     for(int i = 0; i < numVertices; i++) {
-    //         printf("(%f, %f) ", (verts[i].x+colliderPosition.x)*metresToPixels, (verts[i].y + colliderPosition.y)*metresToPixels);
-    //     }
-    // }
-    // printf("\n");
-
     std::vector<Point> colliderPoints = getColliderVertices(c);
     Polygon testColliderPoly = Polygon(colliderPoints);
 
@@ -371,11 +346,9 @@ void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnwa
         subPos.y += sWidth*(i / g->subWidth);
         //Generate the rect to be used to represent the subcell
         SDL_FRect subRect = (SDL_FRect){subPos.x, subPos.y, sWidth, sWidth};
-        //printf("Subcell No.%i position: (%f, %f) (%f, %f)\n", i, subRect.x, subRect.y, subRect.w, subRect.h);
 
         //Check if that rect overlaps with the collider
         if(isOverlapping(&subRect, c)) { 
-            //printf("Subcell is overlapping\n");
             //If it does, check by how much using Martinez-Rueda-Fiedo algorithm: https://www.sciencedirect.com/science/article/abs/pii/S0098300408002793
 	        std::vector<Point> rectPoints = getRectVertices(&subRect);
             Polygon testRectPoly = Polygon(rectPoints);
@@ -383,33 +356,10 @@ void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnwa
             Martinez compute = Martinez(testRectPoly, testColliderPoly);
             compute.compute(compute.INTERSECTION, testResult); 
 
-            // printf("Rect Polygon Vertices:\n");
-            // for(int i = 0; i < testRectPoly.ncontours(); i++) {
-            //     for(int j = 0; j < testRectPoly[i].nvertices(); j++) {
-            //         printf("(%f, %f)", testRectPoly[i].vertex(j).x, testRectPoly[i].vertex(j).y);
-            //     }
-            // }
-            // printf("\nCollider Polygon Vertices: \n");
-            // for(int i = 0; i < testColliderPoly.ncontours(); i++) {
-            //     for(int j = 0; j < testColliderPoly[i].nvertices(); j++) {
-            //         printf("(%f, %f)", testColliderPoly[i].vertex(j).x, testColliderPoly[i].vertex(j).y);
-            //     }
-            // }
-            // printf("\nResult Polygon Vertices: \n");
-            // for(int i = 0; i < testResult.ncontours(); i++) {
-            //     for(int j = 0; j < testResult[i].nvertices(); j++) {
-            //         printf("(%f, %f)", testResult[i].vertex(j).x, testResult[i].vertex(j).y);
-            //     }
-            // }
-            // printf("\n");
-
-            //If we are checking for collider overlaps to set unwalkable/walkable tiles (on world instantiation or collider creation)
             //This doesn't quite work when tiles are being destroyed. I think its because of the faulty positioning
             if(setUnwalkable) {
                 float resArea = getPolygonArea(testResult);
                 float rectArea = getPolygonArea(testRectPoly);
-                // printf("Area of the resulting polygon: %f\n", resArea);
-                // printf("Area of the tile rect: %f\n", rectArea);
                 //If >=40% (arbitrary value, should be adjusted or made adjustable as needed), set the subcell to be unwalkable
                 if(resArea / rectArea >= 0.4)
                     g->tiles[index].subcells[i] = 1;
@@ -446,12 +396,6 @@ void intersectingSubcells(std::shared_ptr<GridData> g, Collider* c, bool setUnwa
             else g->tiles[index].status = 2; //set the tile to be partial
         }
     }
-    // for(int i = 0; i < g->subWidth; i++) {
-    //     for(int j = 0; j < g->subWidth; j ++) {
-    //         printf("%i ", g->tiles[index].subcells[(i*g->subWidth)+j]);
-    //     }
-    //     printf("\n");
-    // }
 }
 #pragma endregion
 
