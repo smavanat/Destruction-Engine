@@ -23,6 +23,14 @@ make
 ./urss
 ```
 Building may take a while since the project needs to fetch and build the various libraries to be for your specific system.
+## Use:  
+The app that is built from this project is a demo for the features discussed in my research. The demo consists of three scenarios:  
+The first scenario is a grid that is almost entirely covered with impassable tiles except for the start and end tiles. The user can then erase a route through
+the tiles that will then then be highlighted by a debug path diagram.  
+The second scenario is much like the first, except there is also an agent that follows the outlined path to reach the end.  
+The third scenario features no user interaction, since it is a demo of the agent's destruction ability to reach the end tile from the start tile.  
+  
+If you want to see the part of the code that are directly relevant to the pathfinding, see GridData.cpp and GridManager.cpp and their respective header files
 ## Credits:  
 I am using SDL3: https://github.com/libsdl-org/SDL  
 I am using SDL3_Image: https://github.com/libsdl-org/SDL_image  
