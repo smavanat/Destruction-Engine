@@ -11,7 +11,7 @@ mkdir build
 cd build
 cmake -G "${YOUR-CMAKE-BUILD-CONFIG}" ..
 cmake --build .
-.\my_app.exe
+.\urss.exe
 ```
 ### Mac and Linux:  
 ```
@@ -20,7 +20,7 @@ mkdir build
 cd build
 cmake ..
 make
-./my_app
+./urss
 ```
 ## Credits:  
 I am using SDL3: https://github.com/libsdl-org/SDL  
