@@ -1,9 +1,18 @@
 # About  
-This is the repository for the code used in the development of my 2025 URSS project *Pathfinding in Dynamic Environments*  
+This is the repository for the code used in the development of my 2025 URSS project *Pathfinding in Dynamic Environments*.  
 You can find my current progress logs in the Progress.txt file.
 
 ## Building  
-This project can be build in the following ways:  
+This project can be built and run in the following ways:  
+### Windows:  
+```
+cd ${DIR-WITH-CODE}  
+mkdir build
+cd buil
+cmake -G "${YOUR-CMAKE-BUILD-CONFIG}" ..
+cmake --build .
+.\my_app.exe
+```
 
 ## Credits:  
 I am using SDL3: https://github.com/libsdl-org/SDL  
