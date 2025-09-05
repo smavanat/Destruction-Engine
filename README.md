@@ -30,7 +30,7 @@ the tiles that will then then be highlighted by a debug path diagram.
 The second scenario is much like the first, except there is also an agent that follows the outlined path to reach the end.  
 The third scenario features no user interaction, since it is a demo of the agent's destruction ability to reach the end tile from the start tile.  
   
-If you want to see the part of the code that are directly relevant to the pathfinding, see GridData.cpp and GridManager.cpp and their respective header files
+If you want to see the parts of the code that are directly relevant to the pathfinding, see GridData.cpp and GridManager.cpp and their respective header files
 ## Credits:  
 I am using SDL3: https://github.com/libsdl-org/SDL  
 I am using SDL3_Image: https://github.com/libsdl-org/SDL_image  
