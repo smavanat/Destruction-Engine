@@ -8,12 +8,20 @@ This project can be built and run in the following ways:
 ```
 cd ${DIR-WITH-CODE}  
 mkdir build
-cd buil
+cd build
 cmake -G "${YOUR-CMAKE-BUILD-CONFIG}" ..
 cmake --build .
 .\my_app.exe
 ```
-
+### Mac and Linux:  
+```
+cd ${DIR-WITH-CODE}  
+mkdir build
+cd build
+cmake ..
+make
+./my_app
+```
 ## Credits:  
 I am using SDL3: https://github.com/libsdl-org/SDL  
 I am using the box2d physics library: https://github.com/erincatto/box2d  
